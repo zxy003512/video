@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
-    const resultsContainer = document.getElementById('results-container'); // Main container for both types
-    const aiResultsArea = document.getElementById('ai-results-area'); // Target for AI results
-    const yfspResultsArea = document.getElementById('yfsp-results-area'); // Target for YFSP results
+    const resultsContainer = document.getElementById('results-container'); // Main container
+    const aiResultsArea = document.getElementById('ai-results-area');     // Target for AI results
+    const yfspResultsArea = document.getElementById('yfsp-results-area'); // Target for YFSP section
     const yfspResultsGrid = document.getElementById('yfsp-results-grid'); // Grid within YFSP area
     const loadingIndicator = document.getElementById('loading-indicator');
     const errorMessageDiv = document.getElementById('error-message');
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerModal = document.getElementById('player-modal');
     const closePlayerBtn = playerModal.querySelector('.close-player-btn');
     const playerTitle = document.getElementById('player-title');
-    const parsingSelectContainer = document.getElementById('player-parsing-selector'); // Container for selector in player
+    const parsingSelectContainer = document.getElementById('player-parsing-selector');
     const parsingSelect = document.getElementById('parsing-select');
     const videoPlayerIframe = document.getElementById('video-player');
 
@@ -39,22 +39,23 @@ document.addEventListener('DOMContentLoaded', () => {
         defaultParsingInterfaces: [],
         defaultSearxngUrl: ''
     };
-    let currentVideoLink = ''; // Store the link when opening player (for AI results parsing)
+    let currentVideoLink = '';
 
     // --- Functions ---
 
-    const showLoading = (show, message = '正在智能分析中...') => { // Customizable message
+    const showLoading = (show, message = '正在智能分析中...') => {
         loadingIndicator.querySelector('p').textContent = message;
-        loadingIndicator.style.display = show ? 'flex' : 'none'; // Using flex for center align
+        loadingIndicator.style.display = show ? 'flex' : 'none';
         searchBtn.disabled = show;
     };
 
     const showError = (message) => {
         errorMessageDiv.textContent = message;
         errorMessageDiv.style.display = 'block';
+        // Hide error message slightly longer for better readability
         setTimeout(() => {
-             errorMessageDiv.style.display = 'none';
-        }, 7000); // Longer display time
+            errorMessageDiv.style.display = 'none';
+        }, 7000);
     };
 
     const clearError = () => {
@@ -62,15 +63,20 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMessageDiv.textContent = '';
     };
 
+    // --- MODIFIED: clearResults Function ---
     const clearResults = () => {
-        // Clear both result areas
+        // Clear the content of specific result areas, NOT the container itself
         aiResultsArea.innerHTML = '';
         yfspResultsGrid.innerHTML = '';
-        yfspResultsArea.style.display = 'none'; // Hide YFSP area initially
-        resultsContainer.innerHTML = ''; // Clear the main container in case of "not found" message
+        // Hide YFSP area by default, displayYfspResults will show it if needed
+        yfspResultsArea.style.display = 'none';
+        // Remove any "not found" message that might be in resultsContainer
+        const notFoundMsg = resultsContainer.querySelector('.not-found-message');
+        if (notFoundMsg) {
+            resultsContainer.removeChild(notFoundMsg);
+        }
     };
 
-    // Load settings (Combined logic from previous version)
     const loadSettings = async () => {
         try {
             const response = await fetch('/api/config');
@@ -88,14 +94,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     {"name": "接口5 - 77flv.cc", "url": "https://jx.77flv.cc/?url="},
                     {"name": "接口6 - yemu.xyz", "url": "https://www.yemu.xyz/?url="}
                 ],
-                defaultSearxngUrl: "https://searxng.zetatechs.online/search" // Example default
+                defaultSearxngUrl: "https://searxng.zetatechs.online/search"
              };
         }
 
         const savedSettings = localStorage.getItem('videoSearchPlayerSettings');
         if (savedSettings) {
             currentSettings = JSON.parse(savedSettings);
-            // Ensure parsingInterfaces is always an array
             if (!Array.isArray(currentSettings.parsingInterfaces)) {
                 currentSettings.parsingInterfaces = defaultSettings.defaultParsingInterfaces || [];
             }
@@ -106,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 aiApiKey: '',
                 aiModel: '',
                 searxngUrl: defaultSettings.defaultSearxngUrl,
-                parsingInterfaces: defaultSettings.defaultParsingInterfaces ? JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces)) : [] // Deep copy defaults
+                parsingInterfaces: defaultSettings.defaultParsingInterfaces ? JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces)) : []
             };
             console.log("Using default settings:", currentSettings);
         }
@@ -115,14 +120,13 @@ document.addEventListener('DOMContentLoaded', () => {
         updateParsingSelect();
     };
 
-    // Save settings (Combined logic)
     const saveSettings = () => {
         const newUrl = newInterfaceUrlInput.value.trim();
          if (newUrl && !newUrl.includes('?url=')) {
              showError("新解析接口URL应包含 '?url='");
              return;
          }
-         if (newUrl && !newUrl.endsWith('=')) { // Keep this validation
+         if (newUrl && !newUrl.endsWith('=')) {
              showError("新解析接口URL应以 '=' 结尾");
              return;
          }
@@ -132,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             aiApiKey: aiApiKeyInput.value.trim(),
             aiModel: aiModelInput.value.trim(),
             searxngUrl: searxngUrlInput.value.trim() || defaultSettings.defaultSearxngUrl,
-            parsingInterfaces: currentSettings.parsingInterfaces || [] // Ensure interfaces are saved
+            parsingInterfaces: currentSettings.parsingInterfaces || []
         };
         localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings));
         console.log("Settings saved:", currentSettings);
@@ -141,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateParsingSelect();
     };
 
-    // Reset settings (Combined logic)
      const resetToDefaults = () => {
          if (confirm("确定要恢复所有设置为默认值吗？这将清除您自定义的API密钥和接口。")) {
              currentSettings = {
@@ -149,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 aiApiKey: '',
                 aiModel: '',
                 searxngUrl: defaultSettings.defaultSearxngUrl,
-                parsingInterfaces: defaultSettings.defaultParsingInterfaces ? JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces)) : [] // Deep copy defaults
+                parsingInterfaces: defaultSettings.defaultParsingInterfaces ? JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces)) : []
              };
              localStorage.removeItem('videoSearchPlayerSettings');
              populateSettingsForm();
@@ -160,7 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
          }
     };
 
-    // Populate settings form (Combined logic)
     const populateSettingsForm = () => {
         aiApiUrlInput.value = currentSettings.aiApiUrl || '';
         aiApiKeyInput.value = currentSettings.aiApiKey || '';
@@ -168,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         searxngUrlInput.value = currentSettings.searxngUrl || defaultSettings.defaultSearxngUrl || '';
     };
 
-    // Render parsing interfaces list (Combined logic)
     const renderParsingInterfacesList = () => {
         interfacesListDiv.innerHTML = '';
         if (!currentSettings.parsingInterfaces || currentSettings.parsingInterfaces.length === 0) {
@@ -178,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentSettings.parsingInterfaces.forEach((iface, index) => {
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('interface-item');
-            // Use danger-btn-small for styling the remove button
             itemDiv.innerHTML = `
                 <span>${iface.name} (${iface.url})</span>
                 <button data-index="${index}" class="remove-interface-btn danger-btn-small" aria-label="删除接口">&times;</button>
@@ -194,7 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // Add parsing interface (Combined logic)
     const addParsingInterface = () => {
         const name = newInterfaceNameInput.value.trim();
         const url = newInterfaceUrlInput.value.trim();
@@ -204,31 +203,28 @@ document.addEventListener('DOMContentLoaded', () => {
          if (!url.endsWith('=')) { showError("URL 必须以 '=' 结尾"); return; }
 
         if (!currentSettings.parsingInterfaces) { currentSettings.parsingInterfaces = []; }
-        // Check if URL already exists
         if (currentSettings.parsingInterfaces.some(iface => iface.url === url)) {
             showError("该接口 URL 已存在");
             return;
         }
 
         currentSettings.parsingInterfaces.push({ name, url });
-        localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings)); // Save immediately
+        localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings));
         renderParsingInterfacesList();
         updateParsingSelect();
         newInterfaceNameInput.value = '';
         newInterfaceUrlInput.value = '';
     };
 
-    // Remove parsing interface (Combined logic)
     const removeParsingInterface = (index) => {
         if (currentSettings.parsingInterfaces && currentSettings.parsingInterfaces[index]) {
             currentSettings.parsingInterfaces.splice(index, 1);
-            localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings)); // Save immediately
+            localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings));
             renderParsingInterfacesList();
             updateParsingSelect();
         }
     };
 
-    // Update parsing select dropdown (Combined logic)
     const updateParsingSelect = () => {
         parsingSelect.innerHTML = '';
         if (currentSettings.parsingInterfaces && currentSettings.parsingInterfaces.length > 0) {
@@ -239,27 +235,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 parsingSelect.appendChild(option);
             });
             parsingSelect.disabled = false;
-            if (parsingSelectContainer) parsingSelectContainer.style.display = 'block'; // Ensure visible if options exist
+            if (parsingSelectContainer) parsingSelectContainer.style.display = 'block';
         } else {
             const option = document.createElement('option');
             option.textContent = '无可用解析接口';
             parsingSelect.appendChild(option);
             parsingSelect.disabled = true;
-            if (parsingSelectContainer) parsingSelectContainer.style.display = 'none'; // Hide if no options
+            if (parsingSelectContainer) parsingSelectContainer.style.display = 'none';
         }
     };
 
-    // Display AI search results (Targets #ai-results-area)
+    // --- MODIFIED: displayResults Function ---
     const displayResults = (results) => {
-        aiResultsArea.innerHTML = ''; // Clear only AI results area
+        // aiResultsArea.innerHTML = ''; // Removed: Clearing is now handled by clearResults()
+
         if (!results || results.length === 0) {
-            // Don't show "not found" here yet
+            // If AI results are empty, don't display anything in its area.
+            // The "not found" message is handled later in performSearch.
             return;
         }
 
         results.forEach(result => {
             const card = document.createElement('div');
-            card.classList.add('result-card', 'ai-result-card'); // Specific class for AI results
+            card.classList.add('result-card', 'ai-result-card');
             card.dataset.link = result.video_link;
             card.dataset.title = result.title;
 
@@ -269,33 +267,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="link-preview">${result.video_link.substring(0, 60)}${result.video_link.length > 60 ? '...' : ''}</p>
                  <button class="play-button" aria-label="播放 ${result.title}"><i class="fas fa-play"></i> 播放 (需解析)</button>
             `;
-            // Add listener to the button specifically
             card.querySelector('.play-button').addEventListener('click', (e) => {
                 e.stopPropagation();
                  if (parsingSelect.disabled) {
                      showError("请先在设置中添加至少一个视频解析接口才能播放此来源。");
                      return;
                  }
-                currentVideoLink = result.video_link; // Store link for parsing
+                currentVideoLink = result.video_link;
                 openPlayer(currentVideoLink, result.title, false); // false = needs parsing
             });
-            aiResultsArea.appendChild(card);
+            aiResultsArea.appendChild(card); // Appends to the (now correctly persisting) aiResultsArea div
         });
     };
 
-    // --- NEW: Display YFSP search results (Targets #yfsp-results-grid) ---
+    // --- MODIFIED: displayYfspResults Function ---
     const displayYfspResults = (results) => {
-        yfspResultsGrid.innerHTML = ''; // Clear previous YFSP results
+        // yfspResultsGrid.innerHTML = ''; // Removed: Clearing is now handled by clearResults()
+
         if (!results || results.length === 0) {
-            yfspResultsArea.style.display = 'none'; // Hide the whole YFSP section
+            yfspResultsArea.style.display = 'none'; // Hide the section if no results
             return;
         }
 
-        yfspResultsArea.style.display = 'block'; // Show the YFSP section
+        yfspResultsArea.style.display = 'block'; // Show the section
 
         results.forEach(result => {
             const card = document.createElement('div');
-            card.classList.add('result-card', 'yfsp-result-card'); // Specific class for YFSP results
+            card.classList.add('result-card', 'yfsp-result-card');
             card.dataset.playPageUrl = result.first_episode_play_page_url;
             card.dataset.title = result.title;
 
@@ -326,18 +324,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                // Show loading spinner next to button
                 playButton.disabled = true;
                 loadingSpinner.style.display = 'inline-block';
 
                 try {
-                    // Call backend endpoint to get the final player URL
                     const response = await fetch('/api/yfsp/episode', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ play_page_url: playPageUrl })
                     });
-
                     const data = await response.json();
 
                     if (!response.ok || data.error) {
@@ -345,7 +340,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     if (data.final_player_url) {
-                        // Open player with the direct URL
                         openPlayer(data.final_player_url, title, true); // true = direct URL
                     } else {
                          throw new Error("未能获取到最终播放链接。");
@@ -355,59 +349,51 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error("Error fetching YFSP direct link:", error);
                     showError(`播放 ${title} 时出错: ${error.message}`);
                 } finally {
-                     // Hide loading spinner and re-enable button
                      playButton.disabled = false;
                      loadingSpinner.style.display = 'none';
                 }
             });
-
+            // Appends to the yfspResultsGrid div
             yfspResultsGrid.appendChild(card);
         });
     };
 
-
-    // Open the player modal (Handles both direct and parsable URLs)
     const openPlayer = (link, title, isDirectUrl = false) => {
         playerTitle.textContent = `正在播放: ${title}`;
 
         if (isDirectUrl) {
-            // Direct URL (from YFSP) - Hide parser, set src directly
             console.log("Opening player with direct URL:", link);
-            parsingSelectContainer.style.display = 'none'; // Hide parsing selector
+            parsingSelectContainer.style.display = 'none';
             videoPlayerIframe.src = link;
         } else {
-             // Needs parsing (from AI results) - Show parser, build URL
              console.log("Opening player, needs parsing for link:", link);
              if (parsingSelect.disabled) {
                  showError("请先在设置中添加至少一个视频解析接口。");
-                 return; // Don't open if no parsers
+                 return;
              }
-             currentVideoLink = link; // Store the raw link
-             parsingSelectContainer.style.display = 'block'; // Show parsing selector
+             currentVideoLink = link;
+             parsingSelectContainer.style.display = 'block';
              const selectedParserUrl = parsingSelect.value;
              if (selectedParserUrl && currentVideoLink) {
                  videoPlayerIframe.src = selectedParserUrl + encodeURIComponent(currentVideoLink);
              } else {
-                 videoPlayerIframe.src = 'about:blank'; // Clear src if error
+                 videoPlayerIframe.src = 'about:blank';
                  showError("无法构建播放链接，请检查解析接口和视频链接。");
-                 return; // Don't open if initial build fails
+                 return;
              }
         }
-
         playerModal.style.display = 'block';
     };
 
-    // Close the player modal (Combined logic)
     const closePlayer = () => {
         playerModal.style.display = 'none';
-        videoPlayerIframe.src = 'about:blank'; // Reset src to stop playback
+        videoPlayerIframe.src = 'about:blank';
         playerTitle.textContent = '正在播放...';
         currentVideoLink = '';
-        // Reset parser visibility (it will be set correctly when opening again)
-        parsingSelectContainer.style.display = 'block';
+        parsingSelectContainer.style.display = 'block'; // Reset for next potential opening
     };
 
-    // Perform search (Handles combined AI & YFSP results)
+    // --- MODIFIED: performSearch Function ---
     const performSearch = async () => {
         const query = searchInput.value.trim();
         if (!query) {
@@ -416,8 +402,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         clearError();
-        clearResults(); // Clear both areas
-        showLoading(true, '正在搜索和分析...'); // Updated message
+        clearResults(); // Clears content inside aiResultsArea and yfspResultsGrid
+        showLoading(true, '正在搜索和分析...');
 
         try {
             const requestBody = {
@@ -432,7 +418,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log("Sending search request to backend:", requestBody);
 
-            // Assume backend '/api/search' now returns an object with both results
             const response = await fetch('/api/search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -448,29 +433,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errorMsg);
             }
 
-            // Extract results from the combined response object
             const aiResults = responseData.ai_results || [];
             const yfspResults = responseData.yfsp_results || [];
 
-            displayResults(aiResults); // Display AI results into #ai-results-area
-            displayYfspResults(yfspResults); // Display YFSP results into #yfsp-results-grid
+            // Display results in their respective areas
+            displayResults(aiResults);
+            displayYfspResults(yfspResults);
 
-            // Show "not found" message only if BOTH result sets are empty
-            if (aiResults.length === 0 && yfspResults.length === 0) {
-                 // Display the message within the main results container since both areas are empty
-                 resultsContainer.innerHTML = '<p style="text-align: center; margin-top: 20px;">未能找到相关的影视播放链接。</p>';
+            // Check AFTER attempting to display if BOTH areas are effectively empty
+            // We check the innerHTML length as a simple proxy for content
+            if (aiResultsArea.innerHTML.trim().length === 0 && yfspResultsGrid.innerHTML.trim().length === 0) {
+                 // Add the "not found" message directly to resultsContainer
+                 const notFoundMsg = document.createElement('p');
+                 notFoundMsg.classList.add('not-found-message'); // Add class for potential styling/removal
+                 notFoundMsg.style.textAlign = 'center';
+                 notFoundMsg.style.marginTop = '20px';
+                 notFoundMsg.textContent = '未能找到相关的影视播放链接。';
+                 resultsContainer.appendChild(notFoundMsg);
             }
-
 
         } catch (error) {
             console.error("Search Error:", error);
             showError(`搜索或分析时出错: ${error.message}`);
-            clearResults(); // Clear everything on error
+            // clearResults() was already called at the beginning
         } finally {
             showLoading(false);
         }
     };
-
 
     // --- Event Listeners ---
     searchBtn.addEventListener('click', performSearch);
@@ -480,7 +469,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Settings Modal Listeners (Combined logic)
     settingsBtn.addEventListener('click', () => {
         populateSettingsForm();
         renderParsingInterfacesList();
@@ -490,14 +478,11 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsModal.style.display = 'none';
     });
     saveSettingsBtn.addEventListener('click', saveSettings);
-     resetSettingsBtn.addEventListener('click', resetToDefaults);
+    resetSettingsBtn.addEventListener('click', resetToDefaults);
     addInterfaceBtn.addEventListener('click', addParsingInterface);
 
-    // Player Modal Listeners (Combined logic)
     closePlayerBtn.addEventListener('click', closePlayer);
-     // Update iframe src ONLY if the parsing selector is visible (i.e., for AI results)
     parsingSelect.addEventListener('change', () => {
-        // Check if player is open AND the parser selector is visible (meaning it's an AI result)
         if (playerModal.style.display === 'block' && parsingSelectContainer.style.display === 'block' && currentVideoLink) {
              const selectedParserUrl = parsingSelect.value;
              if (selectedParserUrl) {
@@ -506,7 +491,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Close modals on outside click (Combined logic)
     window.addEventListener('click', (event) => {
         if (event.target === settingsModal) {
             settingsModal.style.display = 'none';
