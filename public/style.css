@@ -2,30 +2,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
 :root {
-    /* --- Color Palette --- */
-    --primary-color: #007bff;
-    --primary-hover-color: #0056b3;
-    --secondary-color: #6c757d;
-    --secondary-hover-color: #5a6268;
-    --background-color: #f4f7f9;
-    --card-bg: #ffffff;
-    --text-color: #343a40;
-    --text-muted: #6c757d;
-    --border-color: #e1e4e8;
-    --input-bg: #ffffff;
-    --input-border-focus: rgba(0, 123, 255, 0.3);
-    --shadow-color: rgba(0, 0, 0, 0.08);
-    --danger-color: #dc3545;
-    --danger-hover-color: #c82333;
-    --success-color: #28a745;
-    --success-hover-color: #218838;
-    --warning-color: #ffc107;
-    --light-text-on-dark: #ffffff;
-    --yfsp-button-bg: #ff8c00; /* Orange for YFSP action */
+    /* --- Light Theme Colors --- */
+    --primary-color: #007bff; /* 主题蓝 */
+    --primary-hover-color: #0056b3; /* 主题蓝悬停 */
+    --secondary-color: #6c757d; /* 次要灰 */
+    --secondary-hover-color: #5a6268; /* 次要灰悬停 */
+    --background-color: #f4f7f9; /* 页面背景色 */
+    --card-bg: #ffffff; /* 卡片/容器背景色 */
+    --text-color: #343a40; /* 主要文本颜色 */
+    --text-muted: #6c757d; /* 辅助文本/提示文字颜色 */
+    --border-color: #e1e4e8; /* 边框颜色 */
+    --input-bg: #ffffff; /* 输入框背景 */
+    --input-border-focus: rgba(0, 123, 255, 0.5); /* 输入框聚焦光晕 */
+    --shadow-color: rgba(0, 0, 0, 0.08); /* 阴影颜色 */
+    --danger-color: #dc3545; /* 危险/错误红 */
+    --danger-hover-color: #c82333; /* 危险/错误红悬停 */
+    --success-color: #28a745; /* 成功绿 */
+    --success-hover-color: #218838; /* 成功绿悬停 */
+    --light-text-on-dark: #ffffff; /* 深色背景上的浅色文字 */
+    --yfsp-button-bg: #ff8c00; /* Orange for YFSP select button */
     --yfsp-button-hover-bg: #cc7000;
-    --modal-overlay-bg: rgba(0, 0, 0, 0.55);
+    --episode-button-bg: #e9ecef; /* Light grey for episode buttons */
+    --episode-button-text: #495057;
+    --episode-button-hover-bg: #dee2e6;
+    --episode-button-active-bg: #ced4da;
 
-    /* --- Theme Variables (Using Light Theme) --- */
+
+    /* --- Use Light Theme Variables --- */
     --theme-bg: var(--background-color);
     --theme-card-bg: var(--card-bg);
     --theme-text: var(--text-color);
@@ -47,9 +50,9 @@ body {
     line-height: 1.6;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: flex-start; /* Align top */
     min-height: 100vh;
-    padding: 20px;
+    padding: 20px; /* Add padding for smaller screens */
 }
 
 .background-overlay {
@@ -58,20 +61,20 @@ body {
    left: 0;
    width: 100%;
    height: 100%;
-   background: linear-gradient(135deg, rgba(244, 247, 249, 0.7), rgba(225, 228, 232, 0.7));
+   background: linear-gradient(135deg, rgba(244, 247, 249, 0.6), rgba(225, 228, 232, 0.6));
    z-index: -1;
-   opacity: 0.6;
+   opacity: 0.5;
 }
 
 
 .container {
     max-width: 900px;
     width: 100%;
-    margin: 40px auto; /* More margin top */
-    padding: 35px 40px;
+    margin: 30px auto; /* Add more margin top */
+    padding: 35px 40px; /* Increase padding */
     background-color: var(--theme-card-bg);
     border-radius: 12px;
-    box-shadow: 0 10px 30px var(--theme-shadow);
+    box-shadow: 0 8px 25px var(--theme-shadow);
     position: relative;
     z-index: 1;
     border: 1px solid var(--theme-border);
@@ -81,7 +84,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 25px; /* Reduced spacing */
     border-bottom: 1px solid var(--theme-border);
     padding-bottom: 20px;
 }
@@ -89,7 +92,7 @@ header {
 header h1 {
     color: var(--theme-primary);
     font-weight: 700;
-    font-size: 1.8em;
+    font-size: 1.8em; /* Slightly smaller title */
 }
 
 #settings-btn {
@@ -102,12 +105,12 @@ header h1 {
 }
 #settings-btn:hover {
     color: var(--theme-primary);
-    transform: rotate(45deg);
+    transform: rotate(45deg) scale(1.1);
 }
 
 .search-box {
     display: flex;
-    margin-bottom: 15px;
+    margin-bottom: 15px; /* Reduced spacing */
     gap: 15px;
 }
 
@@ -140,7 +143,7 @@ header h1 {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease, opacity 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.1s ease;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -165,36 +168,32 @@ header h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 25px;
-    margin-bottom: 30px;
-    padding: 12px 15px;
-    background-color: rgba(0, 123, 255, 0.05);
+    gap: 25px; /* More space between options */
+    margin-bottom: 30px; /* Space below selector */
+    padding: 10px;
+    background-color: rgba(0, 123, 255, 0.05); /* Very light blue background */
     border-radius: 8px;
-    border: 1px solid rgba(0, 123, 255, 0.1);
+    border: 1px solid rgba(0, 123, 255, 0.1); /* Subtle border */
 }
 .search-method-selector label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 8px; /* Space between radio and text */
     cursor: pointer;
     font-size: 1em;
     color: var(--text-color);
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-radius: 6px;
     transition: background-color 0.2s ease;
 }
 .search-method-selector input[type="radio"] {
-    margin-right: 4px;
-    accent-color: var(--theme-primary); /* Modern browser styling */
-    cursor: pointer;
-    transform: scale(1.1);
-}
-.search-method-selector label:has(input:checked) { /* Style checked label */
-    background-color: rgba(0, 123, 255, 0.1);
-    font-weight: 500;
+    margin-right: 2px;
+     /* Accent color for modern browsers */
+     accent-color: var(--theme-primary);
+     cursor: pointer; /* Indicate radio is clickable */
 }
 .search-method-selector label:hover {
-    background-color: rgba(0, 123, 255, 0.15);
+    background-color: rgba(0, 123, 255, 0.1);
 }
 .search-method-selector label i {
     color: var(--theme-primary);
@@ -202,94 +201,53 @@ header h1 {
     transition: transform 0.2s ease;
 }
 .search-method-selector input[type="radio"]:checked + i {
-     transform: scale(1.15);
+     transform: scale(1.1);
 }
 
 
 /* Results */
 #results-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); /* Slightly smaller min */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 25px;
-    margin-top: 30px;
-    min-height: 100px; /* Prevent collapse when empty */
-}
-
-.no-results {
-    grid-column: 1 / -1; /* Span all columns */
-    text-align: center;
-    color: var(--text-muted);
-    padding: 40px 20px;
-    font-size: 1.1em;
+    margin-top: 25px; /* Reduced spacing */
 }
 
 .result-card {
     background-color: var(--theme-card-bg);
     border: 1px solid var(--theme-border);
     border-radius: 10px;
-    display: flex; /* Use flex for better control */
-    flex-direction: column;
+    padding: 0; /* Reset padding */
     box-shadow: 0 5px 15px var(--theme-shadow);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
-    overflow: hidden;
+    overflow: hidden; /* Important for image fit and radius */
+    display: flex; /* Use flex for column layout */
+    flex-direction: column;
 }
 .result-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* Common Card Content Styles */
-.result-card h3 {
-    font-size: 1.1em;
-    margin-bottom: 10px;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 0 15px; /* Padding for title */
-    margin-top: 15px; /* Space above title */
-}
-.result-card p {
-    font-size: 0.9em;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-    line-height: 1.5;
-    padding: 0 15px;
-}
-.action-btn { /* Style for all main action buttons on cards */
-    display: inline-block;
-    padding: 10px 20px;
-    font-size: 0.95em;
-    font-weight: 500;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease, opacity 0.3s ease;
-    margin: 10px 15px 15px 15px; /* Bottom margin */
-    width: calc(100% - 30px); /* Full width minus padding */
-    text-align: center;
-}
-.action-btn i {
-    margin-right: 8px;
-}
-.action-btn:active:not(:disabled) {
-    transform: scale(0.97);
-}
-.action-btn:disabled {
-    background-color: var(--secondary-color);
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-.action-btn .fa-spinner {
-     animation: spin 1s linear infinite;
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
 }
 
 /* AI Card Specifics */
 .ai-card {
-    /* Structure defined by base .result-card */
+    padding: 20px; /* Restore padding for AI cards */
+    cursor: pointer;
 }
 .ai-card h3 {
+    font-size: 1.15em;
     color: var(--theme-primary);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+.ai-card p {
+    font-size: 0.95em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    line-height: 1.5;
 }
 .ai-card .website-badge {
     display: inline-block;
@@ -299,106 +257,197 @@ header h1 {
     border-radius: 6px;
     font-size: 0.85em;
     font-weight: 500;
-    margin-left: 15px; /* Align with padding */
     margin-bottom: 10px;
-    max-width: calc(100% - 30px); /* Prevent overflow */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 .ai-card .link-preview {
     font-size: 0.85em;
     color: var(--secondary-color);
-    word-break: break-all;
-    margin-bottom: 15px; /* Space before button */
+    word-break: break-all; /* Break long URLs */
+    line-height: 1.4;
+    margin-bottom: 10px; /* Add space before hint */
 }
-.ai-card .play-ai-btn {
-    background-color: var(--theme-primary);
-    color: var(--light-text-on-dark);
+.ai-card .play-hint {
+    display: block;
+    font-size: 0.85em;
+    color: var(--secondary-color);
+    text-align: right;
+    margin-top: 10px;
 }
-.ai-card .play-ai-btn:hover:not(:disabled) {
-    background-color: var(--primary-hover-color);
+.ai-card .play-hint i {
+    margin-right: 4px;
+    color: var(--theme-primary);
 }
 
 
 /* YFSP Card Specifics */
 .yfsp-card {
-    /* Structure defined by base .result-card */
+   /* Already flex column via .result-card */
 }
 .yfsp-cover {
     width: 100%;
-    aspect-ratio: 2 / 3;
+    aspect-ratio: 2 / 3; /* Common poster aspect ratio */
     background-color: #eee; /* Placeholder bg */
     overflow: hidden;
-    flex-shrink: 0; /* Prevent image shrinking */
+    position: relative; /* For 'no-cover' text */
+    display: flex; /* Center 'no-cover' text */
+    justify-content: center;
+    align-items: center;
 }
 .yfsp-cover img {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-bottom: 1px solid var(--theme-border);
+    object-fit: cover; /* Cover the area, might crop */
+    border-bottom: 1px solid var(--theme-border); /* Separator */
+}
+.yfsp-cover .no-cover {
+    font-size: 0.9em;
+    color: var(--text-muted);
 }
 .yfsp-info {
-    /* Text content within the card, padding handled by individual elements */
-    flex-grow: 1; /* Allow info area to grow */
+    padding: 15px; /* Padding for text content */
+    text-align: center;
+    flex-grow: 1; /* Allow info to take remaining space if needed */
     display: flex;
-    flex-direction: column; /* Stack title, desc, button */
+    flex-direction: column;
+    gap: 15px; /* Space between title, button, and episode list */
 }
 .yfsp-info h3 {
-    color: var(--text-color);
-    margin-top: 15px; /* Add space above title */
+    font-size: 1.1em;
+    color: var(--text-color); /* Standard text color */
+    margin-bottom: 0; /* Remove bottom margin, use gap instead */
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.yfsp-desc {
-     flex-grow: 1; /* Allow description to take available space */
-     min-height: 30px; /* Ensure some space even if short */
-}
-
-.yfsp-info .select-episode-btn {
-    background-color: var(--yfsp-button-bg);
+/* Button for selecting episodes */
+.select-episode-btn {
+    display: inline-block; /* Fit content */
+    padding: 10px 20px;
+    font-size: 0.95em;
+    font-weight: 500;
+    background-color: var(--yfsp-button-bg); /* Distinct color */
     color: var(--light-text-on-dark);
-    margin-top: auto; /* Push button to bottom */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease, opacity 0.3s ease;
+    width: auto; /* Don't force full width */
+    margin: 0 auto; /* Center button */
 }
-.yfsp-info .select-episode-btn:hover:not(:disabled) {
+.select-episode-btn i {
+    margin-right: 6px;
+}
+.select-episode-btn:hover:not(:disabled) {
     background-color: var(--yfsp-button-hover-bg);
+}
+.select-episode-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+.select-episode-btn:disabled {
+    background-color: var(--secondary-color);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+/* Styles for the dynamically added episode list container */
+.episode-list {
+    margin-top: 10px; /* Space above episode buttons */
+    padding-top: 10px; /* Space inside container */
+    border-top: 1px solid var(--theme-border); /* Separator line */
+    display: flex;
+    flex-wrap: wrap; /* Allow buttons to wrap */
+    gap: 8px; /* Space between episode buttons */
+    justify-content: center; /* Center buttons */
+    max-height: 150px; /* Limit height and make scrollable */
+    overflow-y: auto; /* Enable vertical scrolling if needed */
+    scrollbar-width: thin; /* For Firefox */
+    scrollbar-color: var(--secondary-color) var(--background-color); /* For Firefox */
+}
+/* Styles for scrollbar (Webkit browsers) */
+.episode-list::-webkit-scrollbar {
+  width: 6px;
+}
+.episode-list::-webkit-scrollbar-track {
+  background: var(--background-color);
+  border-radius: 3px;
+}
+.episode-list::-webkit-scrollbar-thumb {
+  background-color: var(--secondary-color);
+  border-radius: 3px;
+}
+/* Styles for individual episode buttons */
+.episode-select-btn {
+    background-color: var(--episode-button-bg);
+    color: var(--episode-button-text);
+    border: 1px solid var(--theme-border);
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+    min-width: 40px; /* Ensure minimum width */
+    text-align: center;
+}
+.episode-select-btn:hover:not(:disabled) {
+    background-color: var(--episode-button-hover-bg);
+    border-color: #adb5bd;
+}
+.episode-select-btn:active:not(:disabled) {
+    background-color: var(--episode-button-active-bg);
+    transform: scale(0.96);
+}
+.episode-select-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+/* Style for loading spinner inside buttons */
+.fa-spinner {
+     animation: spin 1s linear infinite;
+}
+.episode-list .no-episodes,
+.episode-list .episode-error {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    width: 100%; /* Take full width */
+    text-align: center;
+    padding: 10px 0;
 }
 
 
 /* Loading Indicator */
 .loading {
-    display: none;
-    flex-direction: column;
+    display: none; /* Hidden by default, shown by JS */
+    flex-direction: column; /* Stack spinner and text */
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 40px 0;
+    padding: 50px 0;
     color: var(--text-muted);
 }
-.player-loading { /* Loading inside player iframe container */
+/* Loading indicator specifically inside player */
+.player-loading {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.85); /* More opaque */
-    z-index: 5;
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white overlay */
+    z-index: 5; /* Above iframe, below modal controls */
     border-radius: 8px; /* Match iframe container */
-}
-.episode-loading { /* Loading inside episode selector */
-    padding: 60px 0; /* More padding */
 }
 
 .spinner {
     border: 5px solid rgba(0, 0, 0, 0.1);
     border-left-color: var(--theme-primary);
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     animation: spin 1s linear infinite;
-    margin-bottom: 15px;
+    margin: 0 auto 20px auto;
 }
 .loading p {
-    font-size: 1em;
+    font-size: 1.1em;
 }
 
 @keyframes spin {
@@ -407,47 +456,44 @@ header h1 {
 
 /* Modal Styles */
 .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto; /* Changed to auto to allow scrolling if content overflows */
-    background-color: var(--modal-overlay-bg);
-    backdrop-filter: blur(3px);
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.55); /* Slightly darker overlay */
+    backdrop-filter: blur(4px);
     animation: fadeIn 0.3s ease;
 }
 
 .modal-content {
     background-color: var(--theme-card-bg);
-    margin: 5vh auto; /* Use vh for vertical centering */
-    padding: 30px 35px;
-    border: none;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 650px; /* Default max-width for settings */
+    margin: 5% auto; /* Centered vertically */
+    padding: 35px 40px; /* Consistent padding */
+    border: none; /* Remove border, rely on shadow */
+    border-radius: 10px; /* Consistent radius */
+    width: 90%; /* Responsive width */
+    max-width: 650px; /* Max width for settings */
     position: relative;
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
-    animation: slideIn 0.4s ease-out;
-    color: var(--theme-text);
-    max-height: 90vh; /* Limit height */
-    overflow-y: auto; /* Allow vertical scroll within modal content */
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
+    animation: slideIn 0.4s ease-out; /* Smoother animation */
+    color: var(--theme-text); /* Ensure text color is set */
 }
 
-
 .close-btn {
-    color: #aaa;
+    color: #999; /* Lighter close icon */
     position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 28px;
-    font-weight: bold;
+    top: 18px;
+    right: 25px;
+    font-size: 32px; /* Larger icon */
+    font-weight: 300; /* Thinner icon */
     line-height: 1;
     cursor: pointer;
     transition: color 0.3s ease, transform 0.2s ease;
-    z-index: 10;
+    z-index: 10; /* Ensure above other content */
 }
 
 .close-btn:hover,
@@ -458,61 +504,65 @@ header h1 {
 }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes slideIn { from { transform: translateY(-40px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
 
 /* Settings Modal Specifics */
-#settings-modal .modal-content {
-     max-width: 650px; /* Standard size */
-}
 #settings-modal h2 {
-    font-size: 1.5em;
+    font-size: 1.6em;
     color: var(--theme-primary);
     margin-bottom: 25px;
     text-align: center;
     font-weight: 500;
 }
-#settings-modal h2 i { margin-right: 10px; }
+#settings-modal h2 i {
+    margin-right: 10px;
+    font-size: 0.9em;
+}
 
 .settings-section {
-    margin-bottom: 25px;
-    padding-bottom: 20px;
+    margin-bottom: 30px;
+    padding-bottom: 25px;
     border-bottom: 1px solid var(--theme-border);
 }
 .settings-section:last-of-type {
     border-bottom: none;
     padding-bottom: 0;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .settings-section h3 {
-    margin-bottom: 15px;
+    margin-bottom: 18px;
     color: var(--primary-color);
-    font-size: 1.2em;
+    font-size: 1.25em;
     font-weight: 500;
     display: flex;
     align-items: center;
     gap: 8px;
 }
-.settings-section h3 i { font-size: 1em; }
+.settings-section h3 i {
+    font-size: 1em;
+    color: var(--primary-color); /* Match title color */
+}
+
 
 .settings-section label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     font-weight: 500;
-    font-size: 0.9em;
+    font-size: 0.95em;
     color: var(--text-color);
 }
 
 .settings-section input[type="text"],
 .settings-section input[type="password"] {
     width: 100%;
-    padding: 10px 12px;
-    margin-bottom: 15px;
+    padding: 12px 15px;
+    margin-bottom: 18px;
     border: 1px solid var(--theme-border);
     border-radius: 6px;
     background-color: var(--input-bg);
     color: var(--theme-text);
-    font-size: 0.95em;
+    font-size: 1em;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 .settings-section input[type="text"]:focus,
@@ -522,33 +572,37 @@ header h1 {
     outline: none;
 }
 
+
 #parsing-interfaces-list .interface-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     background-color: var(--background-color);
-    padding: 8px 12px;
+    padding: 10px 15px;
     border-radius: 6px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     border: 1px solid var(--theme-border);
 }
+
 #parsing-interfaces-list span {
     flex-grow: 1;
-    margin-right: 10px;
-    font-size: 0.9em;
+    margin-right: 15px;
+    font-size: 0.95em;
     color: var(--text-color);
-    word-break: break-all;
+    word-break: break-all; /* Break long URLs */
 }
+
 #parsing-interfaces-list button.remove-interface-btn {
     background: none;
     border: none;
     color: var(--danger-color);
     cursor: pointer;
-    font-size: 1.1em;
+    font-size: 1.2em;
     font-weight: bold;
     padding: 0 5px;
     line-height: 1;
     transition: color 0.3s ease, transform 0.2s ease;
+    flex-shrink: 0; /* Prevent button from shrinking */
 }
 #parsing-interfaces-list button.remove-interface-btn:hover {
     color: var(--danger-hover-color);
@@ -559,128 +613,146 @@ header h1 {
 .add-interface-form {
     display: flex;
     gap: 10px;
-    margin-top: 15px;
-    flex-wrap: wrap;
+    margin-top: 20px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
 }
+
 .add-interface-form input {
     flex: 1;
-    min-width: 150px;
-    padding: 8px 10px;
+    min-width: 180px; /* Allow shrinking but prefer larger size */
+    padding: 10px 12px;
     border: 1px solid var(--theme-border);
     border-radius: 6px;
     background-color: var(--input-bg);
     color: var(--theme-text);
-    font-size: 0.9em;
+    font-size: 0.95em;
 }
 .add-interface-form input:focus {
      border-color: var(--theme-primary);
      box-shadow: 0 0 0 3px var(--input-border-focus);
      outline: none;
 }
+
 #add-interface-btn {
-    padding: 8px 15px;
+    padding: 10px 18px;
     background-color: var(--success-color);
     color: var(--light-text-on-dark);
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.95em;
     font-weight: 500;
     transition: background-color 0.3s;
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0; /* Prevent button from shrinking too much */
 }
-#add-interface-btn:hover { background-color: var(--success-hover-color); }
+#add-interface-btn:hover {
+    background-color: var(--success-hover-color);
+}
 
 .settings-note {
     font-size: 0.85em;
     color: var(--text-muted);
     margin-top: 15px;
-    text-align: left;
+    text-align: left; /* Align notes left */
 }
 
 #save-settings-btn, #reset-settings-btn {
-    padding: 10px 20px;
-    font-size: 0.95em;
+    padding: 12px 25px;
+    font-size: 1em;
     font-weight: 500;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.1s ease;
-    margin-top: 15px;
-    margin-right: 10px;
+    margin-top: 20px;
+    margin-right: 15px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
 }
-#save-settings-btn:active, #reset-settings-btn:active { transform: scale(0.98); }
+#save-settings-btn:active, #reset-settings-btn:active {
+    transform: scale(0.98);
+}
 
 #save-settings-btn {
     background-color: var(--theme-primary);
     color: var(--light-text-on-dark);
 }
-#save-settings-btn:hover { background-color: var(--primary-hover-color); }
+#save-settings-btn:hover {
+     background-color: var(--primary-hover-color);
+}
 
 #reset-settings-btn {
     background-color: var(--secondary-color);
     color: var(--light-text-on-dark);
 }
-#reset-settings-btn:hover { background-color: var(--secondary-hover-color); }
+#reset-settings-btn:hover {
+     background-color: var(--secondary-hover-color);
+}
 
 .danger-btn { /* Applied to reset button */
     background-color: var(--danger-color);
     color: white;
 }
-.danger-btn:hover { background-color: var(--danger-hover-color); }
+.danger-btn:hover {
+    background-color: var(--danger-hover-color);
+}
 
 
 /* Player Modal */
 .player-modal .modal-content {
-    max-width: 1100px; /* Larger width */
-    width: 95%;
-    height: 90vh; /* Fixed height based on viewport */
-    max-height: none; /* Override max-height */
-    margin: 2.5vh auto; /* Center vertically */
+    max-width: 90%; /* Responsive width */
+    width: 1100px; /* Larger max width for player on desktop */
+    height: 90vh; /* Use more viewport height */
+    margin: 2% auto; /* Adjust vertical centering for larger modal */
     display: flex;
     flex-direction: column;
-    padding: 20px;
-    overflow: hidden; /* Prevent scrollbars on the modal itself */
+    padding: 25px; /* Adjust padding for player */
+    overflow: hidden; /* Prevent internal scrollbars on modal content itself */
+}
+
+.player-modal-content {
+     /* Removed overflow hidden here, handled by parent */
 }
 
 #player-title {
     color: var(--theme-primary);
-    margin-bottom: 10px;
-    font-size: 1.3em;
+    margin-bottom: 15px;
+    font-size: 1.4em; /* Larger title */
     font-weight: 500;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex-shrink: 0;
+    flex-shrink: 0; /* Prevent title from shrinking */
 }
 
 .parsing-selector {
-    margin-bottom: 15px;
+    /* Default display: none set in HTML now */
+    margin-bottom: 15px; /* Reduced space */
     text-align: center;
-    flex-shrink: 0;
-    /* transition: opacity 0.3s ease, visibility 0.3s ease; */
+    flex-shrink: 0; /* Prevent selector from shrinking */
+    transition: opacity 0.3s ease, visibility 0.3s ease; /* For hiding/showing */
 }
 .parsing-selector label {
-     margin-right: 8px;
-     font-size: 0.95em;
+     margin-right: 10px;
+     font-size: 1em;
      color: var(--text-muted);
 }
+
 #parsing-select {
-    padding: 8px 12px;
+    padding: 10px 15px;
     border: 1px solid var(--theme-border);
     border-radius: 6px;
     background-color: var(--input-bg);
     color: var(--theme-text);
-    min-width: 200px;
-    max-width: 300px;
+    min-width: 250px; /* Wider select */
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.95em;
+    max-width: 90%; /* Prevent overflow on small player */
 }
 #parsing-select:focus {
     border-color: var(--theme-primary);
@@ -688,191 +760,221 @@ header h1 {
     outline: none;
 }
 #parsing-select:disabled {
-    background-color: #e9ecef;
+    background-color: #e9ecef; /* Disabled background */
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 
 .iframe-container {
-    flex-grow: 1; /* Take remaining space */
-    overflow: hidden;
-    position: relative;
-    background-color: #000;
-    border-radius: 8px;
-    border: 1px solid var(--theme-border);
+    flex-grow: 1; /* Take remaining vertical space */
+    overflow: hidden; /* Hide potential scrollbars if iframe fits */
+    position: relative; /* Needed for absolute positioning of loading indicator */
+    background-color: #000; /* Black background while loading */
+    border-radius: 8px; /* Rounded corners for iframe area */
+    border: 1px solid var(--theme-border); /* Subtle border around iframe */
+    min-height: 200px; /* Ensure a minimum height */
 }
 
 #video-player {
     width: 100%;
     height: 100%;
     border: none;
-    display: block;
-    transition: opacity 0.3s ease;
+    display: block; /* Remove potential bottom space */
+    transition: opacity 0.3s ease; /* Fade in */
 }
 
-/* Episode Selector Modal */
-.episode-selector-modal .modal-content {
-    max-width: 700px; /* Medium size */
-    max-height: 80vh; /* Limit height */
-}
-#episode-selector-title {
-    font-size: 1.4em;
-    color: var(--theme-primary);
-    margin-bottom: 20px;
-    text-align: center;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.episode-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); /* Responsive grid */
-    gap: 12px; /* Spacing between buttons */
-    padding: 10px 0; /* Padding around the grid */
-    max-height: 55vh; /* Limit height of button area */
-    overflow-y: auto; /* Allow scrolling for many episodes */
-}
-
-.episode-button {
-    padding: 10px 5px; /* Adjust padding */
-    font-size: 0.9em;
-    background-color: #f0f0f0;
-    color: var(--text-color);
-    border: 1px solid var(--theme-border);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.episode-button:hover {
-    background-color: var(--primary-color);
-    color: var(--light-text-on-dark);
-    border-color: var(--primary-hover-color);
-}
-.episode-button:active {
-    transform: scale(0.96);
-}
-.episode-button:disabled {
-    background-color: var(--secondary-color);
-    color: var(--light-text-on-dark);
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-.episode-button .fa-spinner {
-     animation: spin 1s linear infinite;
-}
-
-.episode-error { /* Error message inside episode selector */
-    margin: 20px 0; /* Add some spacing */
-}
-
-
-/* General Error Message */
+/* Error Message */
 .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-    padding: 15px 20px;
-    border-radius: 8px;
-    margin-top: 20px;
+    background-color: #f8d7da; /* Danger background (Bootstrap light) */
+    color: #721c24; /* Danger text color */
+    border: 1px solid #f5c6cb; /* Danger border color */
+    padding: 18px 25px; /* More padding */
+    border-radius: 8px; /* Consistent radius */
+    margin-top: 25px;
+    margin-bottom: 15px; /* Add bottom margin */
     text-align: center;
     animation: fadeIn 0.5s;
-    font-size: 1em;
-    word-wrap: break-word; /* Allow long messages to wrap */
+    font-size: 1.05em;
+    word-wrap: break-word; /* Wrap long error messages */
 }
 
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    body { padding: 10px; }
     .container {
-        padding: 20px;
+        padding: 25px;
         margin: 20px auto;
     }
     header {
-        flex-direction: column;
-        align-items: center; /* Center title on mobile */
-        gap: 15px;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        flex-direction: column; /* Stack title and button */
+        align-items: flex-start;
+        gap: 10px;
     }
-    #settings-btn { font-size: 1.5em; }
+    header h1 {
+        font-size: 1.6em;
+    }
+    #settings-btn {
+        align-self: flex-end; /* Move button to right */
+        font-size: 1.5em;
+    }
     .search-box {
         flex-direction: column;
         gap: 10px;
+        margin-bottom: 20px; /* Adjust spacing */
     }
-     #search-input, #search-btn { font-size: 1em; padding: 12px 15px; }
-     .search-method-selector { flex-direction: column; align-items: stretch; gap: 10px; }
-     .search-method-selector label { text-align: center; padding: 8px; }
+     #search-input, #search-btn {
+         font-size: 1em;
+         padding: 12px 15px;
+     }
+     .search-method-selector {
+         flex-direction: column; /* Stack radio buttons */
+         align-items: flex-start; /* Align left */
+         gap: 10px; /* Reduce gap */
+         padding: 15px;
+         margin-bottom: 25px;
+     }
+     .search-method-selector label {
+         width: 100%; /* Make labels full width */
+     }
 
      #results-container {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust grid */
-        gap: 15px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Adjust grid for mobile */
+        gap: 20px;
     }
-    .result-card h3 { font-size: 1em; }
-    .result-card p { font-size: 0.85em; }
-    .action-btn { font-size: 0.9em; padding: 9px 15px; }
+     /* YFSP Card Adjustments */
+     .yfsp-info {
+         padding: 12px;
+         gap: 12px;
+     }
+     .yfsp-info h3 {
+         font-size: 1em;
+     }
+     .select-episode-btn {
+         font-size: 0.9em;
+         padding: 8px 15px;
+     }
+     .episode-list {
+         max-height: 120px; /* Reduce max height */
+         gap: 6px;
+     }
+     .episode-select-btn {
+         font-size: 0.8em;
+         padding: 4px 8px;
+         min-width: 35px;
+     }
 
 
     .modal-content {
         width: 95%;
-        margin: 5vh auto;
-        padding: 20px;
-        max-height: 90vh; /* Ensure mobile modals don't exceed viewport */
+        margin: 8% auto; /* Adjust margin for mobile */
+        padding: 25px;
+        max-width: none; /* Remove max-width constraint */
     }
-    #settings-modal h2 { font-size: 1.4em; }
-    .add-interface-form { flex-direction: column; }
-
+    #settings-modal h2 {
+        font-size: 1.4em;
+    }
+    .add-interface-form {
+        flex-direction: column;
+    }
+    .add-interface-form input {
+        min-width: 0; /* Reset min-width */
+        width: 100%;
+    }
      .player-modal .modal-content {
         height: auto; /* Let content define height */
-        max-height: 90vh;
-        width: 98%; /* Almost full width */
+        max-height: 85vh; /* Limit height */
+        width: 95%;
+        padding: 15px;
      }
+     /* Make iframe container proportionally smaller on mobile */
      .iframe-container {
-        min-height: 30vh;
-        aspect-ratio: 16 / 9;
-        flex-grow: 1; /* Allow growing on mobile too */
+        min-height: 30vh; /* Adjust minimum height */
+        aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+        flex-grow: 0; /* Don't let it grow infinitely */
+        max-height: 60vh; /* Limit height further */
      }
-     #player-title { font-size: 1.1em; }
-     #parsing-select { width: 100%; min-width: 0; }
 
-     .episode-selector-modal .modal-content {
-         max-width: 95%;
+     #player-title {
+         font-size: 1.2em;
      }
-     .episode-list {
-         grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-         gap: 8px;
-         max-height: 60vh; /* Allow more height for buttons on mobile */
+     .parsing-selector label {
+         display: block; /* Stack label */
+         margin-bottom: 5px;
      }
-     .episode-button { font-size: 0.85em; padding: 8px 4px; }
-
-
+     #parsing-select {
+         width: 100%; /* Full width select */
+         min-width: 0;
+     }
     #save-settings-btn, #reset-settings-btn {
-        width: 100%;
+        width: 100%; /* Full width buttons */
         margin-right: 0;
-        margin-bottom: 10px;
-        justify-content: center;
+        margin-bottom: 10px; /* Space between stacked buttons */
+        justify-content: center; /* Center button content */
     }
-    #save-settings-btn:last-of-type, #reset-settings-btn:last-of-type { margin-bottom: 0; }
+    #save-settings-btn:last-of-type, #reset-settings-btn:last-of-type {
+         margin-bottom: 0;
+    }
+
 }
 
 @media (max-width: 480px) {
-     .container { padding: 15px; margin: 15px auto; }
-     header h1 { font-size: 1.4em; text-align: center; }
-     #settings-btn { position: absolute; top: 15px; right: 15px; } /* Move settings button */
+     .container {
+         padding: 15px; /* Reduce padding further */
+     }
+     header h1 {
+        font-size: 1.4em;
+    }
     #results-container {
         grid-template-columns: 1fr; /* Single column */
         gap: 15px;
     }
-    .modal-content { padding: 15px; }
-    #settings-modal h2 { font-size: 1.3em; }
-    .settings-section h3 { font-size: 1.1em; }
-    .episode-list {
-        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); /* Even smaller buttons */
-    }
-    .episode-button { font-size: 0.8em; padding: 7px 3px; }
+    /* Further reduce YFSP card elements */
+     .yfsp-info h3 {
+         font-size: 0.95em; /* Smaller font */
+     }
+     .select-episode-btn {
+         font-size: 0.85em;
+     }
+     .episode-select-btn {
+         font-size: 0.75em;
+         padding: 3px 6px;
+         min-width: 30px;
+     }
 
+     .ai-card h3 {
+         font-size: 1em;
+     }
+     .ai-card .link-preview {
+         font-size: 0.8em;
+     }
+     .ai-card .website-badge {
+         font-size: 0.8em;
+         padding: 3px 8px;
+     }
+
+     .modal-content {
+         padding: 20px;
+     }
+     #settings-modal h2 {
+         font-size: 1.3em;
+     }
+     .player-modal .modal-content {
+        /* Height adjusted by aspect ratio in iframe container */
+     }
+     .iframe-container {
+         min-height: 25vh;
+     }
+     #player-title {
+         font-size: 1.1em;
+     }
+     .parsing-selector {
+         margin-bottom: 10px;
+     }
+     #parsing-select {
+         font-size: 0.9em;
+         padding: 8px 10px;
+     }
 }

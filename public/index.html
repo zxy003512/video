@@ -32,14 +32,14 @@
             </label>
         </div>
 
-        <!-- Settings Modal -->
+
         <div id="settings-modal" class="modal">
             <div class="modal-content">
-                <span class="close-btn close-settings-btn">&times;</span>
+                <span class="close-btn">&times;</span>
                 <h2><i class="fas fa-sliders-h"></i> 应用设置</h2>
 
                 <div class="settings-section">
-                    <h3><i class="fas fa-robot"></i> AI 配置 (用于智能 AI 过滤)</h3>
+                    <h3><i class="fas fa-robot"></i> AI 配置 (用于智能 AI 过滤 & YFSP播放解析)</h3>
                     <label for="ai-api-url">API 地址:</label>
                     <input type="text" id="ai-api-url" placeholder="例如: https://api.zetatechs.com/v1">
 
@@ -48,7 +48,7 @@
 
                     <label for="ai-model">模型:</label>
                     <input type="text" id="ai-model" placeholder="例如: gemini-2.0-flash">
-                     <p class="settings-note">提示：AI配置仅在选择“智能 AI 过滤”搜索方式时使用。YFSP资源站使用内置方法获取播放链接。</p>
+                     <p class="settings-note">注意：此处的 AI 配置同时用于“智能 AI 过滤”和“YFSP 资源站”的播放链接解析。</p>
                 </div>
 
                 <div class="settings-section">
@@ -75,30 +75,27 @@
             </div>
         </div>
 
-        <!-- Loading Indicator -->
         <div id="loading-indicator" class="loading" style="display: none;">
             <div class="spinner"></div>
             <p id="loading-text">正在智能分析中...</p>
         </div>
 
-        <!-- Results Container -->
         <div id="results-container">
             <!-- Search results will be displayed here -->
         </div>
 
-         <!-- Player Modal -->
          <div id="player-modal" class="modal player-modal">
              <div class="modal-content player-modal-content">
-                <span class="close-btn close-player-btn">&times;</span>
+                <span class="close-player-btn close-btn">&times;</span>
                 <h3 id="player-title">正在播放...</h3>
-                 <div class="parsing-selector" id="parsing-selector-container" style="display: none;"> <!-- Hidden by default -->
+                 <div class="parsing-selector" id="parsing-selector-container" style="display: none;"> <!-- Initially hidden for YFSP -->
                      <label for="parsing-select">选择解析接口:</label>
                      <select id="parsing-select">
-                         <!-- Options loaded by JS for AI Method -->
+                         <!-- Options loaded by JS -->
                      </select>
                  </div>
                 <div class="iframe-container">
-                    <iframe id="video-player" src="about:blank" frameborder="0" allowfullscreen></iframe>
+                    <iframe id="video-player" src="" frameborder="0" allowfullscreen></iframe>
                      <!-- Loading indicator for player -->
                      <div id="player-loading-indicator" class="loading player-loading" style="display: none;">
                         <div class="spinner"></div>
@@ -108,31 +105,11 @@
             </div>
         </div>
 
-        <!-- Episode Selector Modal (New) -->
-        <div id="episode-selector-modal" class="modal episode-selector-modal">
-            <div class="modal-content episode-selector-content">
-                <span class="close-btn close-episode-selector-btn">&times;</span>
-                <h3 id="episode-selector-title">选择剧集</h3>
-                 <!-- Loading indicator for episodes -->
-                 <div id="episode-loading-indicator" class="loading episode-loading" style="display: none;">
-                    <div class="spinner"></div>
-                    <p>正在加载剧集列表...</p>
-                </div>
-                <!-- Error message for episodes -->
-                <div id="episode-error-message" class="error-message episode-error" style="display: none;"></div>
-                <!-- Container for episode buttons -->
-                <div id="episode-list-container" class="episode-list">
-                    <!-- Episode buttons will be added here by JS -->
-                </div>
-            </div>
-        </div>
-
-         <!-- General Error Message Area -->
          <div id="error-message" class="error-message" style="display: none;">
              <!-- Error messages will be shown here -->
          </div>
 
-    </div> <!-- End .container -->
+    </div>
 
     <script src="script.js"></script>
 </body>
