@@ -4,15 +4,15 @@
   "description": "Proxy server and frontend for ZXY影视",
   "main": "api/index.js",
   "scripts": {
-    "start": "node api/index.js", // For potential local testing (won't work exactly like Vercel)
-    "dev": "vercel dev" // Use Vercel CLI for local simulation
+    "start": "node api/index.js", 
+    "dev": "vercel dev" 
   },
   "dependencies": {
-    "axios": "^1.0.0", // Use a specific version or ^1.x.x
+    "axios": "^1.0.0", 
     "cors": "^2.8.5",
-    "express": "^4.18.2" // Use a specific version or ^4.x.x
+    "express": "^4.18.2" 
   },
   "engines": {
-    "node": "18.x" // Specify Node.js version for Vercel (e.g., 18.x or 20.x)
+    "node": "18.x" 
   }
 }
