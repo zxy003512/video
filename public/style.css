@@ -1,650 +1,207 @@
 /* public/style.css */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+/* ... (Keep all existing styles) ... */
 
-:root {
-    /* --- Light Theme Colors --- */
-    --primary-color: #007bff; /* 主题蓝 */
-    --primary-hover-color: #0056b3; /* 主题蓝悬停 */
-    --secondary-color: #6c757d; /* 次要灰 */
-    --secondary-hover-color: #5a6268; /* 次要灰悬停 */
-    --background-color: #f4f7f9; /* 页面背景色 */
-    --card-bg: #ffffff; /* 卡片/容器背景色 */
-    --text-color: #343a40; /* 主要文本颜色 */
-    --text-muted: #6c757d; /* 辅助文本/提示文字颜色 */
-    --border-color: #e1e4e8; /* 边框颜色 */
-    --input-bg: #ffffff; /* 输入框背景 */
-    --input-border-focus: rgba(0, 123, 255, 0.5); /* 输入框聚焦光晕 */
-    --shadow-color: rgba(0, 0, 0, 0.08); /* 阴影颜色 */
-    --danger-color: #dc3545; /* 危险/错误红 */
-    --danger-hover-color: #c82333; /* 危险/错误红悬停 */
-    --success-color: #28a745; /* 成功绿 */
-    --success-hover-color: #218838; /* 成功绿悬停 */
-    --light-text-on-dark: #ffffff; /* 深色背景上的浅色文字 */
+/* --- Additions for YFSP Results --- */
 
-    /* --- Use Light Theme Variables --- */
-    --theme-bg: var(--background-color);
-    --theme-card-bg: var(--card-bg);
-    --theme-text: var(--text-color);
-    --theme-border: var(--border-color);
-    --theme-primary: var(--primary-color);
-    --theme-shadow: var(--shadow-color);
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--theme-bg);
-    color: var(--theme-text);
-    line-height: 1.6;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; /* Align top */
-    min-height: 100vh;
-    padding: 20px; /* Add padding for smaller screens */
-}
-
-/* Remove the dark overlay or keep it very subtle if needed */
-.background-overlay {
-   /* display: none; Remove if not needed */
-   /* Or use a very light gradient/texture if desired */
-   position: fixed;
-   top: 0;
-   left: 0;
-   width: 100%;
-   height: 100%;
-   background: linear-gradient(135deg, rgba(244, 247, 249, 0.6), rgba(225, 228, 232, 0.6));
-   z-index: -1;
-   opacity: 0.5; /* Make it very subtle */
-}
-
-
-.container {
-    max-width: 900px;
-    width: 100%;
-    margin: 30px auto; /* Add more margin top */
-    padding: 35px 40px; /* Increase padding */
-    background-color: var(--theme-card-bg);
-    border-radius: 12px; /* Slightly larger radius */
-    box-shadow: 0 8px 25px var(--theme-shadow); /* Softer shadow */
-    position: relative;
-    z-index: 1;
-    border: 1px solid var(--theme-border); /* Add subtle border */
-}
-
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 35px; /* Increase spacing */
-    border-bottom: 1px solid var(--theme-border);
-    padding-bottom: 20px;
-}
-
-header h1 {
-    color: var(--theme-primary);
-    font-weight: 700;
-    font-size: 2em; /* Slightly larger title */
-}
-
-#settings-btn {
-    background: none;
+/* Separator between AI and YFSP results */
+.results-separator {
     border: none;
-    color: var(--secondary-color); /* Use secondary color */
-    font-size: 1.6em;
-    cursor: pointer;
-    transition: color 0.3s ease, transform 0.3s ease;
+    border-top: 1px solid var(--theme-border);
+    margin: 40px 0 20px 0; /* Add spacing around the separator */
 }
 
-#settings-btn:hover {
-    color: var(--theme-primary);
-    transform: rotate(45deg) scale(1.1); /* Add scale effect */
+/* Title for the YFSP results section */
+.results-source-title {
+    font-size: 1.4em;
+    color: var(--secondary-color); /* Use secondary color for distinction */
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 500;
+}
+.results-source-title i {
+    margin-right: 10px;
 }
 
-.search-box {
-    display: flex;
-    margin-bottom: 35px; /* Increase spacing */
-    gap: 15px; /* Increase gap */
-}
-
-#search-input {
-    flex-grow: 1;
-    padding: 14px 18px; /* Increase padding */
-    font-size: 1.05em; /* Slightly larger font */
-    border: 1px solid var(--theme-border);
-    border-radius: 8px; /* More rounded */
-    background-color: var(--input-bg);
-    color: var(--theme-text);
-    outline: none;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-#search-input:focus {
-    border-color: var(--theme-primary);
-    box-shadow: 0 0 0 4px var(--input-border-focus); /* More visible focus */
-}
-
-#search-input::placeholder {
-    color: var(--text-muted);
-    opacity: 0.8; /* Ensure placeholder is visible */
-}
-
-#search-btn {
-    padding: 14px 25px; /* Match input padding */
-    font-size: 1.05em; /* Match input font size */
-    font-weight: 500; /* Medium weight */
-    background-color: var(--theme-primary);
-    color: var(--light-text-on-dark);
-    border: none;
-    border-radius: 8px; /* Match input radius */
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px; /* Space between icon and text */
-}
-
-#search-btn:hover {
-    background-color: var(--primary-hover-color);
-}
-#search-btn:active {
-    transform: scale(0.97); /* Slightly more pronounced click effect */
-}
-#search-btn i {
-    font-size: 0.9em; /* Adjust icon size relative to text */
-}
-
-/* Results */
-#results-container {
+/* Grid container for YFSP results (can reuse existing grid styles if desired) */
+#yfsp-results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 25px; /* Increase gap */
-    margin-top: 30px; /* Increase spacing */
+    /* You can reuse the grid settings from #results-container if they match */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Example: slightly smaller cards maybe */
+    gap: 20px;
 }
 
-.result-card {
-    background-color: var(--theme-card-bg);
-    border: 1px solid var(--theme-border);
-    border-radius: 10px; /* Consistent radius */
-    padding: 20px; /* Increase padding */
-    box-shadow: 0 5px 15px var(--theme-shadow);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-    cursor: pointer;
-    overflow: hidden; /* Prevent content overflow */
+/* Specific styling for YFSP result cards */
+.yfsp-result-card {
+    /* Inherits base .result-card styles like background, border, shadow, hover */
+    padding: 0; /* Remove base padding, control internally */
+    overflow: hidden; /* Ensure content fits */
+    cursor: default; /* Card itself is not clickable, button is */
+}
+.yfsp-result-card:hover {
+    /* Keep or adjust hover effect */
+     transform: translateY(-4px);
+     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-.result-card:hover {
-    transform: translateY(-6px); /* More lift on hover */
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12); /* Enhanced shadow on hover */
+.yfsp-card-content {
+    display: flex;
+    flex-direction: column; /* Stack image and info */
+    height: 100%;
 }
 
-.result-card h3 {
-    font-size: 1.15em; /* Slightly larger title */
-    color: var(--theme-primary);
+.yfsp-cover {
+    position: relative;
+    width: 100%;
+    /* Maintain aspect ratio for cover, e.g., 2:3 */
+    padding-top: 150%; /* Adjust percentage for desired aspect ratio (height/width * 100) */
+    background-color: #eee; /* Placeholder background */
+}
+
+.yfsp-cover img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover the area */
+    display: block;
+    border-bottom: 1px solid var(--theme-border); /* Separator line */
+}
+
+.yfsp-note {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font-size: 0.75em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.yfsp-info {
+    padding: 15px;
+    flex-grow: 1; /* Take remaining space */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Push button towards bottom if needed */
+}
+
+.yfsp-info h4 {
+    font-size: 1.0em; /* Adjust title size */
+    color: var(--theme-text); /* Standard text color */
     margin-bottom: 10px;
-    white-space: nowrap;
+    font-weight: 500;
+     /* Prevent long titles from breaking layout badly */
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Limit to 2 lines */
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-height: 2.4em; /* Reserve space for two lines */
+}
+
+.yfsp-info .play-button {
+    /* Style the play button within YFSP card */
+    display: inline-flex; /* Align icon and text */
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 15px;
+    font-size: 0.9em;
     font-weight: 500;
-}
-
-.result-card p {
-    font-size: 0.95em; /* Standard paragraph size */
-    color: var(--text-muted); /* Muted color for secondary info */
-    margin-bottom: 12px;
-    line-height: 1.5;
-}
-
-.result-card .website-badge {
-    display: inline-block;
-    background-color: rgba(0, 123, 255, 0.1); /* Lighter primary background */
-    color: var(--theme-primary);
-    padding: 4px 10px; /* Adjust padding */
-    border-radius: 6px; /* Rounded badge */
-    font-size: 0.85em;
-    font-weight: 500;
-    margin-bottom: 10px; /* Space below badge */
-}
-
-.result-card .link-preview {
-    font-size: 0.85em;
-    color: var(--secondary-color);
-    word-break: break-all; /* Allow long links to break */
-    line-height: 1.4;
-}
-
-/* Loading Indicator */
-.loading {
-    text-align: center;
-    padding: 50px 0;
-    color: var(--text-muted);
-}
-
-.spinner {
-    border: 5px solid rgba(0, 0, 0, 0.1); /* Lighter border */
-    border-left-color: var(--theme-primary);
-    border-radius: 50%;
-    width: 45px; /* Slightly larger */
-    height: 45px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 20px auto; /* Increase bottom margin */
-}
-.loading p {
-    font-size: 1.1em;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Modal Styles */
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1000; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0, 0, 0, 0.55); /* Slightly darker overlay */
-    backdrop-filter: blur(4px);
-    animation: fadeIn 0.3s ease;
-}
-
-.modal-content {
-    background-color: var(--theme-card-bg);
-    margin: 5% auto; /* Centered vertically */
-    padding: 35px 40px; /* Consistent padding */
-    border: none; /* Remove border, rely on shadow */
-    border-radius: 10px; /* Consistent radius */
-    width: 90%; /* Responsive width */
-    max-width: 650px; /* Max width for settings */
-    position: relative;
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
-    animation: slideIn 0.4s ease-out; /* Smoother animation */
-    color: var(--theme-text); /* Ensure text color is set */
-}
-
-.close-btn {
-    color: #999; /* Lighter close icon */
-    position: absolute;
-    top: 18px;
-    right: 25px;
-    font-size: 32px; /* Larger icon */
-    font-weight: 300; /* Thinner icon */
-    line-height: 1;
+    background-color: var(--success-color); /* Use success color for direct play */
+    color: var(--light-text-on-dark);
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
-    transition: color 0.3s ease, transform 0.2s ease;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-top: auto; /* Push to bottom if container is flex */
+    width: 100%; /* Make button full width */
 }
-
-.close-btn:hover,
-.close-btn:focus {
-    color: var(--danger-color);
-    transform: scale(1.1);
-    text-decoration: none;
+.yfsp-info .play-button:hover {
+    background-color: var(--success-hover-color);
 }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideIn { from { transform: translateY(-40px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-
-/* Settings Modal Specifics */
-#settings-modal h2 { /* Style modal title */
-    font-size: 1.6em;
-    color: var(--theme-primary);
-    margin-bottom: 25px;
-    text-align: center;
-    font-weight: 500;
+.yfsp-info .play-button:disabled {
+     background-color: var(--secondary-color);
+     cursor: not-allowed;
 }
-#settings-modal h2 i {
-    margin-right: 10px;
+.yfsp-info .play-button i {
     font-size: 0.9em;
 }
 
-.settings-section {
-    margin-bottom: 30px;
-    padding-bottom: 25px;
-    border-bottom: 1px solid var(--theme-border);
-}
-.settings-section:last-of-type {
-    border-bottom: none;
-    padding-bottom: 0;
-    margin-bottom: 25px;
-}
-
-.settings-section h3 {
-    margin-bottom: 18px; /* More space below section titles */
+/* Style for the loading spinner next to the YFSP play button */
+.yfsp-play-loading i {
     color: var(--primary-color);
-    font-size: 1.25em;
-    font-weight: 500;
+    font-size: 1.1em;
 }
 
-.settings-section label {
-    display: block;
-    margin-bottom: 8px; /* More space below labels */
-    font-weight: 500;
-    font-size: 0.95em;
-    color: var(--text-color);
+/* Style for AI result card button (if added) */
+.ai-result-card .play-button {
+     display: inline-flex; /* Align icon and text */
+     align-items: center;
+     justify-content: center;
+     gap: 6px;
+     padding: 8px 15px;
+     font-size: 0.9em;
+     font-weight: 500;
+     background-color: var(--theme-primary); /* Use primary color */
+     color: var(--light-text-on-dark);
+     border: none;
+     border-radius: 6px;
+     cursor: pointer;
+     transition: background-color 0.3s ease, transform 0.1s ease;
+     margin-top: 10px; /* Add some space above */
+     width: 100%;
 }
-
-.settings-section input[type="text"],
-.settings-section input[type="password"] {
-    width: 100%;
-    padding: 12px 15px; /* Consistent padding */
-    margin-bottom: 18px; /* More space below inputs */
-    border: 1px solid var(--theme-border);
-    border-radius: 6px; /* Consistent radius */
-    background-color: var(--input-bg);
-    color: var(--theme-text);
-    font-size: 1em;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-.settings-section input[type="text"]:focus,
-.settings-section input[type="password"]:focus {
-    border-color: var(--theme-primary);
-    box-shadow: 0 0 0 3px var(--input-border-focus);
-}
-
-
-#parsing-interfaces-list .interface-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: var(--background-color); /* Use main bg for contrast */
-    padding: 10px 15px; /* More padding */
-    border-radius: 6px;
-    margin-bottom: 10px;
-    border: 1px solid var(--theme-border);
-}
-
-#parsing-interfaces-list span {
-    flex-grow: 1;
-    margin-right: 15px;
-    font-size: 0.95em;
-    color: var(--text-color);
-    word-break: break-all; /* Allow wrapping */
-}
-
-#parsing-interfaces-list button.remove-interface-btn { /* Target specifically */
-    background: none;
-    border: none;
-    color: var(--danger-color);
-    cursor: pointer;
-    font-size: 1.2em; /* Larger remove icon */
-    font-weight: bold;
-    padding: 0 5px; /* Click area */
-    line-height: 1;
-    transition: color 0.3s ease, transform 0.2s ease;
-}
-#parsing-interfaces-list button.remove-interface-btn:hover {
-    color: var(--danger-hover-color);
-    transform: scale(1.1);
-}
-
-
-.add-interface-form {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
-}
-
-.add-interface-form input {
-    flex: 1; /* Allow inputs to grow */
-    min-width: 180px; /* Minimum width before wrapping */
-    padding: 10px 12px;
-    border: 1px solid var(--theme-border);
-    border-radius: 6px;
-    background-color: var(--input-bg);
-    color: var(--theme-text);
-    font-size: 0.95em;
-}
-.add-interface-form input:focus {
-     border-color: var(--theme-primary);
-     box-shadow: 0 0 0 3px var(--input-border-focus);
-     outline: none;
-}
-
-#add-interface-btn {
-    padding: 10px 18px;
-    background-color: var(--success-color);
-    color: var(--light-text-on-dark);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.95em;
-    font-weight: 500;
-    transition: background-color 0.3s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-#add-interface-btn:hover {
-    background-color: var(--success-hover-color);
-}
-
-#save-settings-btn, #reset-settings-btn {
-    padding: 12px 25px;
-    font-size: 1em;
-    font-weight: 500;
-    border: none;
-    border-radius: 8px; /* Consistent radius */
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease;
-    margin-top: 20px; /* Add more space */
-    margin-right: 15px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-#save-settings-btn:active, #reset-settings-btn:active {
-    transform: scale(0.98);
-}
-
-#save-settings-btn {
-    background-color: var(--theme-primary);
-    color: var(--light-text-on-dark);
-}
-#save-settings-btn:hover {
+.ai-result-card .play-button:hover {
      background-color: var(--primary-hover-color);
 }
 
-#reset-settings-btn {
-    background-color: var(--secondary-color);
-    color: var(--light-text-on-dark);
-}
-#reset-settings-btn:hover {
-     background-color: var(--secondary-hover-color);
-}
 
-.danger-btn { /* Applied to reset button */
-    background-color: var(--danger-color);
-    color: white;
-}
-.danger-btn:hover {
-    background-color: var(--danger-hover-color);
-}
-
-
-/* Player Modal */
-.player-modal .modal-content {
-    max-width: 90%; /* Responsive width */
-    width: 1100px; /* Larger max width for player on desktop */
-    height: 90vh; /* Use more viewport height */
-    margin: 2% auto; /* Adjust vertical centering for larger modal */
-    display: flex;
-    flex-direction: column;
-    padding: 25px; /* Adjust padding for player */
-}
-
-.player-modal-content {
-     /* Inherits from .modal-content, added flex properties there */
-     overflow: hidden; /* Prevent internal scrollbars */
-}
-
-#player-title {
-    color: var(--theme-primary);
-    margin-bottom: 15px;
-    font-size: 1.4em; /* Larger title */
-    font-weight: 500;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 0; /* Prevent title from shrinking */
-}
-
-.parsing-selector {
-    margin-bottom: 20px; /* More space */
-    text-align: center;
-    flex-shrink: 0; /* Prevent selector from shrinking */
-}
-.parsing-selector label {
-     margin-right: 10px;
-     font-size: 1em;
-     color: var(--text-muted);
-}
-
-#parsing-select {
-    padding: 10px 15px;
-    border: 1px solid var(--theme-border);
-    border-radius: 6px;
-    background-color: var(--input-bg);
-    color: var(--theme-text);
-    min-width: 250px; /* Wider select */
-    cursor: pointer;
-    font-size: 0.95em;
-}
-#parsing-select:focus {
-    border-color: var(--theme-primary);
-    box-shadow: 0 0 0 3px var(--input-border-focus);
-    outline: none;
-}
-
-.iframe-container {
-    flex-grow: 1; /* Take remaining vertical space */
-    overflow: hidden; /* Hide potential scrollbars if iframe fits */
-    position: relative;
-    background-color: #f0f0f0; /* Lighter placeholder background */
-    border-radius: 8px; /* Rounded corners for iframe area */
-    border: 1px solid var(--theme-border); /* Subtle border around iframe */
-}
-
-#video-player {
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block; /* Remove potential bottom space */
-}
-
-/* Error Message */
-.error-message {
-    background-color: #f8d7da; /* Danger background (Bootstrap light) */
-    color: #721c24; /* Danger text color */
-    border: 1px solid #f5c6cb; /* Danger border color */
-    padding: 18px 25px; /* More padding */
-    border-radius: 8px; /* Consistent radius */
-    margin-top: 25px;
-    text-align: center;
-    animation: fadeIn 0.5s;
-    font-size: 1.05em;
-}
-
-
-/* Responsive Design */
+/* Responsive adjustments if needed for YFSP cards */
 @media (max-width: 768px) {
-    .container {
-        padding: 25px;
-        margin: 20px auto;
+    #yfsp-results-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Adjust grid for mobile */
+        gap: 15px;
     }
-    header {
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-    }
-    header h1 {
-        font-size: 1.6em;
-    }
-    .search-box {
-        flex-direction: column;
+     .yfsp-info h4 {
+         font-size: 0.95em;
+     }
+     .yfsp-info .play-button {
+         font-size: 0.85em;
+         padding: 7px 12px;
+     }
+}
+@media (max-width: 480px) {
+     #yfsp-results-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Further adjust */
         gap: 10px;
-        margin-bottom: 25px;
     }
-     #search-input, #search-btn {
-         font-size: 1em;
-         padding: 12px 15px;
+     .yfsp-info h4 {
+         font-size: 0.9em;
+         min-height: 2.2em; /* Adjust reserved space */
      }
-     #results-container {
-        grid-template-columns: 1fr; /* Stack cards on mobile */
-        gap: 20px;
-    }
-    .modal-content {
-        width: 95%;
-        margin: 8% auto; /* Adjust margin for mobile */
-        padding: 25px;
-        max-width: none; /* Remove max-width constraint */
-    }
-    #settings-modal h2 {
-        font-size: 1.4em;
-    }
-    .add-interface-form {
-        flex-direction: column;
-    }
-    .add-interface-form input {
-        min-width: 0; /* Reset min-width */
-        width: 100%;
-    }
-     .player-modal .modal-content {
-        height: 75vh; /* Adjust height for mobile */
-        width: 95%;
-        padding: 15px;
-     }
-     #player-title {
-         font-size: 1.2em;
-     }
-     .parsing-selector label {
-         display: block; /* Stack label */
-         margin-bottom: 5px;
-     }
-     #parsing-select {
-         width: 100%; /* Full width select */
-         min-width: 0;
-     }
-    #save-settings-btn, #reset-settings-btn {
-        width: 100%; /* Full width buttons */
-        margin-right: 0;
-        margin-bottom: 10px; /* Space between stacked buttons */
-        justify-content: center; /* Center button content */
-    }
-    #save-settings-btn:last-of-type, #reset-settings-btn:last-of-type {
-         margin-bottom: 0;
-    }
-
+      .yfsp-note {
+         font-size: 0.7em;
+         padding: 2px 5px;
+      }
 }
 
-@media (max-width: 480px) {
-     .container {
-         padding: 20px;
-     }
-     header h1 {
-        font-size: 1.4em;
-    }
-    .result-card {
-        padding: 15px;
-    }
-     .result-card h3 {
-         font-size: 1.05em;
-     }
-     .modal-content {
-         padding: 20px;
-     }
-     #settings-modal h2 {
-         font-size: 1.3em;
-     }
-     .player-modal .modal-content {
-         height: 70vh; /* Further adjust for small screens */
-     }
+/* Small danger button style for remove interface */
+.danger-btn-small {
+     background: none !important; /* Override any background */
+     border: none;
+     color: var(--danger-color);
+     cursor: pointer;
+     font-size: 1.2em;
+     font-weight: bold;
+     padding: 0 5px;
+     line-height: 1;
+     transition: color 0.3s ease, transform 0.2s ease;
+}
+.danger-btn-small:hover {
+     color: var(--danger-hover-color);
+     transform: scale(1.1);
 }
