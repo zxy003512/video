@@ -9,8 +9,6 @@
 </head>
 <body>
     <div class="background-overlay"></div>
-
-    <!-- Main Content Container -->
     <div class="container">
         <header>
             <h1>影视智能搜索播放器</h1>
@@ -22,111 +20,94 @@
             <button id="search-btn" aria-label="搜索"><i class="fas fa-search"></i> 搜索</button>
         </div>
 
-        <!-- Loading Indicator -->
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2><i class="fas fa-sliders-h"></i> 应用设置</h2>
+
+                <div class="settings-section">
+                    <h3>AI 配置</h3>
+                    <label for="ai-api-url">API 地址:</label>
+                    <input type="text" id="ai-api-url" placeholder="例如: https://api.zetatechs.com/v1">
+
+                    <label for="ai-api-key">API Key:</label>
+                    <input type="password" id="ai-api-key" placeholder="你的 AI API Key (sk-...)">
+
+                    <label for="ai-model">模型:</label>
+                    <input type="text" id="ai-model" placeholder="例如: gemini-2.0-flash">
+                </div>
+
+                <div class="settings-section">
+                    <h3>搜索引擎 (SearXNG)</h3>
+                    <label for="searxng-url">实例地址:</label>
+                    <input type="text" id="searxng-url" placeholder="例如: https://searxng.zetatechs.online/search">
+                </div>
+
+                <div class="settings-section">
+                    <h3>视频解析接口</h3>
+                    <div id="parsing-interfaces-list">
+                        <!-- Interfaces will be loaded here by JS -->
+                    </div>
+                    <div class="add-interface-form">
+                        <input type="text" id="new-interface-name" placeholder="接口名称 (例如: 接口X)">
+                        <input type="text" id="new-interface-url" placeholder="接口URL (例如: https://jx.example.com/?url=)">
+                        <button id="add-interface-btn"><i class="fas fa-plus"></i> 添加接口</button>
+                    </div>
+                </div>
+
+                <button id="save-settings-btn"><i class="fas fa-save"></i> 保存设置</button>
+                 <button id="reset-settings-btn" class="danger-btn"><i class="fas fa-undo"></i> 恢复默认</button>
+            </div>
+        </div>
+
         <div id="loading-indicator" class="loading" style="display: none;">
             <div class="spinner"></div>
             <p>正在智能分析中...</p>
         </div>
 
-        <!-- Results Container - Now holds both AI and YFSP -->
+        <!-- Existing results container (for AI results) -->
         <div id="results-container">
-            <div id="ai-results-area">
-                <!-- AI Search results will be displayed here -->
-            </div>
-            <div id="yfsp-results-area" style="display: none;">
-                <hr class="results-separator">
-                <h2 class="results-source-title"><i class="fas fa-film"></i> 影视源搜索结果 (YFSP)</h2>
-                <div id="yfsp-results-grid" class="results-grid">
-                    <!-- YFSP results will be displayed here -->
+            <!-- AI Search results will be displayed here -->
+        </div>
+        <!-- NEW: Container for YFSP results -->
+        <div id="yfsp-results-container">
+             <!-- YFSP Search results will be displayed here -->
+        </div>
+
+         <div id="player-modal" class="modal player-modal">
+             <div class="modal-content player-modal-content">
+                <span class="close-player-btn close-btn">&times;</span>
+                <h3 id="player-title">正在播放...</h3>
+                 <div class="parsing-selector">
+                     <label for="parsing-select">选择解析接口:</label>
+                     <select id="parsing-select">
+                         <!-- Options loaded by JS -->
+                     </select>
+                 </div>
+                <div class="iframe-container">
+                    <iframe id="video-player" src="" frameborder="0" allowfullscreen></iframe>
                 </div>
             </div>
         </div>
 
-         <!-- Error Message -->
+        <!-- NEW: Modal for YFSP Episodes -->
+        <div id="episode-modal" class="modal episode-modal">
+            <div class="modal-content episode-modal-content">
+                <span class="close-episode-btn close-btn">&times;</span>
+                <h3 id="episode-modal-title">选择剧集</h3>
+                <div id="episode-list" class="episode-list-container">
+                    <!-- Episode list will be loaded here -->
+                    <p>正在加载剧集...</p>
+                </div>
+            </div>
+        </div>
+
          <div id="error-message" class="error-message" style="display: none;">
              <!-- Error messages will be shown here -->
          </div>
 
-    </div> <!-- End of Main Content Container -->
 
-    <!-- Settings Modal (Kept outside container for layering) -->
-    <div id="settings-modal" class="modal">
-         <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2><i class="fas fa-sliders-h"></i> 应用设置</h2>
-
-            <div class="settings-section">
-                <h3>AI 配置</h3>
-                <label for="ai-api-url">API 地址:</label>
-                <input type="text" id="ai-api-url" placeholder="例如: https://api.zetatechs.com/v1">
-
-                <label for="ai-api-key">API Key:</label>
-                <input type="password" id="ai-api-key" placeholder="你的 AI API Key (sk-...)">
-
-                <label for="ai-model">模型:</label>
-                <input type="text" id="ai-model" placeholder="例如: gemini-2.0-flash">
-            </div>
-
-            <div class="settings-section">
-                <h3>搜索引擎 (SearXNG)</h3>
-                <label for="searxng-url">实例地址:</label>
-                <input type="text" id="searxng-url" placeholder="例如: https://searxng.zetatechs.online/search">
-            </div>
-
-            <div class="settings-section">
-                <h3>视频解析接口 (用于 AI 搜索结果)</h3>
-                <div id="parsing-interfaces-list">
-                    <!-- Interfaces will be loaded here by JS -->
-                </div>
-                <div class="add-interface-form">
-                    <input type="text" id="new-interface-name" placeholder="接口名称 (例如: 接口X)">
-                    <input type="text" id="new-interface-url" placeholder="接口URL (例如: https://jx.example.com/?url=)">
-                    <button id="add-interface-btn"><i class="fas fa-plus"></i> 添加接口</button>
-                </div>
-            </div>
-
-            <button id="save-settings-btn"><i class="fas fa-save"></i> 保存设置</button>
-             <button id="reset-settings-btn" class="danger-btn"><i class="fas fa-undo"></i> 恢复默认</button>
-        </div>
     </div>
-
-    <!-- Player Modal (Kept outside container for layering) -->
-     <div id="player-modal" class="modal player-modal">
-         <div class="modal-content player-modal-content">
-            <span class="close-player-btn close-btn">&times;</span>
-            <h3 id="player-title">正在播放...</h3>
-             <!-- Parsing selector specific to AI results, shown/hidden by JS -->
-             <div class="parsing-selector" id="player-parsing-selector">
-                 <label for="parsing-select">选择解析接口 (用于AI结果):</label>
-                 <select id="parsing-select">
-                     <!-- Options loaded by JS -->
-                 </select>
-             </div>
-            <div class="iframe-container">
-                <!-- Use about:blank initially to avoid initial load errors -->
-                <iframe id="video-player" src="about:blank" frameborder="0" allowfullscreen></iframe>
-            </div>
-        </div>
-    </div>
-
-    <!-- NEW: Episode List Modal -->
-<div id="episode-modal" class="modal episode-modal">
-    <div class="modal-content episode-modal-content">
-        <span class="close-episode-btn close-btn">&times;</span>
-        <h3 id="episode-list-title">剧集列表</h3>
-        <div id="episode-list-loading" class="loading" style="display: none;">
-             <div class="spinner"></div>
-             <p>正在加载剧集...</p>
-        </div>
-        <div id="episode-list-area" class="episode-list-grid">
-            <!-- Episode buttons/links will be loaded here by JS -->
-        </div>
-         <div id="episode-list-error" class="error-message" style="display: none;">
-             <!-- Episode loading errors shown here -->
-         </div>
-    </div>
-</div>
-
 
     <script src="script.js"></script>
 </body>
