@@ -248,72 +248,105 @@ def search_yfsp(query):
     return results
 
 # --- NEW: YFSP M3U8 Extraction Function ---
+# --- NEW: YFSP M3U8 Extraction Function (REVISED) ---
 def get_yfsp_m3u8_url(play_page_url):
     print(f"Backend: Fetching M3U8 from YFSP play page: {play_page_url}")
     try:
-        response = requests.get(play_page_url, headers=COMMON_HEADERS, timeout=15)
+        response = requests.get(play_page_url, headers=COMMON_HEADERS, timeout=20) # Increased timeout slightly
         response.raise_for_status()
         response.encoding = response.apparent_encoding
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Find the script containing player_aaaa
-        script_tags = soup.find_all('script', type='text/javascript')
+        # Find the script containing 'var player_aaaa' more reliably
+        script_tags = soup.find_all('script')
         player_script_content = None
         for script in script_tags:
-            if script.string and 'player_aaaa' in script.string:
+            # Check if script content exists and contains the variable definition start
+            if script.string and 'var player_aaaa' in script.string:
                 player_script_content = script.string
-                break
+                print("Backend: Found script tag containing 'var player_aaaa'.")
+                break # Found the script, exit loop
 
         if not player_script_content:
-            print("Backend: 'player_aaaa' script not found.")
+            print("Backend: ERROR - Script tag containing 'var player_aaaa' not found.")
             return None
 
-        # Extract the JSON part using regex (more robust)
-        match = re.search(r'var\s+player_aaaa\s*=\s*(\{.*?\})\s*;?\s*</script>', player_script_content, re.DOTALL | re.IGNORECASE)
-        if not match:
-             # Try another common pattern if the first fails
-             match = re.search(r'var\s+player_aaaa\s*=\s*(\{.*?\});', player_script_content, re.DOTALL | re.IGNORECASE)
+        # --- Refined Regex and JSON Extraction ---
+        # Regex targets 'var player_aaaa = {' followed by the JSON object ending '};' or possibly just '}'
+        # It captures the content within the outermost curly braces { ... }
+        # re.DOTALL allows '.' to match newline characters
+        match = re.search(r'var\s+player_aaaa\s*=\s*(\{[\s\S]*?\})\s*;?', player_script_content, re.DOTALL)
 
         if match:
             json_str = match.group(1)
+            print(f"Backend: Regex matched. Extracted JSON string (first 100 chars): {json_str[:100]}...")
+
             try:
-                # It might be almost JSON, try loading it
+                # --- Attempt 1: Direct JSON Loading ---
+                # Replace escaped slashes which might cause issues sometimes, although json.loads usually handles them
+                # json_str_cleaned = json_str.replace('\\/', '/') # Optional: Try if direct loading fails
                 player_data = json.loads(json_str)
                 m3u8_url = player_data.get('url')
+
                 if m3u8_url:
-                    print(f"Backend: Successfully extracted M3U8 URL: {m3u8_url}")
-                    return m3u8_url
+                     # Sometimes the URL itself might have unicode escapes (less common)
+                     try:
+                         m3u8_url = m3u8_url.encode('utf-8').decode('unicode_escape')
+                     except Exception:
+                         pass # Ignore if decoding fails, use original
+
+                     # Further clean URL (remove potential extra escaping)
+                     m3u8_url = m3u8_url.replace('\\/', '/')
+
+                     print(f"Backend: Successfully extracted M3U8 URL: {m3u8_url}")
+                     return m3u8_url
                 else:
-                    print("Backend: 'url' key not found in player_aaaa JSON.")
+                    print("Backend: ERROR - 'url' key not found in player_aaaa JSON data.")
                     return None
+
             except json.JSONDecodeError as e:
-                print(f"Backend: JSON decoding error for player_aaaa: {e}. JSON string was: {json_str[:200]}...")
-                 # Attempt to fix common JSON issues like unicode escapes before giving up
+                print(f"Backend: JSONDecodeError: {e}. Trying potential fixes...")
+                # --- Attempt 2: Fix common issues (like potential unicode escapes in keys/values before parsing) ---
                 try:
-                    # Sometimes unicode escapes are wrongly encoded
+                    # Fix potential unicode escapes within the string *before* parsing
                     json_str_fixed = json_str.encode('utf-8').decode('unicode_escape')
+                    # Also unescape slashes here as unicode_escape might re-introduce them weirdly
+                    json_str_fixed = json_str_fixed.replace('\\/', '/')
+                    print(f"Backend: Attempting parse after unicode/slash fixes...")
+
                     player_data = json.loads(json_str_fixed)
                     m3u8_url = player_data.get('url')
+
                     if m3u8_url:
-                        print(f"Backend: Successfully extracted M3U8 URL after fixing encoding: {m3u8_url}")
+                        # Clean the final URL again
+                        m3u8_url = m3u8_url.replace('\\/', '/')
+                        print(f"Backend: Successfully extracted M3U8 URL after fixes: {m3u8_url}")
                         return m3u8_url
                     else:
-                         print("Backend: 'url' key not found in player_aaaa JSON (after fixing encoding).")
-                         return None
+                        print("Backend: ERROR - 'url' key not found in player_aaaa JSON (after fixes).")
+                        return None
                 except Exception as fix_e:
-                     print(f"Backend: Could not fix or parse player_aaaa JSON even after trying encoding fix: {fix_e}")
+                     # Log the problematic string fragment for debugging if all else fails
+                     print(f"Backend: ERROR - Could not parse player_aaaa JSON even after fixes: {fix_e}. Problematic string fragment: {json_str[:200]}...")
                      return None
         else:
-            print("Backend: Regex could not find player_aaaa JSON structure in script.")
+            print("Backend: ERROR - Regex could not find 'var player_aaaa = {...}' structure in the script.")
             return None
 
+    except requests.exceptions.Timeout:
+         print(f"Backend: ERROR - Timeout fetching YFSP play page {play_page_url}")
+         return None
     except requests.exceptions.RequestException as e:
-        print(f"Backend: Error fetching YFSP play page {play_page_url}: {e}")
+        print(f"Backend: ERROR - RequestException fetching YFSP play page {play_page_url}: {e}")
         return None
     except Exception as e:
-        print(f"Backend: General error extracting M3U8 from {play_page_url}: {e}")
+        # Catch any other unexpected error during processing
+        import traceback
+        print(f"Backend: ERROR - General error extracting M3U8 from {play_page_url}: {e}")
+        print(traceback.format_exc()) # Print full traceback for debugging
         return None
+
 
 # --- API Endpoints ---
 
