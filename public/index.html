@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>zxy影视搜索</title>
+    <title>ZXY影视搜索</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -11,7 +11,7 @@
     <div class="background-overlay"></div>
     <div class="container">
         <header>
-            <h1>zxy影视搜索</h1>
+            <h1>ZXY影视搜索</h1>
             <button id="settings-btn" aria-label="设置"><i class="fas fa-cog"></i></button>
         </header>
 
@@ -20,8 +20,10 @@
             <button id="search-btn" aria-label="搜索"><i class="fas fa-search"></i> 搜索</button>
         </div>
 
+        <!-- Settings Modal (Keep existing) -->
         <div id="settings-modal" class="modal">
-            <div class="modal-content">
+            <!-- ... existing modal content ... -->
+             <div class="modal-content">
                 <span class="close-btn">&times;</span>
                 <h2><i class="fas fa-sliders-h"></i> 应用设置</h2>
 
@@ -44,7 +46,7 @@
                 </div>
 
                 <div class="settings-section">
-                    <h3>视频解析接口</h3>
+                    <h3>视频解析接口 (用于 AI 搜索结果)</h3>
                     <div id="parsing-interfaces-list">
                         <!-- Interfaces will be loaded here by JS -->
                     </div>
@@ -60,21 +62,38 @@
             </div>
         </div>
 
+        <!-- Loading Indicator (Keep existing) -->
         <div id="loading-indicator" class="loading" style="display: none;">
             <div class="spinner"></div>
             <p>正在智能分析中...</p>
         </div>
 
+        <!-- Results Container -->
         <div id="results-container">
-            <!-- Search results will be displayed here -->
+            <!-- AI Search results will be displayed here by displayResults -->
+            <div id="ai-results-area">
+                 <!-- Existing results were likely placed directly in results-container,
+                      JS will now target this specific div -->
+            </div>
+
+            <!-- NEW: YFSP Search Results Area -->
+            <div id="yfsp-results-area" style="display: none;"> <!-- Initially hidden -->
+                <hr class="results-separator">
+                <h2 class="results-source-title"><i class="fas fa-film"></i> 影视源搜索结果 (YFSP)</h2>
+                <div id="yfsp-results-grid" class="results-grid">
+                    <!-- YFSP results will be displayed here by displayYfspResults -->
+                </div>
+            </div>
         </div>
 
+        <!-- Player Modal (Keep existing, JS will handle direct URL) -->
          <div id="player-modal" class="modal player-modal">
              <div class="modal-content player-modal-content">
                 <span class="close-player-btn close-btn">&times;</span>
                 <h3 id="player-title">正在播放...</h3>
-                 <div class="parsing-selector">
-                     <label for="parsing-select">选择解析接口:</label>
+                 <!-- Parsing selector might be hidden/shown by JS for direct links -->
+                 <div class="parsing-selector" id="player-parsing-selector">
+                     <label for="parsing-select">选择解析接口 (用于AI结果):</label>
                      <select id="parsing-select">
                          <!-- Options loaded by JS -->
                      </select>
@@ -85,10 +104,10 @@
             </div>
         </div>
 
+        <!-- Error Message (Keep existing) -->
          <div id="error-message" class="error-message" style="display: none;">
              <!-- Error messages will be shown here -->
          </div>
-
 
     </div>
 
