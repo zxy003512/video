@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZXY影视搜索</title>
+    <title>影视智能搜索播放器</title> <!-- 你可以将 ZXY 影音搜索 改回这个标题或保持 -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="background-overlay"></div>
+
+    <!-- Main Content Container -->
     <div class="container">
         <header>
-            <h1>ZXY影视搜索</h1>
+            <h1>影视智能搜索播放器</h1> <!-- 或者 ZXY 影音搜索 -->
             <button id="settings-btn" aria-label="设置"><i class="fas fa-cog"></i></button>
         </header>
 
@@ -20,95 +22,89 @@
             <button id="search-btn" aria-label="搜索"><i class="fas fa-search"></i> 搜索</button>
         </div>
 
-        <!-- Settings Modal (Keep existing) -->
-        <div id="settings-modal" class="modal">
-            <!-- ... existing modal content ... -->
-             <div class="modal-content">
-                <span class="close-btn">&times;</span>
-                <h2><i class="fas fa-sliders-h"></i> 应用设置</h2>
-
-                <div class="settings-section">
-                    <h3>AI 配置</h3>
-                    <label for="ai-api-url">API 地址:</label>
-                    <input type="text" id="ai-api-url" placeholder="例如: https://api.zetatechs.com/v1">
-
-                    <label for="ai-api-key">API Key:</label>
-                    <input type="password" id="ai-api-key" placeholder="你的 AI API Key (sk-...)">
-
-                    <label for="ai-model">模型:</label>
-                    <input type="text" id="ai-model" placeholder="例如: gemini-2.0-flash">
-                </div>
-
-                <div class="settings-section">
-                    <h3>搜索引擎 (SearXNG)</h3>
-                    <label for="searxng-url">实例地址:</label>
-                    <input type="text" id="searxng-url" placeholder="例如: https://searxng.zetatechs.online/search">
-                </div>
-
-                <div class="settings-section">
-                    <h3>视频解析接口 (用于 AI 搜索结果)</h3>
-                    <div id="parsing-interfaces-list">
-                        <!-- Interfaces will be loaded here by JS -->
-                    </div>
-                    <div class="add-interface-form">
-                        <input type="text" id="new-interface-name" placeholder="接口名称 (例如: 接口X)">
-                        <input type="text" id="new-interface-url" placeholder="接口URL (例如: https://jx.example.com/?url=)">
-                        <button id="add-interface-btn"><i class="fas fa-plus"></i> 添加接口</button>
-                    </div>
-                </div>
-
-                <button id="save-settings-btn"><i class="fas fa-save"></i> 保存设置</button>
-                 <button id="reset-settings-btn" class="danger-btn"><i class="fas fa-undo"></i> 恢复默认</button>
-            </div>
-        </div>
-
-        <!-- Loading Indicator (Keep existing) -->
+        <!-- Loading Indicator (Keep inside container is fine) -->
         <div id="loading-indicator" class="loading" style="display: none;">
             <div class="spinner"></div>
             <p>正在智能分析中...</p>
         </div>
 
-        <!-- Results Container -->
+        <!-- Results Container (Keep inside container) -->
         <div id="results-container">
-            <!-- AI Search results will be displayed here by displayResults -->
             <div id="ai-results-area">
-                 <!-- Existing results were likely placed directly in results-container,
-                      JS will now target this specific div -->
+                <!-- AI Search results will be displayed here -->
             </div>
-
-            <!-- NEW: YFSP Search Results Area -->
-            <div id="yfsp-results-area" style="display: none;"> <!-- Initially hidden -->
+            <div id="yfsp-results-area" style="display: none;">
                 <hr class="results-separator">
                 <h2 class="results-source-title"><i class="fas fa-film"></i> 影视源搜索结果 (YFSP)</h2>
                 <div id="yfsp-results-grid" class="results-grid">
-                    <!-- YFSP results will be displayed here by displayYfspResults -->
+                    <!-- YFSP results will be displayed here -->
                 </div>
             </div>
         </div>
 
-        <!-- Player Modal (Keep existing, JS will handle direct URL) -->
-         <div id="player-modal" class="modal player-modal">
-             <div class="modal-content player-modal-content">
-                <span class="close-player-btn close-btn">&times;</span>
-                <h3 id="player-title">正在播放...</h3>
-                 <!-- Parsing selector might be hidden/shown by JS for direct links -->
-                 <div class="parsing-selector" id="player-parsing-selector">
-                     <label for="parsing-select">选择解析接口 (用于AI结果):</label>
-                     <select id="parsing-select">
-                         <!-- Options loaded by JS -->
-                     </select>
-                 </div>
-                <div class="iframe-container">
-                    <iframe id="video-player" src="" frameborder="0" allowfullscreen></iframe>
-                </div>
-            </div>
-        </div>
-
-        <!-- Error Message (Keep existing) -->
+         <!-- Error Message (Keep inside container is fine) -->
          <div id="error-message" class="error-message" style="display: none;">
              <!-- Error messages will be shown here -->
          </div>
 
+    </div> <!-- End of Main Content Container -->
+
+    <!-- Settings Modal (Moved Outside Container) -->
+    <div id="settings-modal" class="modal">
+         <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2><i class="fas fa-sliders-h"></i> 应用设置</h2>
+
+            <div class="settings-section">
+                <h3>AI 配置</h3>
+                <label for="ai-api-url">API 地址:</label>
+                <input type="text" id="ai-api-url" placeholder="例如: https://api.example.com/v1">
+
+                <label for="ai-api-key">API Key:</label>
+                <input type="password" id="ai-api-key" placeholder="你的 AI API Key (sk-...)">
+
+                <label for="ai-model">模型:</label>
+                <input type="text" id="ai-model" placeholder="例如: gemini-2.0-flash">
+            </div>
+
+            <div class="settings-section">
+                <h3>搜索引擎 (SearXNG)</h3>
+                <label for="searxng-url">实例地址:</label>
+                <input type="text" id="searxng-url" placeholder="例如: https://searxng.example.com/search">
+            </div>
+
+            <div class="settings-section">
+                <h3>视频解析接口 (用于 AI 搜索结果)</h3>
+                <div id="parsing-interfaces-list">
+                    <!-- Interfaces will be loaded here by JS -->
+                </div>
+                <div class="add-interface-form">
+                    <input type="text" id="new-interface-name" placeholder="接口名称 (例如: 接口X)">
+                    <input type="text" id="new-interface-url" placeholder="接口URL (例如: https://jx.example.com/?url=)">
+                    <button id="add-interface-btn"><i class="fas fa-plus"></i> 添加接口</button>
+                </div>
+            </div>
+
+            <button id="save-settings-btn"><i class="fas fa-save"></i> 保存设置</button>
+             <button id="reset-settings-btn" class="danger-btn"><i class="fas fa-undo"></i> 恢复默认</button>
+        </div>
+    </div>
+
+    <!-- Player Modal (Moved Outside Container) -->
+     <div id="player-modal" class="modal player-modal">
+         <div class="modal-content player-modal-content">
+            <span class="close-player-btn close-btn">&times;</span>
+            <h3 id="player-title">正在播放...</h3>
+             <div class="parsing-selector" id="player-parsing-selector">
+                 <label for="parsing-select">选择解析接口 (用于AI结果):</label>
+                 <select id="parsing-select">
+                     <!-- Options loaded by JS -->
+                 </select>
+             </div>
+            <div class="iframe-container">
+                <iframe id="video-player" src="about:blank" frameborder="0" allowfullscreen></iframe> <!-- Use about:blank initially -->
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
