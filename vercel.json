@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.js",        // Path to your backend function entry point
+      "use": "@vercel/node"         // Use the Node.js builder
+    },
+    {
+      "src": "videopage.html",      // Path to your frontend HTML
+      "use": "@vercel/static"       // Use the static file builder
+    }
+  ],
+  "routes": [
+    // Route API calls to the backend function
+    {
+      "src": "/api/(.*)",           // Match any path starting with /api/
+      "dest": "/api/index.js"       // Route it to the Node.js function
+    },
+    // Serve the main HTML file for the root path
+    {
+      "src": "/",                   // Match the root path
+      "dest": "/videopage.html"     // Serve the HTML file
+    },
+    // Optional: Handle non-API, non-root requests (e.g., if you had other static files)
+    // If you only have videopage.html, the above route for "/" is sufficient.
+    // If you had CSS/JS files linked externally:
+    // {
+    //   "src": "/(.*\\.(css|js|png|jpg|gif|svg))$",
+    //   "dest": "/$1"
+    // },
+    // Fallback for any other requests - serve the main page (useful for single-page apps, maybe not needed here)
+    // {
+    //   "src": "/(.*)",
+    //   "dest": "/videopage.html"
+    // }
+  ]
+}
+
