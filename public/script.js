@@ -3,8 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
-    const resultsContainer = document.getElementById('results-container'); // For AI results
-    const yfspResultsContainer = document.getElementById('yfsp-results-container'); // For YFSP results
+    const resultsContainer = document.getElementById('results-container');
     const loadingIndicator = document.getElementById('loading-indicator');
     const errorMessageDiv = document.getElementById('error-message');
 
@@ -23,41 +22,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const newInterfaceUrlInput = document.getElementById('new-interface-url');
     const addInterfaceBtn = document.getElementById('add-interface-btn');
 
-    // Player Modal (Existing)
+    // Player Modal
     const playerModal = document.getElementById('player-modal');
     const closePlayerBtn = playerModal.querySelector('.close-player-btn');
     const playerTitle = document.getElementById('player-title');
-    const parsingSelect = document.getElementById('parsing-select'); // Used for AI results
+    const parsingSelect = document.getElementById('parsing-select');
     const videoPlayerIframe = document.getElementById('video-player');
-
-    // NEW: Episode Modal
-    const episodeModal = document.getElementById('episode-modal');
-    const closeEpisodeBtn = episodeModal.querySelector('.close-episode-btn');
-    const episodeModalTitle = document.getElementById('episode-modal-title');
-    const episodeListDiv = document.getElementById('episode-list');
-
 
     // --- State & Configuration ---
     let currentSettings = {};
-    let defaultSettings = {
+    let defaultSettings = { // Will be populated by /api/config
         defaultParsingInterfaces: [],
         defaultSearxngUrl: ''
     };
-    let currentVideoLink = ''; // Stores the link for AI results playback
-    let isFetching = false; // Prevent multiple simultaneous fetches
+    let currentVideoLink = ''; // To store the link when opening player
 
     // --- Functions ---
 
-    const showLoading = (show, message = "正在智能分析中...") => {
-        loadingIndicator.querySelector('p').textContent = message;
-        loadingIndicator.style.display = show ? 'flex' : 'none'; // Use flex for center alignment
+    const showLoading = (show) => {
+        loadingIndicator.style.display = show ? 'block' : 'none';
         searchBtn.disabled = show;
-        isFetching = show; // Update fetch state
     };
 
     const showError = (message) => {
         errorMessageDiv.textContent = message;
         errorMessageDiv.style.display = 'block';
+        // Hide after some time
         setTimeout(() => {
              errorMessageDiv.style.display = 'none';
         }, 5000);
@@ -70,77 +60,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const clearResults = () => {
         resultsContainer.innerHTML = '';
-        yfspResultsContainer.innerHTML = ''; // Also clear YFSP results
-         // Optionally hide the YFSP heading if containers exist
-        const yfspHeading = yfspResultsContainer.previousElementSibling; // Adjust if structure changes
-        if (yfspHeading && yfspHeading.tagName === 'H2' && yfspHeading.classList.contains('yfsp-heading')) {
-            yfspHeading.style.display = 'none';
-        }
     };
 
-    // --- Settings Management (Largely Unchanged) ---
+    // Load settings from localStorage or fetch defaults
     const loadSettings = async () => {
         try {
+            // Fetch default config (only non-sensitive defaults) from backend
             const response = await fetch('/api/config');
             if (!response.ok) throw new Error('无法加载默认配置');
             defaultSettings = await response.json();
         } catch (error) {
             console.error("Error fetching default config:", error);
             showError("无法从服务器加载默认配置，将使用内置后备设置。");
-             defaultSettings = { // Hardcoded fallback
-                defaultParsingInterfaces: [/*...*/], // Keep your fallback interfaces
-                defaultSearxngUrl: "https://searxng.zetatechs.online/search" // Example fallback
+            // Use hardcoded fallbacks if /api/config fails
+             defaultSettings = {
+                defaultParsingInterfaces: [
+                    {"name": "接口1 - xmflv.com", "url": "https://jx.xmflv.com/?url="},
+                    {"name": "接口2 - bd.jx.cn", "url": "https://bd.jx.cn/?url="},
+                    {"name": "接口3 - xmflv.cc", "url": "https://jx.xmflv.cc/?url="},
+                    {"name": "接口4 - hls.one", "url": "https://jx.hls.one/?url="},
+                    {"name": "接口5 - 77flv.cc", "url": "https://jx.77flv.cc/?url="},
+                    {"name": "接口6 - yemu.xyz", "url": "https://www.yemu.xyz/?url="}
+                ],
+                defaultSearxngUrl: "https://searxng.zetatechs.online/search"
              };
         }
-        // Rest of loadSettings remains the same...
+
         const savedSettings = localStorage.getItem('videoSearchPlayerSettings');
         if (savedSettings) {
             currentSettings = JSON.parse(savedSettings);
+            console.log("Loaded settings from localStorage:", currentSettings);
         } else {
+            // Use defaults fetched from backend or hardcoded fallbacks
             currentSettings = {
-                aiApiUrl: '', aiApiKey: '', aiModel: '',
+                aiApiUrl: '', // User must provide or backend uses its default
+                aiApiKey: '',
+                aiModel: '',
                 searxngUrl: defaultSettings.defaultSearxngUrl,
-                parsingInterfaces: defaultSettings.defaultParsingInterfaces || []
+                parsingInterfaces: defaultSettings.defaultParsingInterfaces
             };
+            console.log("Using default settings:", currentSettings);
         }
         populateSettingsForm();
         renderParsingInterfacesList();
-        updateParsingSelect();
+        updateParsingSelect(); // Update player dropdown initially
     };
 
-    const saveSettings = () => { /* Unchanged */
+    // Save settings to localStorage
+    const saveSettings = () => {
+        // Basic validation
         const newUrl = newInterfaceUrlInput.value.trim();
-         if (newUrl && !newUrl.includes('?url=')) { // Check if it seems like a parsing URL
-             showError("新解析接口URL似乎缺少 '?url=' 部分");
-             // return; // Optional: enforce '?url='
-         }
          if (newUrl && !newUrl.endsWith('=')) {
-             // Maybe just a warning, some interfaces might not end with =
-             // showError("新解析接口URL通常应以 '=' 结尾");
-             // return;
+             showError("新解析接口URL应以 '=' 结尾");
+             return; // Don't save if invalid
          }
 
         currentSettings = {
             aiApiUrl: aiApiUrlInput.value.trim(),
-            aiApiKey: aiApiKeyInput.value.trim(),
+            aiApiKey: aiApiKeyInput.value.trim(), // Store user's key if they enter one
             aiModel: aiModelInput.value.trim(),
-            searxngUrl: searxngUrlInput.value.trim() || defaultSettings.defaultSearxngUrl,
-            parsingInterfaces: currentSettings.parsingInterfaces // Managed separately
+            searxngUrl: searxngUrlInput.value.trim() || defaultSettings.defaultSearxngUrl, // Fallback to default if empty
+            // parsingInterfaces are managed separately by add/remove functions
         };
         localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings));
         console.log("Settings saved:", currentSettings);
-        alert("设置已保存！");
+        alert("设置已保存！"); // Simple feedback
         settingsModal.style.display = 'none';
-        updateParsingSelect();
+        updateParsingSelect(); // Update player dropdown after save
     };
-    const resetToDefaults = () => { /* Unchanged */
-        if (confirm("确定要恢复所有设置为默认值吗？这将清除您自定义的API密钥和接口。")) {
+
+     // Reset settings to defaults fetched from backend
+    const resetToDefaults = () => {
+         if (confirm("确定要恢复所有设置为默认值吗？这将清除您自定义的API密钥和接口。")) {
              currentSettings = {
-                aiApiUrl: '', aiApiKey: '', aiModel: '',
+                aiApiUrl: '', // Clear user overrides
+                aiApiKey: '',
+                aiModel: '',
                 searxngUrl: defaultSettings.defaultSearxngUrl,
-                parsingInterfaces: JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces || []))
+                parsingInterfaces: JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces)) // Deep copy defaults
              };
-             localStorage.removeItem('videoSearchPlayerSettings');
+             localStorage.removeItem('videoSearchPlayerSettings'); // Clear local storage
              populateSettingsForm();
              renderParsingInterfacesList();
              updateParsingSelect();
@@ -148,14 +147,18 @@ document.addEventListener('DOMContentLoaded', () => {
              settingsModal.style.display = 'none';
          }
     };
-    const populateSettingsForm = () => { /* Unchanged */
+
+    // Populate the settings form fields
+    const populateSettingsForm = () => {
         aiApiUrlInput.value = currentSettings.aiApiUrl || '';
         aiApiKeyInput.value = currentSettings.aiApiKey || '';
         aiModelInput.value = currentSettings.aiModel || '';
-        searxngUrlInput.value = currentSettings.searxngUrl || defaultSettings.defaultSearxngUrl || '';
+        searxngUrlInput.value = currentSettings.searxngUrl || defaultSettings.defaultSearxngUrl;
     };
-    const renderParsingInterfacesList = () => { /* Unchanged */
-        interfacesListDiv.innerHTML = '';
+
+    // Render the list of parsing interfaces in the settings modal
+    const renderParsingInterfacesList = () => {
+        interfacesListDiv.innerHTML = ''; // Clear existing list
         if (!currentSettings.parsingInterfaces || currentSettings.parsingInterfaces.length === 0) {
              interfacesListDiv.innerHTML = '<p>没有配置解析接口。</p>';
              return;
@@ -169,34 +172,67 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             interfacesListDiv.appendChild(itemDiv);
         });
+
+        // Add event listeners to remove buttons
         document.querySelectorAll('.remove-interface-btn').forEach(button => {
-            button.addEventListener('click', (e) => removeParsingInterface(parseInt(e.target.getAttribute('data-index'))));
+            button.addEventListener('click', (e) => {
+                const indexToRemove = parseInt(e.target.getAttribute('data-index'));
+                removeParsingInterface(indexToRemove);
+            });
         });
     };
-    const addParsingInterface = () => { /* Unchanged */
+
+    // Add a new parsing interface
+    const addParsingInterface = () => {
         const name = newInterfaceNameInput.value.trim();
         const url = newInterfaceUrlInput.value.trim();
-        if (!name || !url) { showError("接口名称和URL不能为空"); return; }
-        // Basic validation moved to saveSettings
-        if (!currentSettings.parsingInterfaces) currentSettings.parsingInterfaces = [];
+
+        if (!name || !url) {
+            showError("接口名称和URL不能为空");
+            return;
+        }
+        if (!url.includes('?url=')) { // Basic check
+            showError("URL 格式似乎不正确，应包含 '?url='");
+            return;
+        }
+         if (!url.endsWith('=')) {
+             showError("URL 必须以 '=' 结尾");
+             return;
+         }
+
+
+        if (!currentSettings.parsingInterfaces) {
+            currentSettings.parsingInterfaces = [];
+        }
         currentSettings.parsingInterfaces.push({ name, url });
+
+        // Persist immediately after adding
         localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings));
-        renderParsingInterfacesList();
-        updateParsingSelect();
-        newInterfaceNameInput.value = ''; newInterfaceUrlInput.value = '';
+
+        renderParsingInterfacesList(); // Re-render the list in settings
+        updateParsingSelect(); // Update player dropdown
+        newInterfaceNameInput.value = ''; // Clear form
+        newInterfaceUrlInput.value = '';
     };
-    const removeParsingInterface = (index) => { /* Unchanged */
+
+    // Remove a parsing interface
+    const removeParsingInterface = (index) => {
         if (currentSettings.parsingInterfaces && currentSettings.parsingInterfaces[index]) {
             currentSettings.parsingInterfaces.splice(index, 1);
+
+             // Persist immediately after removing
             localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings));
-            renderParsingInterfacesList();
-            updateParsingSelect();
+
+            renderParsingInterfacesList(); // Re-render the list in settings
+            updateParsingSelect(); // Update player dropdown
         }
     };
-    const updateParsingSelect = () => { /* Unchanged, still needed for AI results */
-        parsingSelect.innerHTML = '';
+
+     // Update the <select> dropdown in the player modal
+    const updateParsingSelect = () => {
+        parsingSelect.innerHTML = ''; // Clear existing options
         if (currentSettings.parsingInterfaces && currentSettings.parsingInterfaces.length > 0) {
-            currentSettings.parsingInterfaces.forEach((iface) => {
+            currentSettings.parsingInterfaces.forEach((iface, index) => {
                 const option = document.createElement('option');
                 option.value = iface.url;
                 option.textContent = iface.name;
@@ -204,304 +240,124 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             parsingSelect.disabled = false;
         } else {
-            const option = document.createElement('option'); option.textContent = '没有可用的解析接口'; parsingSelect.appendChild(option);
+            const option = document.createElement('option');
+            option.textContent = '没有可用的解析接口';
+            parsingSelect.appendChild(option);
             parsingSelect.disabled = true;
         }
     };
 
-    // --- Display AI Search Results (Largely Unchanged) ---
+
+    // Display search results as cards
     const displayResults = (results) => {
-        resultsContainer.innerHTML = ''; // Clear only AI results
+        clearResults();
         if (!results || results.length === 0) {
-             // Don't show message here if YFSP might have results
-             // resultsContainer.innerHTML = '<p style="text-align: center;">未能找到相关 AI 精选播放链接。</p>';
-             return;
+            resultsContainer.innerHTML = '<p style="text-align: center;">未能找到相关影视播放链接。</p>';
+            return;
         }
-
-        // Optional: Add a heading for AI results
-        const heading = document.createElement('h2');
-        heading.textContent = 'AI 精选结果';
-        heading.style.textAlign = 'center';
-        heading.style.marginBottom = '20px';
-        heading.style.color = 'var(--secondary-color)';
-        resultsContainer.appendChild(heading);
-
 
         results.forEach(result => {
             const card = document.createElement('div');
-            card.classList.add('result-card'); // Use existing class
-            card.dataset.link = result.video_link;
-            card.dataset.title = result.title;
+            card.classList.add('result-card');
+            card.dataset.link = result.video_link; // Store link in data attribute
+            card.dataset.title = result.title; // Store title
 
             card.innerHTML = `
                 <h3>${result.title}</h3>
                 <p><span class="website-badge">${result.website || '未知来源'}</span></p>
-                <p class="link-preview">${result.video_link.substring(0, 60)}${result.video_link.length > 60 ? '...' : ''}</p>
+                <!-- <p class="description">${result.description || '暂无描述'}</p> -->
+                 <p class="link-preview">${result.video_link.substring(0, 60)}${result.video_link.length > 60 ? '...' : ''}</p>
+
             `;
-            // Click opens player using PARSING INTERFACE
             card.addEventListener('click', () => {
-                openPlayerWithParsingInterface(result.video_link, result.title);
+                openPlayer(result.video_link, result.title);
             });
             resultsContainer.appendChild(card);
         });
     };
 
-    // --- NEW: Display YFSP Search Results ---
-    const displayYfspResults = (results) => {
-        yfspResultsContainer.innerHTML = ''; // Clear only YFSP results
-        if (!results || results.length === 0) {
-            // Don't show message if AI might have results
-            // yfspResultsContainer.innerHTML = '<p style="text-align: center;">未能找到相关 YFSP 资源。</p>';
-            return;
-        }
-
-         // Optional: Add heading via CSS :before pseudo-element is better
-
-
-        results.forEach(result => {
-            const card = document.createElement('div');
-            card.classList.add('yfsp-result-card'); // Use new class for different styling
-            card.dataset.videoId = result.video_id; // Store video ID
-            card.dataset.title = result.title;     // Store title for episode modal
-
-            // Fallback image if cover_img is missing
-            const coverSrc = result.cover_img || 'placeholder.png'; // Add a placeholder image URL or leave empty
-
-            card.innerHTML = `
-                <div class="yfsp-cover-container">
-                     <img src="${coverSrc}" alt="${result.title}封面" loading="lazy" onerror="this.style.display='none'; this.parentElement.style.backgroundColor='#ccc';"> {/* Handle broken images */}
-                </div>
-                <div class="yfsp-card-content">
-                    <h3>${result.title}</h3>
-                    <p class="yfsp-note">${result.note || ' '}</p> {/* Show note */}
-                </div>
-            `;
-            // Click fetches EPISODES
-            card.addEventListener('click', () => {
-                fetchYfspEpisodes(result.video_id, result.title);
-            });
-            yfspResultsContainer.appendChild(card);
-        });
-    };
-
-
-    // --- Open Player (Existing - for AI results using parsing interface) ---
-    const openPlayerWithParsingInterface = (videoLink, title) => {
+    // Open the player modal
+    const openPlayer = (videoLink, title) => {
         if (parsingSelect.disabled) {
              showError("请先在设置中添加至少一个视频解析接口。");
              return;
         }
-        currentVideoLink = videoLink;
-        playerTitle.textContent = `正在播放 (接口解析): ${title}`;
+        currentVideoLink = videoLink; // Store the raw video link
+        playerTitle.textContent = `正在播放: ${title}`;
+
+        // Set iframe src based on currently selected parsing interface
         const selectedParserUrl = parsingSelect.value;
         if (selectedParserUrl && currentVideoLink) {
              videoPlayerIframe.src = selectedParserUrl + encodeURIComponent(currentVideoLink);
-             playerModal.style.display = 'block';
         } else {
-             videoPlayerIframe.src = '';
-             showError("无法构建播放链接，请检查解析接口和视频链接。");
+             videoPlayerIframe.src = ''; // Clear src if no parser/link
+             showError("无法构建播放链接，请检查解析接口和视频链接。")
         }
+
+        playerModal.style.display = 'block';
     };
 
-    // --- NEW: Fetch YFSP Episodes ---
-    const fetchYfspEpisodes = async (videoId, title) => {
-        if (isFetching) return; // Prevent concurrent fetches
-        console.log(`Fetching episodes for YFSP ID: ${videoId}, Title: ${title}`);
-        showLoading(true, "正在获取剧集列表...");
-        clearError();
-        episodeListDiv.innerHTML = '<p>正在加载剧集...</p>'; // Show loading inside modal
-        episodeModalTitle.textContent = `选择剧集: ${title}`;
-        episodeModal.style.display = 'block'; // Show modal early
-
-        try {
-            const response = await fetch('/api/yfsp/episodes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ video_id: videoId }),
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || `获取剧集失败 (${response.status})`);
-            }
-
-            if (!data.episodes || data.episodes.length === 0) {
-                episodeListDiv.innerHTML = '<p>未找到该资源的剧集信息。</p>';
-            } else {
-                displayEpisodes(data.episodes, title); // Pass title for context
-            }
-
-        } catch (error) {
-            console.error("Error fetching episodes:", error);
-            showError(`获取剧集列表时出错: ${error.message}`);
-            episodeListDiv.innerHTML = `<p>获取剧集失败: ${error.message}</p>`; // Show error inside modal
-        } finally {
-            showLoading(false);
-        }
+    // Close the player modal
+    const closePlayer = () => {
+        playerModal.style.display = 'none';
+        videoPlayerIframe.src = ''; // Stop video playback
+        playerTitle.textContent = '正在播放...';
+        currentVideoLink = '';
     };
 
-    // --- NEW: Display YFSP Episodes in Modal ---
-    const displayEpisodes = (episodes, showTitle) => {
-        episodeListDiv.innerHTML = ''; // Clear loading/previous content
-        if (!episodes || episodes.length === 0) {
-            episodeListDiv.innerHTML = '<p>未找到剧集。</p>';
+    // Perform search by calling the backend API
+    const performSearch = async () => {
+        const query = searchInput.value.trim();
+        if (!query) {
+            showError("请输入搜索内容");
             return;
         }
 
-        episodes.forEach(episode => {
-            const episodeItem = document.createElement('button'); // Use button for better accessibility
-            episodeItem.classList.add('episode-item');
-            episodeItem.textContent = episode.episode_name;
-            episodeItem.dataset.playUrl = episode.play_page_url;
-            episodeItem.dataset.episodeName = episode.episode_name; // Store name for player title
-
-            episodeItem.addEventListener('click', () => {
-                playYfspEpisode(episode.play_page_url, episode.episode_name, showTitle);
-            });
-            episodeListDiv.appendChild(episodeItem);
-        });
-    };
-
-    // --- NEW: Play YFSP Episode (Directly uses backend-generated URL) ---
-    const playYfspEpisode = async (playUrl, episodeName, showTitle) => {
-        if (isFetching) return;
-        console.log(`Requesting play URL for: ${playUrl}`);
-        showLoading(true, "正在获取播放链接...");
-        clearError();
-        episodeModal.style.display = 'none'; // Close episode modal
-
-        try {
-            const response = await fetch('/api/yfsp/play', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ play_page_url: playUrl }),
-            });
-            const data = await response.json();
-
-            if (!response.ok || data.error) {
-                throw new Error(data.error || `获取播放链接失败 (${response.status})`);
-            }
-
-            if (data.final_player_url) {
-                playerTitle.textContent = `正在播放 (YFSP): ${showTitle} - ${episodeName}`;
-                videoPlayerIframe.src = data.final_player_url; // Load the direct player URL
-                playerModal.style.display = 'block';          // Show the player modal
-            } else {
-                throw new Error("后端未能返回有效的播放链接。");
-            }
-
-        } catch (error) {
-            console.error("Error getting YFSP play URL:", error);
-            showError(`无法播放: ${error.message}`);
-            // Ensure player is cleared if it fails
-             videoPlayerIframe.src = '';
-             playerModal.style.display = 'none';
-        } finally {
-            showLoading(false);
-        }
-    };
-
-
-    // --- Close Player Modal (Modified slightly for clarity) ---
-    const closePlayer = () => {
-        playerModal.style.display = 'none';
-        videoPlayerIframe.src = 'about:blank'; // More reliable way to stop playback
-        playerTitle.textContent = '正在播放...';
-        currentVideoLink = ''; // Clear link used by AI playback
-    };
-
-     // --- NEW: Close Episode Modal ---
-    const closeEpisodeModalFunc = () => {
-         episodeModal.style.display = 'none';
-         episodeListDiv.innerHTML = ''; // Clear list when closing
-         episodeModalTitle.textContent = '选择剧集';
-    };
-
-
-    // --- Perform Search (MODIFIED to trigger both AI and YFSP searches) ---
-    const performSearch = async () => {
-        const query = searchInput.value.trim();
-        if (!query) { showError("请输入搜索内容"); return; }
-        if (isFetching) { console.log("Fetch in progress, skipping new search."); return; } // Prevent overlap
-
         clearError();
         clearResults();
-        showLoading(true, "正在搜索资源..."); // General search message
-
-        const aiSearchRequest = {
-             query: query,
-             settings: {
-                 aiApiUrl: currentSettings.aiApiUrl,
-                 aiApiKey: currentSettings.aiApiKey,
-                 aiModel: currentSettings.aiModel,
-                 searxngUrl: currentSettings.searxngUrl
-             }
-         };
-        const yfspSearchRequest = { query: query };
+        showLoading(true);
 
         try {
-            // Perform both searches in parallel
-            const [aiPromise, yfspPromise] = await Promise.allSettled([
-                fetch('/api/search', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(aiSearchRequest),
-                }),
-                 fetch('/api/yfsp-search', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(yfspSearchRequest),
-                })
-            ]);
+            // Send current user settings along with the query
+            // Backend will use these or fall back to its environment defaults
+            const requestBody = {
+                 query: query,
+                 settings: {
+                     aiApiUrl: currentSettings.aiApiUrl,
+                     aiApiKey: currentSettings.aiApiKey, // Send user's key if they entered one
+                     aiModel: currentSettings.aiModel,
+                     searxngUrl: currentSettings.searxngUrl
+                 }
+             };
 
-            let aiResults = [];
-            let yfspResults = [];
-            let errors = [];
+            console.log("Sending search request to backend:", requestBody);
 
-            // Process AI Search results
-            if (aiPromise.status === 'fulfilled') {
-                const response = aiPromise.value;
-                const data = await response.json();
-                if (!response.ok) {
-                    errors.push(`AI搜索错误: ${data.error || response.status}`);
-                } else {
-                    aiResults = data; // Expecting a list directly
-                }
-            } else {
-                errors.push(`AI请求失败: ${aiPromise.reason}`);
+
+            const response = await fetch('/api/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+             console.log("Backend Response Status:", response.status);
+             const responseData = await response.json();
+             console.log("Backend Response Data:", responseData);
+
+
+            if (!response.ok) {
+                // Try to get error message from backend response
+                 const errorMsg = responseData.error || `服务器错误 (代码: ${response.status})`;
+                throw new Error(errorMsg);
             }
 
-             // Process YFSP Search results
-            if (yfspPromise.status === 'fulfilled') {
-                const response = yfspPromise.value;
-                const data = await response.json();
-                if (!response.ok) {
-                     errors.push(`YFSP搜索错误: ${data.error || response.status}`);
-                } else {
-                    yfspResults = data.yfsp_results || []; // Expecting {"yfsp_results": [...]}
-                }
-            } else {
-                 errors.push(`YFSP请求失败: ${yfspPromise.reason}`);
-            }
+            displayResults(responseData); // responseData should be the list of results
 
-            // Display results
-            displayResults(aiResults);       // Display AI results
-            displayYfspResults(yfspResults); // Display YFSP results
-
-            // Show combined errors if any
-            if (errors.length > 0) {
-                showError(errors.join('; '));
-            }
-
-            // Show no results message only if BOTH searches yielded nothing
-            if (aiResults.length === 0 && yfspResults.length === 0 && errors.length === 0) {
-                 resultsContainer.innerHTML = '<p style="text-align: center; margin-top: 20px;">未能找到任何相关资源。</p>';
-            }
-
-
-        } catch (error) { // Catch unexpected errors during fetch setup or Promise.allSettled
-            console.error("Search Orchestration Error:", error);
-            showError(`搜索过程中发生意外错误: ${error.message}`);
-            clearResults();
+        } catch (error) {
+            console.error("Search Error:", error);
+            showError(`搜索或分析时出错: ${error.message}`);
+            clearResults(); // Clear any partial results
         } finally {
             showLoading(false);
         }
@@ -511,20 +367,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
     searchBtn.addEventListener('click', performSearch);
     searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
+        if (e.key === 'Enter') {
+            performSearch();
+        }
     });
 
-    // Settings Modal Listeners (Unchanged)
-    settingsBtn.addEventListener('click', () => { populateSettingsForm(); renderParsingInterfacesList(); settingsModal.style.display = 'block'; });
-    closeSettingsBtn.addEventListener('click', () => { settingsModal.style.display = 'none'; });
+    // Settings Modal Listeners
+    settingsBtn.addEventListener('click', () => {
+        populateSettingsForm(); // Ensure form shows current values
+        renderParsingInterfacesList(); // Render current interfaces
+        settingsModal.style.display = 'block';
+    });
+    closeSettingsBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+    });
     saveSettingsBtn.addEventListener('click', saveSettings);
-    resetSettingsBtn.addEventListener('click', resetToDefaults);
+     resetSettingsBtn.addEventListener('click', resetToDefaults);
     addInterfaceBtn.addEventListener('click', addParsingInterface);
 
-    // Player Modal Listeners (Unchanged for AI results)
+    // Player Modal Listeners
     closePlayerBtn.addEventListener('click', closePlayer);
-    parsingSelect.addEventListener('change', () => { // This updates the player if parsing interface changes *while AI result is playing*
-        if (playerModal.style.display === 'block' && currentVideoLink && !videoPlayerIframe.src.includes('yfsp')) { // Check if it's not a YFSP link
+     // Update iframe src when user changes parsing interface while player is open
+    parsingSelect.addEventListener('change', () => {
+        if (playerModal.style.display === 'block' && currentVideoLink) {
              const selectedParserUrl = parsingSelect.value;
              if (selectedParserUrl) {
                   videoPlayerIframe.src = selectedParserUrl + encodeURIComponent(currentVideoLink);
@@ -532,18 +397,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // NEW: Episode Modal Listeners
-    closeEpisodeBtn.addEventListener('click', closeEpisodeModalFunc);
-
 
     // Close modals if clicked outside the content area
     window.addEventListener('click', (event) => {
-        if (event.target === settingsModal) settingsModal.style.display = 'none';
-        if (event.target === playerModal) closePlayer();
-        if (event.target === episodeModal) closeEpisodeModalFunc(); // Close episode modal too
+        if (event.target === settingsModal) {
+            settingsModal.style.display = 'none';
+        }
+         if (event.target === playerModal) {
+            closePlayer();
+        }
     });
 
     // --- Initial Load ---
-    loadSettings();
+    loadSettings(); // Load settings when the page loads
 
 }); // End DOMContentLoaded
