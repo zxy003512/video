@@ -22,6 +22,10 @@
     --light-text-on-dark: #ffffff; /* 深色背景上的浅色文字 */
     --yfsp-button-bg: #ff8c00; /* Orange for YFSP play button */
     --yfsp-button-hover-bg: #cc7000;
+    --episode-button-bg: #e9ecef;
+    --episode-button-hover-bg: #dee2e6;
+    --episode-button-active-bg: var(--primary-color);
+    --episode-button-active-text: var(--light-text-on-dark);
 
     /* --- Use Light Theme Variables --- */
     --theme-bg: var(--background-color);
@@ -61,7 +65,6 @@ body {
    opacity: 0.5;
 }
 
-
 .container {
     max-width: 900px;
     width: 100%;
@@ -79,7 +82,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px; /* Reduced spacing */
+    margin-bottom: 25px;
     border-bottom: 1px solid var(--theme-border);
     padding-bottom: 20px;
 }
@@ -87,7 +90,7 @@ header {
 header h1 {
     color: var(--theme-primary);
     font-weight: 700;
-    font-size: 1.8em; /* Slightly smaller title */
+    font-size: 1.8em;
 }
 
 #settings-btn {
@@ -105,7 +108,7 @@ header h1 {
 
 .search-box {
     display: flex;
-    margin-bottom: 15px; /* Reduced spacing */
+    margin-bottom: 15px;
     gap: 15px;
 }
 
@@ -138,7 +141,7 @@ header h1 {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease;
+    transition: background-color 0.3s ease, transform 0.1s ease, opacity 0.3s ease;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -163,17 +166,17 @@ header h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 25px; /* More space between options */
-    margin-bottom: 30px; /* Space below selector */
+    gap: 25px;
+    margin-bottom: 30px;
     padding: 10px;
-    background-color: rgba(0, 123, 255, 0.05); /* Very light blue background */
+    background-color: rgba(0, 123, 255, 0.05);
     border-radius: 8px;
-    border: 1px solid rgba(0, 123, 255, 0.1); /* Subtle border */
+    border: 1px solid rgba(0, 123, 255, 0.1);
 }
 .search-method-selector label {
     display: flex;
     align-items: center;
-    gap: 8px; /* Space between radio and text */
+    gap: 8px;
     cursor: pointer;
     font-size: 1em;
     color: var(--text-color);
@@ -183,7 +186,6 @@ header h1 {
 }
 .search-method-selector input[type="radio"] {
     margin-right: 2px;
-     /* Accent color for modern browsers */
      accent-color: var(--theme-primary);
 }
 .search-method-selector label:hover {
@@ -202,147 +204,174 @@ header h1 {
 /* Results */
 #results-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); /* Slightly smaller min width */
     gap: 25px;
-    margin-top: 25px; /* Reduced spacing */
+    margin-top: 25px;
+}
+
+.no-results-message {
+    text-align: center;
+    color: var(--text-muted);
+    grid-column: 1 / -1; /* Span all columns */
+    padding: 40px 0;
 }
 
 .result-card {
     background-color: var(--theme-card-bg);
     border: 1px solid var(--theme-border);
     border-radius: 10px;
-    padding: 0; /* Remove padding for YFSP image */
     box-shadow: 0 5px 15px var(--theme-shadow);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
-    overflow: hidden; /* Important for image fit */
+    overflow: hidden; /* Important for image fit and contained elements */
+    display: flex; /* Use flex for layout */
+    flex-direction: column; /* Stack content vertically */
 }
 .result-card:hover {
     transform: translateY(-6px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
 }
 
+/* Common Play Button Style */
+.play-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 0.95em;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease, opacity 0.3s ease;
+    width: auto;
+    margin-top: auto; /* Push button to bottom in flex container */
+}
+.play-btn i {
+    margin-right: 6px;
+}
+.play-btn:hover:not(:disabled) {
+    filter: brightness(90%);
+}
+.play-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+.play-btn:disabled {
+    background-color: var(--secondary-color) !important; /* Ensure override */
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+.play-btn .fa-spinner {
+     animation: spin 1s linear infinite;
+}
+
+
 /* AI Card Specifics */
 .ai-card {
-    padding: 20px; /* Restore padding for AI cards */
-    cursor: pointer;
+    padding: 20px; /* Padding inside card */
 }
 .ai-card h3 {
-    font-size: 1.15em;
-    color: var(--theme-primary);
-    margin-bottom: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 1.1em; /* Slightly smaller */
+    color: var(--theme-text); /* Standard text */
+    margin-bottom: 8px;
     font-weight: 500;
 }
 .ai-card p {
-    font-size: 0.95em;
+    font-size: 0.9em;
     color: var(--text-muted);
-    margin-bottom: 12px;
-    line-height: 1.5;
+    margin-bottom: 8px;
+    line-height: 1.4;
 }
 .ai-card .website-badge {
     display: inline-block;
     background-color: rgba(0, 123, 255, 0.1);
     color: var(--theme-primary);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.85em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
     font-weight: 500;
-    margin-bottom: 10px;
+    margin-bottom: 8px; /* Space below badge */
 }
 .ai-card .link-preview {
-    font-size: 0.85em;
+    font-size: 0.8em;
     color: var(--secondary-color);
     word-break: break-all;
-    line-height: 1.4;
-    margin-bottom: 10px; /* Add space before hint */
+    margin-bottom: 12px; /* Space before button */
 }
-.ai-card .play-hint {
-    display: block;
-    font-size: 0.85em;
-    color: var(--secondary-color);
-    text-align: right;
-    margin-top: 10px;
+.ai-card .play-ai-btn {
+    background-color: var(--success-color); /* Green for AI play */
+    color: var(--light-text-on-dark);
+    width: 100%; /* Full width button */
+    text-align: center;
 }
-.ai-card .play-hint i {
-    margin-right: 4px;
-    color: var(--theme-primary);
+.ai-card .play-ai-btn:hover:not(:disabled) {
+     background-color: var(--success-hover-color);
 }
-
 
 /* YFSP Card Specifics */
 .yfsp-card {
-    display: flex;
-    flex-direction: column; /* Stack image and info */
+    /* Flex direction is column by default */
 }
 .yfsp-cover {
     width: 100%;
     aspect-ratio: 2 / 3; /* Common poster aspect ratio */
     background-color: #eee; /* Placeholder bg */
     overflow: hidden;
+    position: relative; /* For error message positioning */
 }
 .yfsp-cover img {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Cover the area, might crop */
-    border-bottom: 1px solid var(--theme-border); /* Separator */
+    object-fit: cover;
+    border-bottom: 1px solid var(--theme-border);
 }
+.yfsp-cover p { /* Style for "无法加载封面" */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
 .yfsp-info {
-    padding: 15px; /* Padding for text content */
+    padding: 15px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allow info to grow and push button down */
 }
 .yfsp-info h3 {
-    font-size: 1.1em;
-    color: var(--text-color); /* Standard text color */
-    margin-bottom: 15px; /* Space before button */
+    font-size: 1.05em; /* Slightly smaller */
+    color: var(--text-color);
+    margin-bottom: 15px;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex-shrink: 0; /* Prevent title shrinking */
 }
-/* YFSP Card Button Change */
-.select-episode-btn { /* Renamed from play-episode-btn */
-    display: inline-block;
-    padding: 10px 20px;
-    font-size: 0.95em;
-    font-weight: 500;
-    background-color: var(--yfsp-button-bg); /* Keep distinct color */
+.yfsp-info .play-episode-btn {
+    background-color: var(--yfsp-button-bg); /* Orange for YFSP */
     color: var(--light-text-on-dark);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease;
-    width: auto;
+    width: 100%; /* Full width button */
 }
-.select-episode-btn i {
-    margin-right: 8px; /* More space for list icon */
-}
-.select-episode-btn:hover:not(:disabled) {
+.yfsp-info .play-episode-btn:hover:not(:disabled) {
     background-color: var(--yfsp-button-hover-bg);
 }
-.select-episode-btn:active:not(:disabled) {
-    transform: scale(0.97);
-}
-.select-episode-btn:disabled {
-    background-color: var(--secondary-color);
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-.select-episode-btn .fa-spinner {
-     animation: spin 1s linear infinite;
-}
+
 
 /* Loading Indicator */
 .loading {
     display: none; /* Hidden by default, shown by JS */
-    flex-direction: column; /* Stack spinner and text */
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
     padding: 50px 0;
     color: var(--text-muted);
+}
+.loading p {
+    font-size: 1.1em;
+    margin-top: 15px;
 }
 
 .spinner {
@@ -352,60 +381,78 @@ header h1 {
     width: 45px;
     height: 45px;
     animation: spin 1s linear infinite;
-    margin: 0 auto 20px auto;
-}
-.loading p {
-    font-size: 1.1em;
 }
 
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
 
+/* Loading indicator specifically inside player */
+.player-loading {
+    position: absolute; /* Position over iframe */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Darker overlay for player */
+    z-index: 5;
+    border-radius: 8px; /* Match iframe container */
+    color: #eee; /* Light text on dark overlay */
+}
+.player-loading .spinner {
+    border-left-color: #eee; /* Lighter spinner on dark overlay */
+    width: 40px;
+    height: 40px;
+}
+.player-loading p {
+    font-size: 1em;
+    margin-top: 10px;
+}
+
 /* Modal Styles */
 .modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1000; /* Sit on top */
+    display: none;
+    position: fixed;
+    z-index: 1000;
     left: 0;
     top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0, 0, 0, 0.55); /* Slightly darker overlay */
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Prevent body scroll when modal is open */
+    background-color: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(4px);
     animation: fadeIn 0.3s ease;
 }
 
 .modal-content {
     background-color: var(--theme-card-bg);
-    margin: 5% auto; /* Centered vertically */
-    padding: 35px 40px; /* Consistent padding */
-    border: none; /* Remove border, rely on shadow */
-    border-radius: 10px; /* Consistent radius */
-    width: 90%; /* Responsive width */
-    max-width: 650px; /* Max width for settings */
+    margin: 5% auto;
+    padding: 35px 40px;
+    border: none;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 650px; /* Default max width (for settings) */
     position: relative;
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
-    animation: slideIn 0.4s ease-out; /* Smoother animation */
-    color: var(--theme-text); /* Ensure text color is set */
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.4s ease-out;
+    color: var(--theme-text);
+    max-height: 90vh; /* Limit height */
+    overflow-y: auto; /* Allow scrolling within modal content if needed */
 }
 
 .close-btn {
-    color: #999; /* Lighter close icon */
+    color: #999;
     position: absolute;
     top: 18px;
     right: 25px;
-    font-size: 32px; /* Larger icon */
-    font-weight: 300; /* Thinner icon */
+    font-size: 32px;
+    font-weight: 300;
     line-height: 1;
     cursor: pointer;
     transition: color 0.3s ease, transform 0.2s ease;
-    z-index: 10; /* Ensure above other content */
+    z-index: 10;
 }
-
-.close-btn:hover,
-.close-btn:focus {
+.close-btn:hover, .close-btn:focus {
     color: var(--danger-color);
     transform: scale(1.1);
     text-decoration: none;
@@ -422,20 +469,17 @@ header h1 {
     text-align: center;
     font-weight: 500;
 }
-#settings-modal h2 i {
-    margin-right: 10px;
-    font-size: 0.9em;
-}
+#settings-modal h2 i { margin-right: 10px; font-size: 0.9em; }
 
 .settings-section {
-    margin-bottom: 30px;
+    margin-bottom: 25px; /* Consistent spacing */
     padding-bottom: 25px;
     border-bottom: 1px solid var(--theme-border);
 }
 .settings-section:last-of-type {
     border-bottom: none;
     padding-bottom: 0;
-    margin-bottom: 25px;
+    margin-bottom: 20px; /* Less margin before actions */
 }
 
 .settings-section h3 {
@@ -447,11 +491,7 @@ header h1 {
     align-items: center;
     gap: 8px;
 }
-.settings-section h3 i {
-    font-size: 1em;
-    color: var(--primary-color); /* Match title color */
-}
-
+.settings-section h3 i { font-size: 1em; color: var(--primary-color); }
 
 .settings-section label {
     display: block;
@@ -465,7 +505,7 @@ header h1 {
 .settings-section input[type="password"] {
     width: 100%;
     padding: 12px 15px;
-    margin-bottom: 18px;
+    margin-bottom: 10px; /* Less space below input */
     border: 1px solid var(--theme-border);
     border-radius: 6px;
     background-color: var(--input-bg);
@@ -480,7 +520,7 @@ header h1 {
     outline: none;
 }
 
-
+#parsing-interfaces-list { margin-bottom: 15px; }
 #parsing-interfaces-list .interface-item {
     display: flex;
     align-items: center;
@@ -488,10 +528,9 @@ header h1 {
     background-color: var(--background-color);
     padding: 10px 15px;
     border-radius: 6px;
-    margin-bottom: 10px;
+    margin-bottom: 8px; /* Tighter spacing */
     border: 1px solid var(--theme-border);
 }
-
 #parsing-interfaces-list span {
     flex-grow: 1;
     margin-right: 15px;
@@ -499,7 +538,6 @@ header h1 {
     color: var(--text-color);
     word-break: break-all;
 }
-
 #parsing-interfaces-list button.remove-interface-btn {
     background: none;
     border: none;
@@ -516,14 +554,12 @@ header h1 {
     transform: scale(1.1);
 }
 
-
 .add-interface-form {
     display: flex;
     gap: 10px;
-    margin-top: 20px;
+    margin-top: 15px; /* Closer to list */
     flex-wrap: wrap;
 }
-
 .add-interface-form input {
     flex: 1;
     min-width: 180px;
@@ -539,7 +575,6 @@ header h1 {
      box-shadow: 0 0 0 3px var(--input-border-focus);
      outline: none;
 }
-
 #add-interface-btn {
     padding: 10px 18px;
     background-color: var(--success-color);
@@ -554,30 +589,21 @@ header h1 {
     align-items: center;
     gap: 6px;
 }
-#add-interface-btn:hover {
-    background-color: var(--success-hover-color);
-}
+#add-interface-btn:hover { background-color: var(--success-hover-color); }
 
-/* Settings Modal Note */
-.settings-section .settings-note {
+.settings-note {
     font-size: 0.85em;
     color: var(--text-muted);
-    margin-top: 5px; /* Space above */
-    margin-bottom: 15px; /* Space below */
-    text-align: left; /* Align left */
-    background-color: rgba(0, 123, 255, 0.05); /* Light background */
-    padding: 8px 12px;
-    border-radius: 4px;
-    border-left: 3px solid var(--theme-primary); /* Accent line */
-}
-/* Original Settings Note (ensure only one is used if content differs) */
-.settings-note { /* Applied outside specific sections too */
-    font-size: 0.85em;
-    color: var(--text-muted);
-    margin-top: 15px;
-    text-align: center;
+    margin-top: 10px; /* Closer to related element */
+    /* text-align: center; */ /* Removed center align */
 }
 
+.settings-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons right */
+    gap: 15px;
+    margin-top: 25px;
+}
 
 #save-settings-btn, #reset-settings-btn {
     padding: 12px 25px;
@@ -587,214 +613,198 @@ header h1 {
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.1s ease;
-    margin-top: 20px;
-    margin-right: 15px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
 }
-#save-settings-btn:active, #reset-settings-btn:active {
-    transform: scale(0.98);
-}
+#save-settings-btn:active, #reset-settings-btn:active { transform: scale(0.98); }
 
-#save-settings-btn {
-    background-color: var(--theme-primary);
-    color: var(--light-text-on-dark);
-}
-#save-settings-btn:hover {
-     background-color: var(--primary-hover-color);
-}
+#save-settings-btn { background-color: var(--theme-primary); color: var(--light-text-on-dark); }
+#save-settings-btn:hover { background-color: var(--primary-hover-color); }
 
-#reset-settings-btn {
-    background-color: var(--secondary-color); /* Default reset color */
-    color: var(--light-text-on-dark);
-}
-#reset-settings-btn:hover {
-     background-color: var(--secondary-hover-color);
-}
-
-.danger-btn { /* Applied to reset button specifically */
-    background-color: var(--danger-color);
-    color: white;
-}
-.danger-btn:hover {
-    background-color: var(--danger-hover-color);
-}
+#reset-settings-btn { background-color: var(--danger-color); color: white; } /* Make reset danger */
+#reset-settings-btn:hover { background-color: var(--danger-hover-color); }
 
 
 /* Player Modal */
 .player-modal .modal-content {
-    max-width: 90%; /* Responsive width */
-    width: 1100px; /* Larger max width for player on desktop */
-    height: 90vh; /* Use more viewport height */
-    margin: 2% auto; /* Adjust vertical centering for larger modal */
+    max-width: 95%; /* Responsive width */
+    width: 1200px; /* Wider for player + episodes */
+    height: 90vh; /* Use most of viewport height */
+    margin: 2vh auto; /* Center vertically better */
     display: flex;
     flex-direction: column;
-    padding: 25px; /* Adjust padding for player */
-    /* Max height to prevent overly tall modals on large screens */
-    max-height: 95vh;
-}
-
-.player-modal-content {
-     overflow: hidden; /* Prevent internal scrollbars */
+    padding: 20px; /* Slightly less padding */
+    overflow: hidden; /* Prevent modal scrollbars */
 }
 
 #player-title {
     color: var(--theme-primary);
     margin-bottom: 15px;
-    font-size: 1.4em; /* Larger title */
+    font-size: 1.3em; /* Adjust size */
     font-weight: 500;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex-shrink: 0; /* Prevent title from shrinking */
-}
-
-/* Container for Player Controls (Parser Select OR Episode List) */
-.player-controls {
-    margin-bottom: 15px; /* Space below controls */
-    flex-shrink: 0; /* Prevent controls area from shrinking */
-    position: relative; /* Context for potential future additions */
-    min-height: 40px; /* Ensure space even if controls are hidden initially */
-}
-
-/* Parsing Selector (for AI method) */
-.parsing-selector {
-    margin-bottom: 20px; /* More space */
-    text-align: center; /* Center align the select box */
     flex-shrink: 0;
-    transition: opacity 0.3s ease, visibility 0.3s ease; /* For hiding */
-    /* Display is controlled by JS */
-}
-.parsing-selector label {
-     margin-right: 10px;
-     font-size: 1em;
-     color: var(--text-muted);
 }
 
+.parsing-selector {
+    margin-bottom: 15px;
+    text-align: center;
+    flex-shrink: 0;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.parsing-selector label { margin-right: 10px; font-size: 0.95em; color: var(--text-muted); }
 #parsing-select {
-    padding: 10px 15px;
+    padding: 8px 12px; /* Smaller padding */
     border: 1px solid var(--theme-border);
     border-radius: 6px;
     background-color: var(--input-bg);
     color: var(--theme-text);
-    min-width: 250px; /* Wider select */
+    min-width: 200px; /* Adjust width */
     cursor: pointer;
-    font-size: 0.95em;
+    font-size: 0.9em;
 }
 #parsing-select:focus {
     border-color: var(--theme-primary);
     box-shadow: 0 0 0 3px var(--input-border-focus);
     outline: none;
 }
-#parsing-select:disabled {
-    background-color: #e9ecef; /* Disabled background */
-    cursor: not-allowed;
+#parsing-select:disabled { background-color: #e9ecef; cursor: not-allowed; }
+
+/* Layout for Player + Episode List */
+.player-area {
+    display: flex;
+    flex-grow: 1; /* Take remaining space */
+    gap: 20px; /* Space between player and list */
+    overflow: hidden; /* Prevent overflow within area */
+    height: calc(100% - 60px); /* Adjust based on title/selector height */
 }
 
-/* Episode List Container (for YFSP method) */
-#episode-list-container {
-    max-height: 120px; /* Limit height and make scrollable */
-    overflow-y: auto; /* Enable vertical scrolling */
-    overflow-x: hidden; /* Hide horizontal scrollbar */
-    padding: 10px 5px; /* Padding inside the scrollable area */
-    border: 1px solid var(--theme-border); /* Border around the list */
-    border-radius: 6px;
-    background-color: rgba(0, 123, 255, 0.03); /* Subtle background */
-    text-align: left; /* Align buttons to the left */
-    /* Display is controlled by JS */
-}
-
-#episode-list-container p { /* Styling for loading/empty text */
-    text-align: center;
-    color: var(--text-muted);
-    padding: 10px;
-}
-
-/* Individual Episode Buttons */
-.episode-button {
-    display: inline-block;
-    background-color: #e9ecef; /* Light grey background */
-    color: var(--text-color);
-    border: 1px solid var(--theme-border);
-    padding: 8px 12px; /* Button padding */
-    margin: 4px; /* Spacing between buttons */
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-    white-space: nowrap; /* Prevent wrapping */
-}
-
-.episode-button:hover {
-    background-color: #dee2e6; /* Slightly darker grey on hover */
-    border-color: #adb5bd;
-}
-
-.episode-button.active {
-    background-color: var(--theme-primary); /* Primary color for active */
-    color: var(--light-text-on-dark);
-    border-color: var(--theme-primary);
-    font-weight: bold;
-}
-
-/* Iframe Container */
 .iframe-container {
-    flex-grow: 1; /* Take remaining vertical space */
-    overflow: hidden; /* Hide potential scrollbars if iframe fits */
-    position: relative; /* Needed for absolute positioning of loading indicator */
-    background-color: #000; /* Black background while loading */
-    border-radius: 8px; /* Rounded corners for iframe area */
-    border: 1px solid var(--theme-border); /* Subtle border around iframe */
-    min-height: 200px; /* Minimum height to prevent collapse */
+    flex-grow: 1; /* Player takes most space */
+    overflow: hidden;
+    position: relative;
+    background-color: #000;
+    border-radius: 8px;
+    border: 1px solid var(--theme-border);
+    min-width: 0; /* Allow shrinking */
 }
 
 #video-player {
     width: 100%;
     height: 100%;
     border: none;
-    display: block; /* Remove potential bottom space */
-    transition: opacity 0.3s ease; /* Fade in */
+    display: block;
+    transition: opacity 0.3s ease;
 }
 
-/* Loading indicator specifically inside player */
-.player-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); /* Darker overlay for player */
-    z-index: 5; /* Above iframe, below modal controls */
-    border-radius: 8px; /* Match iframe container */
-    color: #fff; /* White text on dark overlay */
-     /* Inherits display:flex from .loading */
+.episode-list-container {
+    flex-basis: 280px; /* Fixed width for episode list */
+    flex-shrink: 0; /* Don't shrink episode list */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Hide overflow for the container */
+    background-color: var(--background-color); /* Light bg for list area */
+    border-radius: 8px;
+    border: 1px solid var(--theme-border);
+    padding: 10px;
 }
-.player-loading .spinner {
-     border: 5px solid rgba(255, 255, 255, 0.2); /* Lighter border for dark bg */
-     border-left-color: #fff; /* White spinner */
+.episode-list-container h4 {
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--theme-text);
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--theme-border);
+    text-align: center;
+    flex-shrink: 0; /* Prevent shrinking */
 }
-.player-loading p {
-    font-size: 1.1em;
+
+.episode-list-scrollable {
+    flex-grow: 1; /* Allow list to take remaining space */
+    overflow-y: auto; /* Enable vertical scrolling for episodes */
+    padding-right: 5px; /* Space for scrollbar */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); /* Grid layout for buttons */
+    gap: 8px;
+    align-content: flex-start; /* Start items from top */
+}
+/* Scrollbar styling (optional, webkit only) */
+.episode-list-scrollable::-webkit-scrollbar { width: 6px; }
+.episode-list-scrollable::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+.episode-list-scrollable::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+.episode-list-scrollable::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+.episode-button {
+    padding: 8px 5px; /* Adjust padding */
+    font-size: 0.85em; /* Smaller font for buttons */
+    background-color: var(--episode-button-bg);
+    color: var(--text-color);
+    border: 1px solid var(--theme-border);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.episode-button:hover {
+    background-color: var(--episode-button-hover-bg);
+    border-color: #adb5bd;
+}
+.episode-button.active {
+    background-color: var(--episode-button-active-bg);
+    color: var(--episode-button-active-text);
+    border-color: var(--episode-button-active-bg);
+    font-weight: 500;
 }
 
 
 /* Error Message */
 .error-message {
-    background-color: #f8d7da; /* Danger background (Bootstrap light) */
-    color: #721c24; /* Danger text color */
-    border: 1px solid #f5c6cb; /* Danger border color */
-    padding: 18px 25px; /* More padding */
-    border-radius: 8px; /* Consistent radius */
-    margin-top: 25px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    padding: 15px 20px; /* Adjusted padding */
+    border-radius: 8px;
+    margin-top: 20px; /* Consistent spacing */
     text-align: center;
     animation: fadeIn 0.5s;
-    font-size: 1.05em;
+    font-size: 1em; /* Slightly smaller */
+    position: relative; /* For potential close button */
 }
 
 
 /* Responsive Design */
+@media (max-width: 992px) { /* Adjust breakpoint for player layout */
+    .player-area {
+        flex-direction: column; /* Stack player and list vertically */
+        height: auto; /* Let content define height */
+        gap: 15px;
+    }
+    .episode-list-container {
+        flex-basis: auto; /* Allow height to adjust */
+        max-height: 200px; /* Limit episode list height */
+        flex-shrink: 1; /* Allow shrinking if needed */
+        width: 100%; /* Full width */
+    }
+    .iframe-container {
+         aspect-ratio: 16 / 9; /* Maintain aspect ratio on smaller screens */
+         flex-grow: 0; /* Don't grow infinitely */
+    }
+     .player-modal .modal-content {
+        width: 95%;
+        max-width: 800px; /* Adjust max-width for tablet */
+        height: auto; /* Auto height */
+        max-height: 90vh; /* Still limit overall height */
+     }
+}
+
+
 @media (max-width: 768px) {
     .container {
         padding: 25px;
@@ -803,146 +813,69 @@ header h1 {
     header {
         margin-bottom: 20px;
         padding-bottom: 15px;
-        flex-direction: column; /* Stack title and button */
+        flex-direction: column;
         align-items: flex-start;
         gap: 10px;
     }
-    header h1 {
-        font-size: 1.6em;
-    }
-    #settings-btn {
-        align-self: flex-end; /* Move button to right */
-        font-size: 1.5em;
-    }
-    .search-box {
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 20px; /* Adjust spacing */
-    }
-     #search-input, #search-btn {
-         font-size: 1em;
-         padding: 12px 15px;
-     }
+    header h1 { font-size: 1.6em; }
+    #settings-btn { align-self: flex-end; font-size: 1.5em; }
+    .search-box { flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    #search-input, #search-btn { font-size: 1em; padding: 12px 15px; }
      .search-method-selector {
-         flex-direction: column; /* Stack radio buttons */
-         align-items: flex-start; /* Align left */
-         gap: 10px; /* Reduce gap */
+         flex-direction: column;
+         align-items: flex-start;
+         gap: 10px;
          padding: 15px;
          margin-bottom: 25px;
      }
-     .search-method-selector label {
-         width: 100%; /* Make labels full width */
-     }
+     .search-method-selector label { width: 100%; }
 
      #results-container {
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Adjust grid for mobile */
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 20px;
     }
-     .result-card {
-         /* Keep card structure */
-     }
-    .yfsp-cover {
-         /* Aspect ratio should handle resizing */
-     }
-     .yfsp-info h3 {
-         font-size: 1em;
-     }
-     /* Responsive button size */
-    .select-episode-btn {
-         font-size: 0.9em;
-         padding: 8px 15px;
-     }
+     .play-btn { font-size: 0.9em; padding: 8px 15px; }
 
     .modal-content {
         width: 95%;
-        margin: 8% auto; /* Adjust margin for mobile */
+        margin: 5% auto; /* Adjust margin */
         padding: 25px;
-        max-width: none; /* Remove max-width constraint */
+        max-width: none;
+        max-height: 90vh;
     }
-    #settings-modal h2 {
-        font-size: 1.4em;
-    }
-    .add-interface-form {
-        flex-direction: column;
-    }
-    .add-interface-form input {
-        min-width: 0; /* Reset min-width */
-        width: 100%;
-    }
+    #settings-modal h2 { font-size: 1.4em; }
+    .add-interface-form { flex-direction: column; }
+    .add-interface-form input { min-width: 0; width: 100%; }
+    .settings-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+    #save-settings-btn, #reset-settings-btn { width: 100%; justify-content: center; }
+
      .player-modal .modal-content {
-        height: auto; /* Let content define height */
-        max-height: 85vh; /* Limit height */
-        width: 95%;
         padding: 15px;
+        height: auto;
+        max-height: 90vh;
      }
-     /* Make iframe container proportionally smaller on mobile */
-     .iframe-container {
-        /* Revert aspect ratio change, let flexbox handle height */
-        flex-grow: 1;
-        min-height: 30vh; /* Adjust min height */
-     }
+     .player-area { /* Stacked already */ }
+     .iframe-container { /* Uses aspect ratio */ }
+     .episode-list-container { max-height: 150px; /* Shorter list on mobile */ }
+     .episode-list-scrollable { grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); } /* Adjust grid */
 
-     #player-title {
-         font-size: 1.2em;
-     }
-     .parsing-selector label {
-         display: block; /* Stack label */
-         margin-bottom: 5px;
-     }
-     #parsing-select {
-         width: 100%; /* Full width select */
-         min-width: 0;
-     }
-    /* Responsive Episode List */
-    #episode-list-container {
-        max-height: 100px; /* Smaller max height on mobile */
-    }
-    .episode-button {
-        padding: 6px 10px;
-        font-size: 0.85em;
-    }
-
-    /* Responsive Settings Buttons */
-    #save-settings-btn, #reset-settings-btn {
-        width: 100%; /* Full width buttons */
-        margin-right: 0;
-        margin-bottom: 10px; /* Space between stacked buttons */
-        justify-content: center; /* Center button content */
-    }
-    #save-settings-btn:last-of-type, #reset-settings-btn:last-of-type {
-         margin-bottom: 0;
-    }
+     #player-title { font-size: 1.1em; }
+     .parsing-selector label { display: block; margin-bottom: 5px; }
+     #parsing-select { width: 100%; min-width: 0; }
 
 }
 
 @media (max-width: 480px) {
-     .container {
-         padding: 15px; /* Reduce padding further */
-     }
-     header h1 {
-        font-size: 1.4em;
-    }
-    #results-container {
-        grid-template-columns: 1fr; /* Single column */
-        gap: 15px;
-    }
-    .yfsp-info h3 {
-         font-size: 0.95em; /* Smaller font */
-     }
-     .ai-card h3 {
-         font-size: 1em;
-     }
-     .ai-card .link-preview {
-         font-size: 0.8em;
-     }
+     .container { padding: 15px; }
+     header h1 { font-size: 1.4em; }
+    #results-container { grid-template-columns: 1fr; gap: 15px; } /* Single column */
+    .ai-card h3, .yfsp-info h3 { font-size: 1em; }
 
-     .modal-content {
-         padding: 20px;
-     }
-     #settings-modal h2 {
-         font-size: 1.3em;
-     }
-     .player-modal .modal-content {
-        /* Height adjusted by flex and iframe container min-height */
-     }
+     .modal-content { padding: 20px; }
+     #settings-modal h2 { font-size: 1.3em; }
+     .episode-list-scrollable { grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); } /* Smaller buttons */
+     .episode-button { font-size: 0.8em; padding: 6px 4px;}
+     #player-title { font-size: 1em; }
+
 }
+
