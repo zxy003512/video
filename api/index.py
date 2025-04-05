@@ -206,12 +206,14 @@ def filter_links_with_ai_backend(results_list, ai_url, ai_key, ai_model):
 
 # --- YFSP Search Function (New Method) ---
 def search_yfsp_backend(query):
-    search_url = YFSP_SEARCH_TEMPLATE.format(query)
+    search_url = YFSP_SEARCH_TEMPLATE.format(requests.utils.quote(query)) # URL encode query
     results = []
     print(f"Backend (YFSP Method): Searching YFSP for: {query} at {search_url}")
     try:
         response = requests.get(search_url, headers=REQUEST_HEADERS, timeout=20)
         response.raise_for_status()
+        # Ensure correct encoding based on response headers or meta tags if needed
+        response.encoding = response.apparent_encoding # Try to guess encoding
         soup = BeautifulSoup(response.text, 'html.parser')
         items = soup.select('.module-main .module-card-item.module-item')
         print(f"Backend (YFSP Method): Found {len(items)} result items.")
@@ -224,23 +226,38 @@ def search_yfsp_backend(query):
             if title_tag and poster_link_tag and img_tag:
                 title = title_tag.get_text(strip=True)
                 detail_page_stub = poster_link_tag.get('href')
-                cover_img_stub = img_tag.get('data-original')
+                # Try getting 'data-original' first, fallback to 'src' if needed
+                cover_img_stub = img_tag.get('data-original') or img_tag.get('src')
 
                 if title and detail_page_stub and cover_img_stub:
                     # Extract ID from detail page stub (e.g., /iyftv/65978/ -> 65978)
                     match = re.search(r'/(\d+)/?$', detail_page_stub)
                     if match:
                         video_id = match.group(1)
-                        results.append({
-                            "title": title,
-                            "cover": urljoin(YFSP_BASE_URL, cover_img_stub), # Make absolute URL
-                            "id": video_id,
-                            "base_url": YFSP_BASE_URL # Pass base URL for constructing episode links later
-                        })
+                        # Ensure cover URL is absolute
+                        absolute_cover_url = urljoin(YFSP_BASE_URL, cover_img_stub)
+                        # Simple check if URL is likely valid (starts http)
+                        if absolute_cover_url.startswith('http'):
+                             results.append({
+                                 "title": title,
+                                 "cover": absolute_cover_url,
+                                 "id": video_id,
+                                 "base_url": YFSP_BASE_URL # Pass base URL for constructing episode links later
+                             })
+                        else:
+                              print(f"Backend (YFSP Method): Invalid cover URL generated: {absolute_cover_url} from stub {cover_img_stub}")
                     else:
                          print(f"Backend (YFSP Method): Could not extract ID from {detail_page_stub}")
+                else:
+                     print(f"Backend (YFSP Method): Skipping item due to missing title, detail stub, or cover stub. Title: {title}, Detail: {detail_page_stub}, Cover: {cover_img_stub}")
+
             else:
-                 print(f"Backend (YFSP Method): Skipping item due to missing title, link, or image.")
+                 # Log which part is missing for debugging
+                 missing = []
+                 if not title_tag: missing.append("title_tag")
+                 if not poster_link_tag: missing.append("poster_link_tag")
+                 if not img_tag: missing.append("img_tag")
+                 print(f"Backend (YFSP Method): Skipping item due to missing element(s): {', '.join(missing)}")
 
 
     except requests.exceptions.Timeout:
@@ -260,49 +277,63 @@ def get_yfsp_episode_details(video_id, episode_num, base_url):
     try:
         response = requests.get(episode_page_url, headers=REQUEST_HEADERS, timeout=15)
         response.raise_for_status()
+        # Ensure correct encoding
+        response.encoding = response.apparent_encoding
         html_content = response.text
 
-        # Find the script containing player_aaaa using regex for flexibility
-        match = re.search(r'var player_aaaa\s*=\s*(\{.*?\});', html_content, re.DOTALL | re.IGNORECASE)
+        # Find the script containing player_aaaa using regex
+        # Making it slightly more robust against whitespace variations
+        match = re.search(r'var\s+player_aaaa\s*=\s*(\{.*?\})\s*;', html_content, re.DOTALL | re.IGNORECASE)
         if not match:
-            print(f"Backend (YFSP Method): Could not find player_aaaa script block in {episode_page_url}")
-            return None
+            print(f"Backend (YFSP Method): Could not find player_aaaa script block ending with ';' in {episode_page_url}")
+            # Fallback: Try finding without semicolon, less reliable
+            match = re.search(r'var\s+player_aaaa\s*=\s*(\{.*?\})', html_content, re.DOTALL | re.IGNORECASE)
+            if not match:
+                print(f"Backend (YFSP Method): Could not find player_aaaa script block at all in {episode_page_url}")
+                return None
 
-        player_data_str = match.group(1)
+        # ----- START OF CHANGE -----
+        potential_json_str = match.group(1).strip() # Get the content within {}
+        print(f"Backend (YFSP Method): Raw content matched inside braces: {potential_json_str[:500]}...") # Log the raw match
 
-        # Parse the JSON data
+        # Now, try parsing directly. If it fails with 'Extra data',
+        # it confirms our theory. The regex might be correct, but the JS has junk.
+        # However, often the regex itself is slightly off, or the JSON is simply malformed.
+        # Let's try parsing directly first.
+
         try:
-            player_data = json.loads(player_data_str)
+            # Attempt to parse the extracted string directly
+            player_data = json.loads(potential_json_str)
             m3u8_url = player_data.get('url')
 
             if not m3u8_url:
-                 print(f"Backend (YFSP Method): 'url' key not found in player_aaaa JSON.")
+                 print(f"Backend (YFSP Method): 'url' key not found in parsed player_aaaa JSON.")
                  return None
 
-            # Handle potential unicode escapes and backslashes if needed (depends on source format)
-            # Python's json.loads usually handles standard escapes.
-            # Need to handle escaped forward slashes '\/' if present
-            m3u8_url = m3u8_url.replace('\\/', '/')
+            m3u8_url = m3u8_url.replace('\\/', '/') # Handle escaped slashes
 
-            # Construct the final player link
             final_player_url = YFSP_FINAL_PLAYER_TEMPLATE.format(m3u8_url)
-            print(f"Backend (YFSP Method): Found M3U8 URL: {m3u8_url}")
+            print(f"Backend (YFSP Method): Successfully parsed. Found M3U8 URL: {m3u8_url}")
             print(f"Backend (YFSP Method): Constructed final player URL: {final_player_url}")
             return final_player_url
 
         except json.JSONDecodeError as e:
-            print(f"Backend (YFSP Method): Failed to parse player_aaaa JSON: {e}")
-            print(f"Backend (YFSP Method): Raw JSON string attempt: {player_data_str[:500]}...") # Log beginning of string
+            # Handle the specific "Extra data" error or other parsing issues
+            print(f"Backend (YFSP Method): Failed to parse player_aaaa JSON directly: {e}")
+            print(f"Backend (YFSP Method): Original matched string (potential junk): {potential_json_str[:500]}...")
+            # OPTIONAL: Implement smarter cleanup here if needed, but often the source HTML/JS is the issue.
+            # For now, we'll just report the failure.
             return None
+        # ----- END OF CHANGE -----
+
         except KeyError:
-             print(f"Backend (YFSP Method): 'url' key missing in player_aaaa data.")
+             print(f"Backend (YFSP Method): 'url' key missing in player_aaaa data after potential parsing.")
              return None
 
     except requests.exceptions.Timeout:
         print(f"Backend (YFSP Method): Timeout fetching episode page {episode_page_url}")
         return None
     except requests.exceptions.RequestException as e:
-        # Check for 404 explicitly, might mean episode doesn't exist
         if e.response is not None and e.response.status_code == 404:
              print(f"Backend (YFSP Method): Episode page not found (404): {episode_page_url}")
         else:
@@ -341,8 +372,15 @@ def handle_search():
         ai_key = settings.get('aiApiKey') or DEFAULT_AI_API_KEY
         ai_model = settings.get('aiModel') or DEFAULT_AI_MODEL
 
+        # Prioritize backend key if user doesn't provide one or provides an empty one
+        if not ai_key:
+            ai_key = DEFAULT_AI_API_KEY
+            print("Backend: Using default AI API Key from environment.")
+        # Ensure a valid key is available
         if not ai_key or "PLACEHOLDER" in ai_key:
+             print("Backend Error: AI API Key is missing or is a placeholder.")
              return jsonify({"error": "AI API Key is not configured or provided."}), 500
+
         if not ai_url: return jsonify({"error": "AI API URL is not configured."}), 500
         if not ai_model: return jsonify({"error": "AI Model is not configured."}), 500
         if not searxng_url: return jsonify({"error": "SearXNG URL is not configured."}), 500
@@ -384,9 +422,8 @@ def handle_get_episode_details():
     if final_player_url:
         return jsonify({"player_url": final_player_url})
     else:
-        # Provide a more specific error if possible (e.g., not found vs parsing error)
-        # For simplicity now, just return a generic error
-        return jsonify({"error": f"Failed to retrieve details for episode {episode_num}"}), 500
+        # Send back a more specific error message if possible
+        return jsonify({"error": f"无法获取剧集 {episode_num} 的播放信息，可能页面结构已更改或剧集不存在。"}), 500 # Changed error message
 
 
 @app.route('/api/config', methods=['GET'])
@@ -410,6 +447,19 @@ def serve_index():
 
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory(app.static_folder, path)
+    # Security: Basic path sanitization, prevent accessing files outside 'public'
+    safe_path = os.path.normpath(path).lstrip('/')
+    if '..' in safe_path or safe_path.startswith('/'):
+         return "Forbidden", 403 # Prevent directory traversal
+    # Serve only if file exists within the static folder
+    full_path = os.path.join(app.static_folder, safe_path)
+    if os.path.isfile(full_path):
+        return send_from_directory(app.static_folder, safe_path)
+    else:
+        # If it's not a recognized static file path, assume it's a route for the SPA
+        # and serve index.html. This helps with frontend routing.
+        print(f"Serving index.html for unknown path: {path}")
+        return send_from_directory(app.static_folder, 'index.html')
+
 
 # Vercel needs the 'app' variable
