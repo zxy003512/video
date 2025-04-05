@@ -20,13 +20,26 @@
             <button id="search-btn" aria-label="搜索"><i class="fas fa-search"></i> 搜索</button>
         </div>
 
+        <!-- Search Method Selection -->
+        <div class="search-method-selector">
+            <label>
+                <input type="radio" name="search-method" value="ai" checked>
+                <i class="fas fa-brain"></i> 智能 AI 过滤
+            </label>
+            <label>
+                <input type="radio" name="search-method" value="yfsp">
+                <i class="fas fa-film"></i> YFSP 资源站
+            </label>
+        </div>
+
+
         <div id="settings-modal" class="modal">
             <div class="modal-content">
                 <span class="close-btn">&times;</span>
                 <h2><i class="fas fa-sliders-h"></i> 应用设置</h2>
 
                 <div class="settings-section">
-                    <h3>AI 配置</h3>
+                    <h3><i class="fas fa-robot"></i> AI 配置 (用于智能 AI 过滤)</h3>
                     <label for="ai-api-url">API 地址:</label>
                     <input type="text" id="ai-api-url" placeholder="例如: https://api.zetatechs.com/v1">
 
@@ -38,13 +51,13 @@
                 </div>
 
                 <div class="settings-section">
-                    <h3>搜索引擎 (SearXNG)</h3>
-                    <label for="searxng-url">实例地址:</label>
+                    <h3><i class="fas fa-search-location"></i> 搜索引擎 (用于智能 AI 过滤)</h3>
+                    <label for="searxng-url">SearXNG 实例地址:</label>
                     <input type="text" id="searxng-url" placeholder="例如: https://searxng.zetatechs.online/search">
                 </div>
 
                 <div class="settings-section">
-                    <h3>视频解析接口</h3>
+                    <h3><i class="fas fa-magic"></i> 视频解析接口 (用于 AI 过滤结果)</h3>
                     <div id="parsing-interfaces-list">
                         <!-- Interfaces will be loaded here by JS -->
                     </div>
@@ -53,6 +66,7 @@
                         <input type="text" id="new-interface-url" placeholder="接口URL (例如: https://jx.example.com/?url=)">
                         <button id="add-interface-btn"><i class="fas fa-plus"></i> 添加接口</button>
                     </div>
+                     <p class="settings-note">注意：解析接口仅对“智能 AI 过滤”模式找到的链接有效。</p>
                 </div>
 
                 <button id="save-settings-btn"><i class="fas fa-save"></i> 保存设置</button>
@@ -62,7 +76,7 @@
 
         <div id="loading-indicator" class="loading" style="display: none;">
             <div class="spinner"></div>
-            <p>正在智能分析中...</p>
+            <p id="loading-text">正在智能分析中...</p>
         </div>
 
         <div id="results-container">
@@ -73,7 +87,7 @@
              <div class="modal-content player-modal-content">
                 <span class="close-player-btn close-btn">&times;</span>
                 <h3 id="player-title">正在播放...</h3>
-                 <div class="parsing-selector">
+                 <div class="parsing-selector" id="parsing-selector-container">
                      <label for="parsing-select">选择解析接口:</label>
                      <select id="parsing-select">
                          <!-- Options loaded by JS -->
@@ -81,6 +95,11 @@
                  </div>
                 <div class="iframe-container">
                     <iframe id="video-player" src="" frameborder="0" allowfullscreen></iframe>
+                     <!-- Loading indicator for player -->
+                     <div id="player-loading-indicator" class="loading player-loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>正在加载播放资源...</p>
+                    </div>
                 </div>
             </div>
         </div>
