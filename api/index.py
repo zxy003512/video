@@ -5,8 +5,9 @@ import json
 import time
 import re
 from flask import Flask, request, jsonify, send_from_directory
-from urllib.parse import urlparse, parse_qs, urljoin
+from urllib.parse import urlparse, urljoin # Removed unused parse_qs
 from dotenv import load_dotenv
+import traceback # For detailed error logging
 
 # Load environment variables from .env file for local development
 load_dotenv()
@@ -15,7 +16,8 @@ app = Flask(__name__, static_folder='../public', static_url_path='')
 
 # --- Configuration ---
 DEFAULT_AI_API_URL = os.getenv('AI_API_URL', "https://api.zetatechs.com/v1/chat/completions")
-DEFAULT_AI_API_KEY = os.getenv('AI_API_KEY', "YOUR_FALLBACK_OR_PLACEHOLDER_KEY") # Vercel 环境变量中必须设置!
+# Vercel 环境变量中必须设置! 检查确保不是占位符
+DEFAULT_AI_API_KEY = os.getenv('AI_API_KEY', "YOUR_FALLBACK_OR_PLACEHOLDER_KEY")
 DEFAULT_AI_MODEL = os.getenv('AI_MODEL', "gemini-2.0-flash") # 确认模型名称正确
 DEFAULT_SEARXNG_URL = os.getenv('SEARXNG_URL', "https://searxng.zetatechs.online/search")
 DEFAULT_PARSING_INTERFACES_JSON = os.getenv('DEFAULT_PARSING_INTERFACES', json.dumps([
@@ -27,16 +29,19 @@ DEFAULT_PARSING_INTERFACES_JSON = os.getenv('DEFAULT_PARSING_INTERFACES', json.d
     {"name": "接口6 - yemu.xyz", "url": "https://www.yemu.xyz/?url=", "restricted_mobile": True}
 ]))
 
-AI_MAX_TOKENS = 30000 # 可以适当调整，但对于提取任务应该足够
-AI_TEMPERATURE = 0.0 # 保持确定性输出
-AI_MAX_RETRIES = 3
-AI_RETRY_DELAY = 5 # seconds
+AI_MAX_TOKENS_FILTER = 30000 # For filtering search results
+AI_MAX_TOKENS_PARSE = 2000  # Smaller limit for parsing specific HTML sections
+AI_TEMPERATURE = 0.0 # Keep deterministic output
+AI_MAX_RETRIES = 3 # Max retries for AI calls
+AI_RETRY_DELAY = 1 # Delay in seconds between retries
 
 # --- Constants for YFSP ---
 YFSP_BASE_URL = "https://www.yfsp.lv"
 YFSP_SEARCH_TEMPLATE = "https://www.yfsp.lv/s/-------------/?wd={}"
-YFSP_FINAL_PLAYER_TEMPLATE = "https://b.212133.xyz/player/ec.php?code=qw&if=1&url={}"
-REQUEST_HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'} # 使用较新的 UA
+YFSP_DETAIL_PAGE_TEMPLATE = "https://www.yfsp.lv/iyf/{}/" # For fetching episode list maybe? Or use first play page.
+YFSP_PLAY_PAGE_TEMPLATE = "https://www.yfsp.lv{}" # Takes relative path like /iyfplay/65978-1-1/
+YFSP_FINAL_PLAYER_TEMPLATE = "https://b.212133.xyz/player/ec.php?code=qw&if=1&url={}" # Template for the final iframe src
+REQUEST_HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'} # Updated UA
 
 # --- Helper Function: Extract Domain ---
 def get_domain(url):
@@ -45,8 +50,90 @@ def get_domain(url):
     except:
         return "Unknown"
 
+# --- Generic AI Request Function with Retry ---
+def make_ai_request(ai_url, ai_key, ai_model, prompt, max_tokens, context="AI Request"):
+    """Makes an AI API request with retry logic."""
+    if not all([ai_url, ai_key, ai_model, prompt]):
+        print(f"Backend ({context}): Missing AI configuration or prompt.")
+        return None, "AI configuration or prompt missing"
+
+    # Check for placeholder key
+    if "YOUR_FALLBACK_OR_PLACEHOLDER_KEY" in ai_key or not ai_key:
+         print(f"Backend ({context}): ERROR - AI API Key is not configured or is a placeholder.")
+         return None, "AI API Key is not configured properly"
+
+    headers = {"Authorization": f"Bearer {ai_key}", "Content-Type": "application/json"}
+    payload = {
+        "model": ai_model,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": max_tokens,
+        "temperature": AI_TEMPERATURE,
+        "stream": False
+    }
+
+    for attempt in range(AI_MAX_RETRIES):
+        print(f"Backend ({context}): AI API attempt {attempt + 1}/{AI_MAX_RETRIES} to {ai_url} with model {ai_model}")
+        response = None
+        try:
+            response = requests.post(ai_url, headers=headers, json=payload, timeout=90) # 90s timeout
+            response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
+            ai_response = response.json()
+
+            if 'choices' in ai_response and len(ai_response['choices']) > 0:
+                message = ai_response['choices'][0].get('message', {})
+                content = message.get('content')
+                if content:
+                    print(f"Backend ({context}): AI response received successfully.")
+                    # Clean potential markdown ```json ... ```
+                    json_content = content.strip()
+                    if json_content.startswith("```json"): json_content = json_content[7:]
+                    if json_content.endswith("```"): json_content = json_content[:-3]
+                    json_content = json_content.strip()
+                    return json_content, None # Return content and no error
+                else:
+                    print(f"Backend ({context}): AI response content is empty.")
+                    # Treat as potentially retryable? Or specific error? Let's retry.
+                    error_reason = "AI response content empty"
+            else:
+                print(f"Backend ({context}): Unexpected AI response structure: {ai_response}")
+                # Treat as potentially retryable? Or specific error? Let's retry.
+                error_reason = "Unexpected AI response structure"
+
+        except requests.exceptions.Timeout:
+            print(f"Backend ({context}): AI API timeout (Attempt {attempt + 1})")
+            error_reason = "Timeout"
+        except requests.exceptions.HTTPError as http_err:
+            print(f"Backend ({context}): AI API HTTP error (Attempt {attempt + 1}): {http_err}")
+            error_reason = f"HTTP Error: {http_err.response.status_code}"
+            if http_err.response.status_code in [401, 403]:
+                print(f"Backend ({context}): Authentication error ({http_err.response.status_code}). Stopping retries.")
+                return None, f"AI Authentication Error ({http_err.response.status_code})" # Non-retryable
+            if http_err.response.status_code == 429: # Rate limit
+                print(f"Backend ({context}): Rate limit hit. Waiting longer before next attempt.")
+                time.sleep(AI_RETRY_DELAY * (attempt + 2)) # Exponential backoff maybe? Simple longer wait for now.
+            # Other 4xx/5xx errors might be temporary, continue retry logic
+        except requests.exceptions.RequestException as e:
+            print(f"Backend ({context}): AI API request error (Attempt {attempt + 1}): {e}")
+            error_reason = f"RequestException: {e}"
+        except Exception as e:
+            print(f"Backend ({context}): Unknown error during AI processing (Attempt {attempt + 1}): {e}")
+            # Log traceback for unexpected errors
+            traceback.print_exc()
+            error_reason = f"Unknown Error: {e}"
+
+        # If an error occurred and it's not the last attempt, wait before retrying
+        if attempt < AI_MAX_RETRIES - 1:
+            print(f"Backend ({context}): Retrying after delay...")
+            time.sleep(AI_RETRY_DELAY)
+        else:
+            print(f"Backend ({context}): AI API max retries reached. Last error: {error_reason}")
+            return None, f"AI failed after {AI_MAX_RETRIES} attempts ({error_reason})"
+
+    return None, f"AI failed after {AI_MAX_RETRIES} attempts (Loop ended unexpectedly)" # Should not be reached if logic is correct
+
 # --- SearXNG Search Function (Original AI Method) ---
 def search_searxng_backend(query, searxng_url):
+    # (Function remains the same as before)
     params = {
         'q': query, 'categories': 'general', 'language': 'auto',
         'time_range': '', 'safesearch': '0', 'theme': 'simple', 'format': 'html'
@@ -66,7 +153,7 @@ def search_searxng_backend(query, searxng_url):
                 if link_tag:
                     title = link_tag.get_text(strip=True)
                     link = link_tag['href']
-                    # 确保链接是绝对 URL
+                    # Ensure link is absolute
                     link = urljoin(searxng_url, link) if not link.startswith('http') else link
                     if title and link.startswith('http'):
                         search_results.append({'title': title, 'link': link})
@@ -75,8 +162,8 @@ def search_searxng_backend(query, searxng_url):
     print(f"Backend (AI Method): Extracted {len(search_results)} valid results.")
     return search_results
 
-# --- AI Filtering Function (Original AI Method) ---
-AI_PROMPT_CN = f"""
+# --- AI Filtering Function (Original AI Method - Now uses generic request function) ---
+AI_PROMPT_CN_FILTER = f"""
 请分析以下搜索结果列表（每个结果包含标题 Title 和 URL）。
 你的任务是仅识别出那些直接指向电影或电视剧集播放页面的 URL。
 优先考虑来自主要视频平台（如腾讯视频 v.qq.com, 爱奇艺 iq.com, Bilibili bilibili.com, 优酷 youku.com, 芒果TV mgtv.com, 华数TV wasu.cn 等）的链接，但也要包含来自其他专用视频流媒体网站的任何有效的直接视频播放链接。
@@ -106,85 +193,56 @@ AI_PROMPT_CN = f"""
 你的 JSON 输出：
 """
 
-# (English AI Prompt - AI_PROMPT_EN - remains the same, not shown for brevity)
-
 def filter_links_with_ai_backend(results_list, ai_url, ai_key, ai_model):
-    # (Function remains largely the same, ensure it uses the correct prompt and parses the response)
-    # ... (Previous implementation of filter_links_with_ai_backend) ...
-    if not results_list: return []
+    if not results_list: return [], None
 
-    print(f"Backend (AI Filter): Sending {len(results_list)} results to AI ({ai_url}, model: {ai_model})")
+    print(f"Backend (AI Filter): Preparing {len(results_list)} results for AI filtering.")
     input_data_for_ai = "\n".join([f"Title: {item['title']}\nURL: {item['link']}" for item in results_list])
-    prompt_to_use = AI_PROMPT_CN.format(input_data_for_ai=input_data_for_ai) # 使用中文提示
+    prompt_to_use = AI_PROMPT_CN_FILTER.format(input_data_for_ai=input_data_for_ai)
 
-    headers = {"Authorization": f"Bearer {ai_key}", "Content-Type": "application/json"}
-    payload = {
-        "model": ai_model, "messages": [{"role": "user", "content": prompt_to_use}],
-        "max_tokens": AI_MAX_TOKENS, "temperature": AI_TEMPERATURE, "stream": False
-    }
+    json_content, error = make_ai_request(
+        ai_url, ai_key, ai_model, prompt_to_use, AI_MAX_TOKENS_FILTER, "AI Filter"
+    )
 
-    for attempt in range(AI_MAX_RETRIES):
-        print(f"Backend (AI Filter): AI API attempt {attempt + 1}/{AI_MAX_RETRIES}")
-        response = None
-        try:
-            response = requests.post(ai_url, headers=headers, json=payload, timeout=90)
-            response.raise_for_status()
-            ai_response = response.json()
+    if error:
+        return None, error # Propagate error message
 
-            if 'choices' in ai_response and len(ai_response['choices']) > 0:
-                content = ai_response['choices'][0].get('message', {}).get('content')
-                if content:
-                    print("Backend (AI Filter): AI response received, parsing JSON...")
-                    try:
-                        json_content = content.strip()
-                        if json_content.startswith("```json"): json_content = json_content[7:]
-                        if json_content.endswith("```"): json_content = json_content[:-3]
-                        json_content = json_content.strip()
+    if not json_content:
+        return None, "AI returned empty content after successful request."
 
-                        parsed_data = json.loads(json_content)
-                        if isinstance(parsed_data, list):
-                            validated_data = []
-                            for item in parsed_data:
-                                if isinstance(item, dict) and 'title' in item and 'video_link' in item:
-                                    if 'website' not in item or not item['website']:
-                                         item['website'] = get_domain(item['video_link'])
-                                    validated_data.append(item)
-                            print(f"Backend (AI Filter): AI parsed {len(validated_data)} valid items.")
-                            return validated_data
-                        else:
-                             print(f"Backend (AI Filter): AI did not return a JSON list. Content: {content[:200]}...")
-                             return [] # Return empty list if format is wrong
-
-                    except json.JSONDecodeError as json_e:
-                        print(f"Backend (AI Filter): AI JSON parsing error: {json_e}. Content: {content[:200]}...")
-                        # Don't retry on parsing error
-                        return None # Indicate failure
-                else: print("Backend (AI Filter): AI response content is empty.")
-            else: print(f"Backend (AI Filter): Unexpected AI response structure: {ai_response}")
-
-        except requests.exceptions.Timeout: print(f"Backend (AI Filter): AI API timeout (Attempt {attempt + 1})")
-        except requests.exceptions.RequestException as e:
-            print(f"Backend (AI Filter): AI API request error (Attempt {attempt + 1}): {e}")
-            if response is not None and response.status_code in [401, 403]:
-                print("Backend (AI Filter): AI Auth error, stopping retries.")
-                return None # Indicate failure
-        except Exception as e: print(f"Backend (AI Filter): Unknown error during AI processing: {e}")
-
-        if attempt < AI_MAX_RETRIES - 1: time.sleep(AI_RETRY_DELAY)
-        else: print("Backend (AI Filter): AI API max retries reached.")
-
-    return None # Indicate failure after retries
+    try:
+        parsed_data = json.loads(json_content)
+        if isinstance(parsed_data, list):
+            validated_data = []
+            for item in parsed_data:
+                if isinstance(item, dict) and 'title' in item and 'video_link' in item:
+                    if 'website' not in item or not item['website']:
+                        item['website'] = get_domain(item['video_link'])
+                    validated_data.append(item)
+            print(f"Backend (AI Filter): AI parsed {len(validated_data)} valid items.")
+            return validated_data, None
+        else:
+            print(f"Backend (AI Filter): AI did not return a JSON list. Content: {json_content[:200]}...")
+            return None, "AI did not return a JSON list"
+    except json.JSONDecodeError as json_e:
+        print(f"Backend (AI Filter): AI JSON parsing error: {json_e}. Content: {json_content[:200]}...")
+        return None, f"AI result JSON parsing error: {json_e}"
+    except Exception as e:
+        print(f"Backend (AI Filter): Error processing AI response: {e}")
+        traceback.print_exc()
+        return None, f"Error processing AI response: {e}"
 
 
 # --- YFSP Search Function (New Method) ---
 def search_yfsp_backend(query):
+    # (Function remains largely the same as before)
     search_url = YFSP_SEARCH_TEMPLATE.format(query)
     results = []
     print(f"Backend (YFSP Method): Searching YFSP for: {query} at {search_url}")
     try:
         response = requests.get(search_url, headers=REQUEST_HEADERS, timeout=20)
         response.raise_for_status()
-        response.encoding = response.apparent_encoding # 尝试自动检测编码
+        response.encoding = response.apparent_encoding # Try to auto-detect encoding
         soup = BeautifulSoup(response.text, 'html.parser')
         items = soup.select('.module-main .module-card-item.module-item')
         print(f"Backend (YFSP Method): Found {len(items)} result items.")
@@ -200,13 +258,14 @@ def search_yfsp_backend(query):
                 cover_img_stub = img_tag.get('data-original')
 
                 if title and detail_page_stub and cover_img_stub:
-                    match = re.search(r'/(\d+)/?$', detail_page_stub)
+                    # Extract ID from detail page link, e.g., /iyf/65978/
+                    match = re.search(r'/iyf/(\d+)/?$', detail_page_stub)
                     if match:
                         video_id = match.group(1)
                         results.append({
                             "title": title,
                             "cover": urljoin(YFSP_BASE_URL, cover_img_stub),
-                            "id": video_id,
+                            "id": video_id, # The ID of the show/movie
                             "base_url": YFSP_BASE_URL
                         })
                     else:
@@ -216,183 +275,277 @@ def search_yfsp_backend(query):
 
     except requests.exceptions.Timeout: print(f"Backend (YFSP Method): Timeout searching {search_url}")
     except requests.exceptions.RequestException as e: print(f"Backend (YFSP Method): Request error searching {search_url}: {e}")
-    except Exception as e: print(f"Backend (YFSP Method): Error parsing YFSP search results: {e}")
+    except Exception as e:
+        print(f"Backend (YFSP Method): Error parsing YFSP search results: {e}")
+        traceback.print_exc()
 
     print(f"Backend (YFSP Method): Extracted {len(results)} valid results.")
     return results
 
-# --- NEW: AI Function to Parse Episode HTML ---
-def parse_episode_html_with_ai(html_content, ai_url, ai_key, ai_model):
-    """
-    Uses AI to parse the episode page HTML and extract m3u8 URLs.
-    Args:
-        html_content (str): The full HTML content of the episode page.
-        ai_url (str): AI API endpoint URL.
-        ai_key (str): AI API key.
-        ai_model (str): AI model name.
-    Returns:
-        dict: A dictionary containing 'url' and 'url_next' or an 'error' key.
-              Example: {"url": "...", "url_next": "..."} or {"error": "message"}
-    """
-    if not html_content:
-        return {"error": "HTML content is empty"}
-    if not all([ai_url, ai_key, ai_model]):
-         return {"error": "AI configuration is incomplete"}
 
-    print(f"Backend (YFSP AI Parser): Sending HTML to AI ({ai_url}, model: {ai_model}) for parsing.")
-
-    prompt = f"""
+# --- NEW: AI Function to Parse Episode LIST from HTML ---
+AI_PROMPT_YFSP_EPISODE_LIST = """
 请仔细分析以下提供的视频播放页面的 HTML 内容。
-在 HTML 中找到定义了 `player_aaaa` JavaScript 变量的 `<script>` 代码块。这个变量被赋值为一个 JSON 对象。
-请精确地解析这个 JSON 对象。
-提取与键 "url" 和 "url_next" 相关联的值。
+你的任务是找到包含剧集链接列表的区域，通常在一个 class 包含 'module-play-list-content' 的 div 元素内。
+你需要提取该区域中所有剧集链接 (`<a>` 标签)。
 
-请注意处理以下情况：
-- JSON 对象可能嵌套在 `<script>` 标签内。
-- JSON 字符串值可能包含转义字符（例如 `\\/` 应替换为 `/`，处理 `\\uXXXX` unicode 转义）。你需要返回清理后的 URL。
-- 如果 "url" 或 "url_next" 键不存在于 JSON 对象中，对应的值应返回 `null`。
-- 如果在 HTML 中找不到 `player_aaaa` 对象，或者无法解析其内容为有效的 JSON，请返回 `{{ "error": "player_aaaa not found or invalid" }}`。
+对于每个找到的剧集链接 `<a>` 标签，请提取以下信息：
+1.  **剧集编号/名称**: `<a>` 标签内部 `<span>` 标签的文本内容。如果找不到 `<span>`，则使用 `<a>` 标签本身的文本内容。去除文本前后的空白。
+2.  **剧集链接**: `<a>` 标签的 `href` 属性值。这通常是一个相对路径。
 
-返回结果必须是且仅是一个 JSON 对象，包含提取的信息。有效输出示例：
-`{{ "url": "https://actual.m3u8/link/...", "url_next": "https://next.m3u8/link/..." }}`
-`{{ "url": "https://actual.m3u8/link/...", "url_next": null }}`
-`{{ "error": "player_aaaa not found or invalid" }}`
+请将提取的信息组织成一个 JSON 列表。列表中的每个对象代表一个剧集，并包含以下确切的键：
+- "num": 提取到的剧集编号/名称 (字符串)。
+- "link": 提取到的 `href` 属性值 (字符串，相对路径)。
 
-不要在 JSON 结构之外添加任何说明或前导/尾随文本。
+例如:
+`[ { "num": "01", "link": "/iyfplay/65978-1-1/" }, { "num": "02", "link": "/iyfplay/65978-1-2/" }, ... ]`
 
-HTML 内容如下：
+如果找不到包含 'module-play-list-content' 的 div，或者该 div 内没有有效的 `<a>` 剧集链接，请返回一个空的 JSON 列表：`[]`。
+
+确保返回的是纯粹的 JSON 列表，不要包含任何额外的解释或文本。
+
+HTML 内容如下（只显示开头部分）：
 --- START HTML ---
-{html_content[:25000]} 
+{html_content_snippet}
 --- END HTML ---
 
 你的 JSON 输出：
-""" # Truncate HTML to avoid exceeding token limits easily
+"""
 
-    headers = {"Authorization": f"Bearer {ai_key}", "Content-Type": "application/json"}
-    payload = {
-        "model": ai_model,
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 1000, # Parsing result should be small
-        "temperature": AI_TEMPERATURE,
-        "stream": False
-    }
+def parse_episode_list_with_ai(html_content, ai_url, ai_key, ai_model):
+    """Uses AI to parse HTML and extract the list of episodes."""
+    if not html_content: return None, "HTML content for episode list parsing is empty"
 
-    for attempt in range(AI_MAX_RETRIES):
-        print(f"Backend (YFSP AI Parser): AI API attempt {attempt + 1}/{AI_MAX_RETRIES}")
-        response = None
-        try:
-            response = requests.post(ai_url, headers=headers, json=payload, timeout=60) # Shorter timeout for parsing
-            response.raise_for_status()
-            ai_response = response.json()
+    print(f"Backend (YFSP AI List Parser): Sending HTML snippet to AI for episode list extraction.")
+    # Limit HTML size sent to AI
+    html_snippet = html_content[:30000] # Send a large chunk likely containing the list
+    prompt = AI_PROMPT_YFSP_EPISODE_LIST.format(html_content_snippet=html_snippet)
 
-            if 'choices' in ai_response and len(ai_response['choices']) > 0:
-                content = ai_response['choices'][0].get('message', {}).get('content')
-                if content:
-                    print("Backend (YFSP AI Parser): AI response received, parsing JSON result...")
-                    try:
-                        # Clean potential markdown
-                        json_content = content.strip()
-                        if json_content.startswith("```json"): json_content = json_content[7:]
-                        if json_content.endswith("```"): json_content = json_content[:-3]
-                        json_content = json_content.strip()
+    json_content, error = make_ai_request(
+        ai_url, ai_key, ai_model, prompt, AI_MAX_TOKENS_PARSE, "YFSP AI List Parser"
+    )
 
-                        # Attempt to parse the JSON the AI returned
-                        parsed_data = json.loads(json_content)
+    if error:
+        return None, error # Propagate error
 
-                        # Basic validation of the expected structure
-                        if isinstance(parsed_data, dict) and ('url' in parsed_data or 'error' in parsed_data):
-                             print(f"Backend (YFSP AI Parser): Successfully parsed AI result: {parsed_data}")
-                             # Clean up potential escaped slashes in URLs if AI didn't do it
-                             if 'url' in parsed_data and parsed_data['url']:
-                                 parsed_data['url'] = parsed_data['url'].replace('\\/', '/')
-                             if 'url_next' in parsed_data and parsed_data['url_next']:
-                                  parsed_data['url_next'] = parsed_data['url_next'].replace('\\/', '/')
-                             return parsed_data
-                        else:
-                             print(f"Backend (YFSP AI Parser): AI returned unexpected JSON structure: {parsed_data}")
-                             return {"error": "AI returned unexpected JSON structure"}
+    if not json_content:
+        return None, "AI returned empty content for episode list."
 
-                    except json.JSONDecodeError as json_e:
-                        print(f"Backend (YFSP AI Parser): AI JSON *result* parsing error: {json_e}. Content: {content[:200]}...")
-                        # Don't retry on parsing error of AI's response
-                        return {"error": f"AI JSON result parsing error: {json_e}"}
-                else: print("Backend (YFSP AI Parser): AI response content is empty.")
-            else: print(f"Backend (YFSP AI Parser): Unexpected AI response structure: {ai_response}")
-
-        except requests.exceptions.Timeout: print(f"Backend (YFSP AI Parser): AI API timeout (Attempt {attempt + 1})")
-        except requests.exceptions.RequestException as e:
-            print(f"Backend (YFSP AI Parser): AI API request error (Attempt {attempt + 1}): {e}")
-            if response is not None and response.status_code in [401, 403]:
-                print("Backend (YFSP AI Parser): AI Auth error, stopping retries.")
-                return {"error": "AI Authentication Error"} # Indicate failure
-        except Exception as e: print(f"Backend (YFSP AI Parser): Unknown error during AI processing: {e}")
-
-        if attempt < AI_MAX_RETRIES - 1: time.sleep(AI_RETRY_DELAY)
-        else: print("Backend (YFSP AI Parser): AI API max retries reached.")
-
-    return {"error": "AI processing failed after multiple retries"} # Indicate failure after retries
-
-
-# --- MODIFIED: YFSP Get Episode Details Function (Uses AI Parsing) ---
-def get_yfsp_episode_details(video_id, episode_num, base_url):
-    episode_page_url = f"{base_url}/iyfplay/{video_id}-1-{episode_num}/"
-    print(f"Backend (YFSP Method): Fetching episode page HTML from {episode_page_url}")
     try:
-        response = requests.get(episode_page_url, headers=REQUEST_HEADERS, timeout=20) # Increased timeout for page load
-        response.raise_for_status()
-        response.encoding = response.apparent_encoding # Ensure correct encoding
-        html_content = response.text
+        parsed_data = json.loads(json_content)
+        if isinstance(parsed_data, list):
+             # Basic validation of list items
+             validated_list = []
+             for item in parsed_data:
+                 if isinstance(item, dict) and 'num' in item and 'link' in item and isinstance(item['link'], str):
+                     # Ensure link looks like a relative path
+                     if item['link'].startswith('/'):
+                         validated_list.append({
+                             "num": str(item['num']).strip(), # Ensure num is string and stripped
+                             "link": item['link'].strip()
+                         })
+                     else:
+                         print(f"Backend (YFSP AI List Parser): Skipping item with invalid link format: {item}")
+                 else:
+                    print(f"Backend (YFSP AI List Parser): Skipping invalid item structure: {item}")
 
-        # Check if HTML content was retrieved
-        if not html_content or len(html_content) < 500: # Basic check for empty or very small response
-             print(f"Backend (YFSP Method): HTML content from {episode_page_url} seems empty or too small.")
-             return None
-
-        # --- Call AI to parse the HTML ---
-        # Use default backend AI settings, NOT user-provided ones from settings modal
-        ai_result = parse_episode_html_with_ai(
-            html_content,
-            DEFAULT_AI_API_URL,
-            DEFAULT_AI_API_KEY,
-            DEFAULT_AI_MODEL
-        )
-
-        # --- Process AI Result ---
-        if not ai_result or 'error' in ai_result:
-            error_msg = ai_result.get('error', 'Unknown AI parsing error') if ai_result else 'AI parsing failed'
-            print(f"Backend (YFSP Method): AI failed to parse episode HTML: {error_msg}")
-            return None # Indicate failure
-
-        m3u8_url = ai_result.get('url')
-
-        if not m3u8_url:
-             print(f"Backend (YFSP Method): AI did not return a 'url' key or it was null.")
-             return None
-
-        # Construct the final player link using the URL returned by AI
-        final_player_url = YFSP_FINAL_PLAYER_TEMPLATE.format(m3u8_url)
-        print(f"Backend (YFSP Method): AI extracted M3U8 URL: {m3u8_url}")
-        print(f"Backend (YFSP Method): Constructed final player URL: {final_player_url}")
-        return final_player_url
-
-    except requests.exceptions.Timeout:
-        print(f"Backend (YFSP Method): Timeout fetching episode page {episode_page_url}")
-        return None
-    except requests.exceptions.RequestException as e:
-        if e.response is not None and e.response.status_code == 404:
-             print(f"Backend (YFSP Method): Episode page not found (404): {episode_page_url}")
+             print(f"Backend (YFSP AI List Parser): Successfully parsed {len(validated_list)} episode items.")
+             return validated_list, None
         else:
-             print(f"Backend (YFSP Method): Request error fetching episode page {episode_page_url}: {e}")
-        return None
-    except Exception as e:
-        print(f"Backend (YFSP Method): Error processing episode page {episode_page_url}: {e}")
-        return None
+             print(f"Backend (YFSP AI List Parser): AI did not return a JSON list. Content: {json_content[:200]}...")
+             return None, "AI did not return a JSON list for episodes"
 
+    except json.JSONDecodeError as json_e:
+        print(f"Backend (YFSP AI List Parser): AI JSON result parsing error: {json_e}. Content: {json_content[:200]}...")
+        return None, f"AI episode list result JSON parsing error: {json_e}"
+    except Exception as e:
+        print(f"Backend (YFSP AI List Parser): Error processing AI response: {e}")
+        traceback.print_exc()
+        return None, f"Error processing AI episode list response: {e}"
+
+# --- AI Function to Parse M3U8 URL from Episode Page HTML ---
+AI_PROMPT_YFSP_PLAYER_URL = f"""
+请仔细分析以下提供的视频播放页面的 HTML 内容。
+在 HTML 中找到定义了 `player_aaaa` JavaScript 变量的 `<script>` 代码块。这个变量被赋值为一个 JSON 对象。
+请精确地解析这个 JSON 对象。
+主要提取与键 "url" 相关联的值。这个值是实际的播放地址 (通常是 m3u8 链接)。
+
+请注意处理以下情况：
+- JSON 对象可能嵌套在 `<script>` 标签内。
+- JSON 字符串值可能包含转义字符（例如 `\\/` 应处理为 `/`）。你需要返回清理后的 URL。
+- 如果 "url" 键不存在于 `player_aaaa` JSON 对象中，或者找不到 `player_aaaa` 对象，请返回 `{{ "error": "Player URL not found in player_aaaa" }}`。
+
+返回结果必须是且仅是一个 JSON 对象。
+如果成功提取，格式为：`{{ "url": "https://actual.m3u8/link/..." }}`
+如果失败，格式为：`{{ "error": "Some error message" }}`
+
+不要在 JSON 结构之外添加任何说明或前导/尾随文本。
+
+HTML 内容如下（只显示开头部分）：
+--- START HTML ---
+{{html_content_snippet}}
+--- END HTML ---
+
+你的 JSON 输出：
+"""
+
+def parse_m3u8_url_with_ai(html_content, ai_url, ai_key, ai_model):
+    """Uses AI to parse HTML for the m3u8 URL within the player_aaaa variable."""
+    if not html_content: return None, "HTML content for M3U8 parsing is empty"
+
+    print(f"Backend (YFSP AI M3U8 Parser): Sending HTML snippet to AI for M3U8 URL extraction.")
+    html_snippet = html_content[:25000] # Limit size
+    prompt = AI_PROMPT_YFSP_PLAYER_URL.format(html_content_snippet=html_snippet)
+
+    json_content, error = make_ai_request(
+        ai_url, ai_key, ai_model, prompt, AI_MAX_TOKENS_PARSE, "YFSP AI M3U8 Parser"
+    )
+
+    if error:
+        return None, error # Propagate error
+
+    if not json_content:
+        return None, "AI returned empty content for M3U8 URL."
+
+    try:
+        parsed_data = json.loads(json_content)
+        if isinstance(parsed_data, dict):
+            if 'error' in parsed_data:
+                 print(f"Backend (YFSP AI M3U8 Parser): AI reported an error: {parsed_data['error']}")
+                 return None, parsed_data['error']
+            elif 'url' in parsed_data and parsed_data['url']:
+                 # Clean up potential escaped slashes
+                 m3u8_url = str(parsed_data['url']).replace('\\/', '/')
+                 print(f"Backend (YFSP AI M3U8 Parser): Successfully parsed M3U8 URL: {m3u8_url}")
+                 return m3u8_url, None
+            else:
+                 print(f"Backend (YFSP AI M3U8 Parser): AI result missing 'url' or it's empty. Data: {parsed_data}")
+                 return None, "AI result missing 'url' key or value"
+        else:
+             print(f"Backend (YFSP AI M3U8 Parser): AI did not return a JSON object. Content: {json_content[:200]}...")
+             return None, "AI did not return a JSON object for M3U8 URL"
+
+    except json.JSONDecodeError as json_e:
+        print(f"Backend (YFSP AI M3U8 Parser): AI JSON result parsing error: {json_e}. Content: {json_content[:200]}...")
+        return None, f"AI M3U8 result JSON parsing error: {json_e}"
+    except Exception as e:
+        print(f"Backend (YFSP AI M3U8 Parser): Error processing AI response: {e}")
+        traceback.print_exc()
+        return None, f"Error processing AI M3U8 response: {e}"
+
+
+# --- Function to fetch HTML with retries ---
+def fetch_html(url, context="HTML Fetch"):
+    """Fetches HTML content with basic retry logic."""
+    for attempt in range(AI_MAX_RETRIES): # Use same retry count for fetching
+        print(f"Backend ({context}): Fetching HTML attempt {attempt + 1}/{AI_MAX_RETRIES} from {url}")
+        try:
+            response = requests.get(url, headers=REQUEST_HEADERS, timeout=30) # Increased timeout
+            response.raise_for_status()
+            response.encoding = response.apparent_encoding # Ensure correct encoding
+            html_content = response.text
+            if not html_content or len(html_content) < 300: # Basic check for valid content
+                 print(f"Backend ({context}): HTML content from {url} seems empty or too small.")
+                 # Consider this a failure and retry
+                 raise ValueError("HTML content too small or empty")
+            print(f"Backend ({context}): Successfully fetched HTML content (length: {len(html_content)}).")
+            return html_content, None
+        except requests.exceptions.Timeout:
+            print(f"Backend ({context}): Timeout fetching {url} (Attempt {attempt + 1})")
+            error_reason = "Timeout"
+        except requests.exceptions.HTTPError as http_err:
+             print(f"Backend ({context}): HTTP error fetching {url} (Attempt {attempt + 1}): {http_err}")
+             error_reason = f"HTTP Error: {http_err.response.status_code}"
+             if http_err.response.status_code == 404:
+                 return None, f"Page not found (404)" # Non-retryable for 404
+        except requests.exceptions.RequestException as e:
+            print(f"Backend ({context}): Request error fetching {url} (Attempt {attempt + 1}): {e}")
+            error_reason = f"RequestException: {e}"
+        except Exception as e:
+            print(f"Backend ({context}): Unknown error fetching {url} (Attempt {attempt + 1}): {e}")
+            traceback.print_exc()
+            error_reason = f"Unknown Error: {e}"
+
+        if attempt < AI_MAX_RETRIES - 1:
+            time.sleep(AI_RETRY_DELAY)
+        else:
+            print(f"Backend ({context}): Max retries reached for fetching HTML. Last error: {error_reason}")
+            return None, f"Failed to fetch HTML after {AI_MAX_RETRIES} attempts ({error_reason})"
+
+    return None, "Failed to fetch HTML (Loop ended unexpectedly)"
+
+
+# --- NEW: Get YFSP Episode List ---
+def get_yfsp_episode_list_backend(video_id, base_url):
+    # Use the first episode's play page URL to get the list, as it likely contains it
+    # Example: /iyfplay/65978-1-1/
+    # We need to guess the first episode structure. Let's assume 'video_id-1-1'.
+    # This might need adjustment if the URL structure varies.
+    first_episode_path = f"/iyfplay/{video_id}-1-1/"
+    page_url_to_parse = urljoin(base_url, first_episode_path)
+    print(f"Backend (YFSP Episode List): Attempting to fetch HTML for list from {page_url_to_parse}")
+
+    html_content, error = fetch_html(page_url_to_parse, "YFSP Episode List Fetch")
+    if error:
+        # Fallback: Try the main detail page? e.g., /iyf/65978/
+        detail_page_path = f"/iyf/{video_id}/"
+        page_url_to_parse = urljoin(base_url, detail_page_path)
+        print(f"Backend (YFSP Episode List): First episode page failed ({error}). Falling back to detail page {page_url_to_parse}")
+        html_content, error = fetch_html(page_url_to_parse, "YFSP Detail Page Fetch")
+        if error:
+            return None, f"Failed to fetch HTML for episode list from both play and detail pages: {error}"
+
+    # Use backend's default AI settings for parsing
+    episode_list, ai_error = parse_episode_list_with_ai(
+        html_content,
+        DEFAULT_AI_API_URL,
+        DEFAULT_AI_API_KEY,
+        DEFAULT_AI_MODEL
+    )
+
+    if ai_error:
+        return None, f"AI failed to parse episode list: {ai_error}"
+
+    return episode_list, None
+
+
+# --- MODIFIED: Get YFSP M3U8 for a SPECIFIC Episode Link ---
+def get_yfsp_m3u8_for_episode_link(episode_link_path, base_url):
+    """Fetches M3U8 for a specific episode link path like /iyfplay/65978-1-5/"""
+    if not episode_link_path or not episode_link_path.startswith('/'):
+        return None, "Invalid episode link path provided"
+
+    episode_page_url = urljoin(base_url, episode_link_path)
+    print(f"Backend (YFSP M3U8): Fetching HTML for M3U8 from {episode_page_url}")
+
+    html_content, fetch_error = fetch_html(episode_page_url, f"YFSP M3U8 Fetch {episode_link_path}")
+    if fetch_error:
+        return None, f"Failed to fetch HTML for episode {episode_link_path}: {fetch_error}"
+
+    # Use backend's default AI settings for parsing M3U8
+    m3u8_url, ai_error = parse_m3u8_url_with_ai(
+        html_content,
+        DEFAULT_AI_API_URL,
+        DEFAULT_AI_API_KEY,
+        DEFAULT_AI_MODEL
+    )
+
+    if ai_error:
+        return None, f"AI failed to parse M3U8 for episode {episode_link_path}: {ai_error}"
+
+    if not m3u8_url:
+        return None, f"AI did not return a valid M3U8 URL for episode {episode_link_path}"
+
+    # Construct the final player URL using the template
+    final_player_url = YFSP_FINAL_PLAYER_TEMPLATE.format(m3u8_url)
+    print(f"Backend (YFSP M3U8): Constructed final player URL: {final_player_url}")
+    return final_player_url, None
 
 # --- API Endpoints ---
 
 @app.route('/api/search', methods=['POST'])
 def handle_search():
+    start_time = time.time()
     data = request.json
     query = data.get('query')
     method = data.get('method', 'ai')
@@ -401,30 +554,27 @@ def handle_search():
     if not query:
         return jsonify({"error": "Query parameter is required"}), 400
 
+    results = []
+    error_message = None
+
     if method == 'yfsp':
         print(f"Backend: Received YFSP search request for '{query}'")
         results = search_yfsp_backend(query)
         # Add method indicator
         for r in results: r['method'] = 'yfsp'
-        return jsonify(results)
 
     elif method == 'ai':
         print(f"Backend: Received AI search request for '{query}'")
         searxng_url = settings.get('searxngUrl') or DEFAULT_SEARXNG_URL
-        # For AI filtering, use user-provided or default backend key
         ai_url = settings.get('aiApiUrl') or DEFAULT_AI_API_URL
-        ai_key = settings.get('aiApiKey') or DEFAULT_AI_API_KEY
+        # Use user-provided key first, fallback to default backend key
+        ai_key_to_use = settings.get('aiApiKey') or DEFAULT_AI_API_KEY
         ai_model = settings.get('aiModel') or DEFAULT_AI_MODEL
 
-        # *** Crucial Security/Config Check ***
-        # Check if *any* key is available (either user-provided or backend default)
-        effective_ai_key = settings.get('aiApiKey') if settings.get('aiApiKey') else DEFAULT_AI_API_KEY
-        if not effective_ai_key or "PLACEHOLDER" in effective_ai_key or "YOUR_FALLBACK_OR_PLACEHOLDER_KEY" in effective_ai_key:
-             print("Backend Error: AI API Key is missing or is a placeholder. Check Vercel Env Vars and user settings.")
+        # *** Crucial Config Check ***
+        if not ai_key_to_use or "PLACEHOLDER" in ai_key_to_use or "YOUR_FALLBACK_OR_PLACEHOLDER_KEY" in ai_key_to_use:
+             print("Backend Error: AI API Key is missing or is a placeholder. Check Env Vars and user settings.")
              return jsonify({"error": "AI API Key is not configured or provided properly."}), 500
-        # Use the determined key for the call
-        ai_key_to_use = effective_ai_key
-
         if not ai_url: return jsonify({"error": "AI API URL is not configured."}), 500
         if not ai_model: return jsonify({"error": "AI Model is not configured."}), 500
         if not searxng_url: return jsonify({"error": "SearXNG URL is not configured."}), 500
@@ -432,41 +582,83 @@ def handle_search():
         raw_results = search_searxng_backend(query, searxng_url)
         if not raw_results:
             print("Backend (AI Method): No results from SearXNG.")
-            return jsonify([])
-
-        # Use the key determined above
-        filtered_results = filter_links_with_ai_backend(raw_results, ai_url, ai_key_to_use, ai_model)
-
-        if filtered_results is None:
-            return jsonify({"error": "AI processing failed after multiple retries."}), 500
+            # Return empty list, not an error
         else:
-             for r in filtered_results: r['method'] = 'ai'
-             return jsonify(filtered_results)
+             filtered_results, ai_error = filter_links_with_ai_backend(raw_results, ai_url, ai_key_to_use, ai_model)
+             if ai_error:
+                 # Don't halt everything, just log it and return empty results for AI method
+                 print(f"Backend (AI Method): AI filtering failed: {ai_error}")
+                 # Return empty list, let frontend know maybe? Or just empty list.
+                 # Let's return the error message to frontend
+                 error_message = f"AI 过滤失败: {ai_error}"
+                 results = [] # Ensure results is empty list on failure
+             elif filtered_results is not None:
+                 for r in filtered_results: r['method'] = 'ai'
+                 results = filtered_results
+             else:
+                 # Should not happen if ai_error handling is correct, but as fallback
+                 results = []
 
     else:
         return jsonify({"error": "Invalid search method specified"}), 400
 
+    end_time = time.time()
+    print(f"Backend: Search request for '{query}' (method: {method}) completed in {end_time - start_time:.2f} seconds. Returning {len(results)} results.")
 
-@app.route('/api/get_episode_details', methods=['POST'])
-def handle_get_episode_details():
+    # If there was an error during AI filtering, return it along with empty results
+    if error_message:
+        return jsonify({"error": error_message, "results": []})
+    else:
+        return jsonify(results)
+
+
+# --- NEW API Endpoint: Get Episode List ---
+@app.route('/api/get_episode_list', methods=['POST'])
+def handle_get_episode_list():
+    start_time = time.time()
     data = request.json
     video_id = data.get('id')
-    episode_num = data.get('episode', 1)
     base_url = data.get('base_url')
 
     if not video_id or not base_url:
         return jsonify({"error": "Missing 'id' or 'base_url'"}), 400
 
-    print(f"Backend: Received request for YFSP episode details: id={video_id}, ep={episode_num}, base={base_url}")
+    print(f"Backend: Received request for YFSP episode list: id={video_id}, base={base_url}")
 
-    # This function now uses AI with backend's default credentials internally
-    final_player_url = get_yfsp_episode_details(video_id, episode_num, base_url)
+    episode_list, error = get_yfsp_episode_list_backend(video_id, base_url)
 
-    if final_player_url:
-        return jsonify({"player_url": final_player_url})
+    end_time = time.time()
+    if error:
+        print(f"Backend: Failed to get episode list for {video_id} in {end_time - start_time:.2f}s. Error: {error}")
+        return jsonify({"error": f"获取剧集列表失败: {error}"}), 500
     else:
-        # Give a slightly more specific error based on the new logic
-        return jsonify({"error": f"无法通过 AI 解析获取剧集 {episode_num} 的播放信息"}), 500
+        print(f"Backend: Successfully got {len(episode_list)} episodes for {video_id} in {end_time - start_time:.2f}s.")
+        return jsonify(episode_list)
+
+
+# --- MODIFIED API Endpoint: Get Player URL for Specific Episode Link ---
+@app.route('/api/get_episode_details', methods=['POST'])
+def handle_get_episode_details():
+    start_time = time.time()
+    data = request.json
+    # Now expects 'episode_link' (relative path) instead of 'episode' number
+    episode_link_path = data.get('episode_link')
+    base_url = data.get('base_url')
+
+    if not episode_link_path or not base_url:
+        return jsonify({"error": "Missing 'episode_link' or 'base_url'"}), 400
+
+    print(f"Backend: Received request for YFSP player URL for link: {episode_link_path}, base={base_url}")
+
+    final_player_url, error = get_yfsp_m3u8_for_episode_link(episode_link_path, base_url)
+
+    end_time = time.time()
+    if error:
+        print(f"Backend: Failed to get player URL for {episode_link_path} in {end_time - start_time:.2f}s. Error: {error}")
+        return jsonify({"error": f"无法获取剧集播放信息: {error}"}), 500
+    else:
+        print(f"Backend: Successfully got player URL for {episode_link_path} in {end_time - start_time:.2f}s.")
+        return jsonify({"player_url": final_player_url})
 
 
 @app.route('/api/config', methods=['GET'])
@@ -480,7 +672,7 @@ def get_config():
     config_data = {
         "defaultParsingInterfaces": default_interfaces,
         "defaultSearxngUrl": DEFAULT_SEARXNG_URL,
-        # Still DO NOT send default AI URL/Key/Model here
+        # DO NOT send default AI URL/Key/Model here for security
     }
     return jsonify(config_data)
 
@@ -491,8 +683,13 @@ def serve_index():
 
 @app.route('/<path:path>')
 def serve_static(path):
-     # Allow serving files also from subdirectories like 'static' if needed
-    return send_from_directory(app.static_folder, path)
+    # Allow serving files also from subdirectories like 'static' if needed
+    # Check if the path actually exists to prevent directory traversal issues
+    safe_path = os.path.abspath(os.path.join(app.static_folder, path))
+    if safe_path.startswith(os.path.abspath(app.static_folder)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return "Not Found", 404
 
 # Vercel needs the 'app' variable
 # No need for if __name__ == '__main__': app.run(...) for Vercel
