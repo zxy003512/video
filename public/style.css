@@ -1,5 +1,249 @@
 /* public/style.css */
-/* ... (Keep all existing styles) ... */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+:root {
+    /* --- Light Theme Colors (Keep your original theme or adjust) --- */
+    --primary-color: #007bff; /* 主题蓝 */
+    --primary-hover-color: #0056b3; /* 主题蓝悬停 */
+    --secondary-color: #6c757d; /* 次要灰 */
+    --secondary-hover-color: #5a6268; /* 次要灰悬停 */
+    --background-color: #f4f7f9; /* 页面背景色 */
+    --card-bg: #ffffff; /* 卡片/容器背景色 */
+    --text-color: #343a40; /* 主要文本颜色 */
+    --text-muted: #6c757d; /* 辅助文本/提示文字颜色 */
+    --border-color: #e1e4e8; /* 边框颜色 */
+    --input-bg: #ffffff; /* 输入框背景 */
+    --input-border-focus: rgba(0, 123, 255, 0.5); /* 输入框聚焦光晕 */
+    --shadow-color: rgba(0, 0, 0, 0.08); /* 阴影颜色 */
+    --danger-color: #dc3545; /* 危险/错误红 */
+    --danger-hover-color: #c82333; /* 危险/错误红悬停 */
+    --success-color: #28a745; /* 成功绿 */
+    --success-hover-color: #218838; /* 成功绿悬停 */
+    --light-text-on-dark: #ffffff; /* 深色背景上的浅色文字 */
+
+    /* --- Use Light Theme Variables --- */
+    --theme-bg: var(--background-color);
+    --theme-card-bg: var(--card-bg);
+    --theme-text: var(--text-color);
+    --theme-border: var(--border-color);
+    --theme-primary: var(--primary-color);
+    --theme-shadow: var(--shadow-color);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+    line-height: 1.6;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align top */
+    min-height: 100vh;
+    padding: 20px; /* Add padding for smaller screens */
+}
+
+.background-overlay {
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background: linear-gradient(135deg, rgba(244, 247, 249, 0.6), rgba(225, 228, 232, 0.6));
+   z-index: -1;
+   opacity: 0.5; /* Subtle overlay */
+}
+
+
+.container {
+    max-width: 900px;
+    width: 100%;
+    margin: 30px auto;
+    padding: 35px 40px;
+    background-color: var(--theme-card-bg);
+    border-radius: 12px;
+    box-shadow: 0 8px 25px var(--theme-shadow);
+    position: relative;
+    z-index: 1;
+    border: 1px solid var(--theme-border);
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px;
+    border-bottom: 1px solid var(--theme-border);
+    padding-bottom: 20px;
+}
+
+header h1 {
+    color: var(--theme-primary);
+    font-weight: 700;
+    font-size: 2em;
+}
+
+#settings-btn {
+    background: none;
+    border: none;
+    color: var(--secondary-color);
+    font-size: 1.6em;
+    cursor: pointer;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+#settings-btn:hover {
+    color: var(--theme-primary);
+    transform: rotate(45deg) scale(1.1);
+}
+
+.search-box {
+    display: flex;
+    margin-bottom: 35px;
+    gap: 15px;
+}
+
+#search-input {
+    flex-grow: 1;
+    padding: 14px 18px;
+    font-size: 1.05em;
+    border: 1px solid var(--theme-border);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    color: var(--theme-text);
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#search-input:focus {
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 4px var(--input-border-focus);
+}
+
+#search-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+
+#search-btn {
+    padding: 14px 25px;
+    font-size: 1.05em;
+    font-weight: 500;
+    background-color: var(--theme-primary);
+    color: var(--light-text-on-dark);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#search-btn:hover {
+    background-color: var(--primary-hover-color);
+}
+#search-btn:active {
+    transform: scale(0.97);
+}
+#search-btn:disabled { /* Style for disabled button */
+     background-color: var(--secondary-color);
+     cursor: not-allowed;
+}
+#search-btn i {
+    font-size: 0.9em;
+}
+
+/* Results Container - Holds both AI and YFSP sections */
+#results-container {
+    /* Removed grid layout here, applied to specific areas */
+    margin-top: 30px;
+}
+
+/* AI Results Area */
+#ai-results-area {
+     /* AI results are simple cards, maybe a flex layout if needed */
+     /* display: flex; flex-direction: column; gap: 15px; */
+     /* Or keep as block level elements */
+}
+
+.result-card { /* Base style for both card types */
+    background-color: var(--theme-card-bg);
+    border: 1px solid var(--theme-border);
+    border-radius: 10px;
+    box-shadow: 0 5px 15px var(--theme-shadow);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    margin-bottom: 20px; /* Space between cards */
+    overflow: hidden;
+}
+.result-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+
+/* AI Result Card Specifics */
+.ai-result-card {
+    padding: 20px; /* Padding for AI card content */
+    cursor: default; /* Card itself not clickable, button is */
+}
+.ai-result-card h3 {
+    font-size: 1.15em;
+    color: var(--theme-primary);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+.ai-result-card p {
+    font-size: 0.95em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+.ai-result-card .website-badge {
+    display: inline-block;
+    background-color: rgba(0, 123, 255, 0.1);
+    color: var(--theme-primary);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+.ai-result-card .link-preview {
+    font-size: 0.85em;
+    color: var(--secondary-color);
+    word-break: break-all;
+    line-height: 1.4;
+}
+.ai-result-card .play-button { /* Style for AI play button */
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     gap: 6px;
+     padding: 8px 15px;
+     font-size: 0.9em;
+     font-weight: 500;
+     background-color: var(--theme-primary); /* Use primary color */
+     color: var(--light-text-on-dark);
+     border: none;
+     border-radius: 6px;
+     cursor: pointer;
+     transition: background-color 0.3s ease, transform 0.1s ease;
+     margin-top: 10px; /* Space above button */
+     width: 100%; /* Full width button */
+}
+.ai-result-card .play-button:hover {
+     background-color: var(--primary-hover-color);
+}
+
 
 /* --- Additions for YFSP Results --- */
 
@@ -7,7 +251,7 @@
 .results-separator {
     border: none;
     border-top: 1px solid var(--theme-border);
-    margin: 40px 0 20px 0; /* Add spacing around the separator */
+    margin: 40px 0 20px 0; /* Spacing around separator */
 }
 
 /* Title for the YFSP results section */
@@ -22,25 +266,19 @@
     margin-right: 10px;
 }
 
-/* Grid container for YFSP results (can reuse existing grid styles if desired) */
+/* Grid container for YFSP results */
 #yfsp-results-grid {
     display: grid;
-    /* You can reuse the grid settings from #results-container if they match */
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Example: slightly smaller cards maybe */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Adjust card size */
     gap: 20px;
 }
 
 /* Specific styling for YFSP result cards */
 .yfsp-result-card {
-    /* Inherits base .result-card styles like background, border, shadow, hover */
+    /* Inherits base .result-card styles (bg, border, shadow, hover) */
     padding: 0; /* Remove base padding, control internally */
-    overflow: hidden; /* Ensure content fits */
-    cursor: default; /* Card itself is not clickable, button is */
-}
-.yfsp-result-card:hover {
-    /* Keep or adjust hover effect */
-     transform: translateY(-4px);
-     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    cursor: default; /* Card not clickable, button is */
+    margin-bottom: 0; /* Remove margin as gap is handled by grid */
 }
 
 .yfsp-card-content {
@@ -52,9 +290,8 @@
 .yfsp-cover {
     position: relative;
     width: 100%;
-    /* Maintain aspect ratio for cover, e.g., 2:3 */
-    padding-top: 150%; /* Adjust percentage for desired aspect ratio (height/width * 100) */
-    background-color: #eee; /* Placeholder background */
+    padding-top: 150%; /* 2:3 Aspect ratio for cover (height/width * 100) */
+    background-color: #eee; /* Placeholder */
 }
 
 .yfsp-cover img {
@@ -82,18 +319,18 @@
 
 .yfsp-info {
     padding: 15px;
-    flex-grow: 1; /* Take remaining space */
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Push button towards bottom if needed */
+    justify-content: space-between; /* Pushes button down */
 }
 
 .yfsp-info h4 {
-    font-size: 1.0em; /* Adjust title size */
-    color: var(--theme-text); /* Standard text color */
+    font-size: 1.0em;
+    color: var(--theme-text);
     margin-bottom: 10px;
     font-weight: 500;
-     /* Prevent long titles from breaking layout badly */
+    /* Ellipsis for long titles */
     display: -webkit-box;
     -webkit-line-clamp: 2; /* Limit to 2 lines */
     -webkit-box-orient: vertical;
@@ -102,23 +339,22 @@
     min-height: 2.4em; /* Reserve space for two lines */
 }
 
-.yfsp-info .play-button {
-    /* Style the play button within YFSP card */
-    display: inline-flex; /* Align icon and text */
+.yfsp-info .play-button { /* Style YFSP play button */
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     padding: 8px 15px;
     font-size: 0.9em;
     font-weight: 500;
-    background-color: var(--success-color); /* Use success color for direct play */
+    background-color: var(--success-color); /* Green for direct play */
     color: var(--light-text-on-dark);
     border: none;
     border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.1s ease;
-    margin-top: auto; /* Push to bottom if container is flex */
-    width: 100%; /* Make button full width */
+    margin-top: auto; /* Push to bottom */
+    width: 100%; /* Full width */
 }
 .yfsp-info .play-button:hover {
     background-color: var(--success-hover-color);
@@ -131,39 +367,388 @@
     font-size: 0.9em;
 }
 
-/* Style for the loading spinner next to the YFSP play button */
+/* Spinner next to YFSP play button */
 .yfsp-play-loading i {
     color: var(--primary-color);
     font-size: 1.1em;
 }
 
-/* Style for AI result card button (if added) */
-.ai-result-card .play-button {
-     display: inline-flex; /* Align icon and text */
-     align-items: center;
-     justify-content: center;
-     gap: 6px;
-     padding: 8px 15px;
-     font-size: 0.9em;
-     font-weight: 500;
-     background-color: var(--theme-primary); /* Use primary color */
-     color: var(--light-text-on-dark);
-     border: none;
-     border-radius: 6px;
-     cursor: pointer;
-     transition: background-color 0.3s ease, transform 0.1s ease;
-     margin-top: 10px; /* Add some space above */
-     width: 100%;
+
+/* Loading Indicator */
+.loading {
+    /* Changed display to flex in JS */
+    flex-direction: column; /* Stack spinner and text */
+    justify-content: center;
+    align-items: center;
+    padding: 50px 0;
+    color: var(--text-muted);
+    min-height: 150px; /* Give it some min height */
 }
-.ai-result-card .play-button:hover {
+
+.spinner {
+    border: 5px solid rgba(0, 0, 0, 0.1);
+    border-left-color: var(--theme-primary);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px auto;
+}
+.loading p {
+    font-size: 1.1em;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Modal Styles (Keep general modal styles) */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background-color: var(--theme-card-bg);
+    margin: 5% auto;
+    padding: 35px 40px;
+    border: none;
+    border-radius: 10px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.4s ease-out;
+    color: var(--theme-text);
+}
+/* Specific max-width for settings modal */
+#settings-modal .modal-content {
+     max-width: 650px;
+}
+
+
+.close-btn {
+    color: #999;
+    position: absolute;
+    top: 18px;
+    right: 25px;
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: var(--danger-color);
+    transform: scale(1.1);
+    text-decoration: none;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateY(-40px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+/* Settings Modal Specifics (Keep styles) */
+#settings-modal h2 {
+    font-size: 1.6em;
+    color: var(--theme-primary);
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: 500;
+}
+#settings-modal h2 i {
+    margin-right: 10px;
+    font-size: 0.9em;
+}
+
+.settings-section {
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid var(--theme-border);
+}
+.settings-section:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 25px;
+}
+
+.settings-section h3 {
+    margin-bottom: 18px;
+    color: var(--primary-color);
+    font-size: 1.25em;
+    font-weight: 500;
+}
+
+.settings-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.95em;
+    color: var(--text-color);
+}
+
+.settings-section input[type="text"],
+.settings-section input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 18px;
+    border: 1px solid var(--theme-border);
+    border-radius: 6px;
+    background-color: var(--input-bg);
+    color: var(--theme-text);
+    font-size: 1em;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.settings-section input[type="text"]:focus,
+.settings-section input[type="password"]:focus {
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 3px var(--input-border-focus);
+    outline: none; /* Remove default outline */
+}
+
+
+#parsing-interfaces-list .interface-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--background-color);
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border: 1px solid var(--theme-border);
+}
+
+#parsing-interfaces-list span {
+    flex-grow: 1;
+    margin-right: 15px;
+    font-size: 0.95em;
+    color: var(--text-color);
+    word-break: break-all;
+}
+
+/* Style for small remove button */
+.danger-btn-small {
+     background: none !important;
+     border: none;
+     color: var(--danger-color);
+     cursor: pointer;
+     font-size: 1.2em; /* Make it slightly larger */
+     font-weight: bold;
+     padding: 0 5px; /* Click area */
+     line-height: 1;
+     transition: color 0.3s ease, transform 0.2s ease;
+}
+.danger-btn-small:hover {
+     color: var(--danger-hover-color);
+     transform: scale(1.1);
+}
+
+
+.add-interface-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.add-interface-form input {
+    flex: 1;
+    min-width: 180px;
+    padding: 10px 12px;
+    border: 1px solid var(--theme-border);
+    border-radius: 6px;
+    background-color: var(--input-bg);
+    color: var(--theme-text);
+    font-size: 0.95em;
+}
+.add-interface-form input:focus {
+     border-color: var(--theme-primary);
+     box-shadow: 0 0 0 3px var(--input-border-focus);
+     outline: none;
+}
+
+#add-interface-btn {
+    padding: 10px 18px;
+    background-color: var(--success-color);
+    color: var(--light-text-on-dark);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+#add-interface-btn:hover {
+    background-color: var(--success-hover-color);
+}
+
+#save-settings-btn, #reset-settings-btn {
+    padding: 12px 25px;
+    font-size: 1em;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-top: 20px;
+    margin-right: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+#save-settings-btn:active, #reset-settings-btn:active {
+    transform: scale(0.98);
+}
+
+#save-settings-btn {
+    background-color: var(--theme-primary);
+    color: var(--light-text-on-dark);
+}
+#save-settings-btn:hover {
      background-color: var(--primary-hover-color);
 }
 
+/* Style for the main reset button */
+.danger-btn {
+    background-color: var(--danger-color);
+    color: white;
+}
+.danger-btn:hover {
+    background-color: var(--danger-hover-color);
+}
 
-/* Responsive adjustments if needed for YFSP cards */
+
+/* Player Modal (Keep styles, ensure selector styles are present) */
+.player-modal .modal-content { /* Target player modal specifically */
+    max-width: 90%;
+    width: 1100px;
+    height: 90vh;
+    margin: 2% auto;
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+}
+
+.player-modal-content {
+     overflow: hidden; /* Prevent internal scrollbars */
+}
+
+#player-title {
+    color: var(--theme-primary);
+    margin-bottom: 15px;
+    font-size: 1.4em;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+}
+
+/* Parsing selector inside player modal */
+#player-parsing-selector { /* Target the container div */
+    margin-bottom: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    /* display: none; Initially hidden, controlled by JS */
+}
+#player-parsing-selector label {
+     margin-right: 10px;
+     font-size: 1em;
+     color: var(--text-muted);
+}
+#parsing-select { /* Target the select element */
+    padding: 10px 15px;
+    border: 1px solid var(--theme-border);
+    border-radius: 6px;
+    background-color: var(--input-bg);
+    color: var(--theme-text);
+    min-width: 250px;
+    cursor: pointer;
+    font-size: 0.95em;
+}
+#parsing-select:focus {
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 3px var(--input-border-focus);
+    outline: none;
+}
+#parsing-select:disabled {
+    background-color: #e9ecef; /* Indicate disabled state */
+    cursor: not-allowed;
+}
+
+
+.iframe-container {
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+    background-color: #000; /* Black background for video area */
+    border-radius: 8px;
+    border: 1px solid var(--theme-border);
+}
+
+#video-player {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+/* Error Message (Keep styles) */
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    padding: 18px 25px;
+    border-radius: 8px;
+    margin-top: 25px;
+    text-align: center;
+    animation: fadeIn 0.5s;
+    font-size: 1.05em;
+}
+
+
+/* Responsive Design (Merge and Adjust) */
 @media (max-width: 768px) {
-    #yfsp-results-grid {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Adjust grid for mobile */
+    .container {
+        padding: 25px;
+        margin: 20px auto;
+    }
+    header {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+    }
+    header h1 {
+        font-size: 1.6em;
+    }
+    .search-box {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+     #search-input, #search-btn {
+         font-size: 1em;
+         padding: 12px 15px;
+     }
+     /* Stack AI cards */
+     #ai-results-area .ai-result-card {
+         /* Already block level, adjust if needed */
+     }
+     /* Adjust YFSP grid */
+     #yfsp-results-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 15px;
     }
      .yfsp-info h4 {
@@ -173,35 +758,86 @@
          font-size: 0.85em;
          padding: 7px 12px;
      }
+
+    .modal-content {
+        width: 95%;
+        margin: 8% auto;
+        padding: 25px;
+        max-width: none;
+    }
+    #settings-modal h2 {
+        font-size: 1.4em;
+    }
+    .add-interface-form {
+        flex-direction: column;
+    }
+    .add-interface-form input {
+        min-width: 0;
+        width: 100%;
+    }
+     .player-modal .modal-content {
+        height: 75vh;
+        width: 95%;
+        padding: 15px;
+     }
+     #player-title {
+         font-size: 1.2em;
+     }
+     #player-parsing-selector label {
+         display: block;
+         margin-bottom: 5px;
+     }
+     #parsing-select {
+         width: 100%;
+         min-width: 0;
+     }
+    #save-settings-btn, #reset-settings-btn {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+        justify-content: center;
+    }
+    #save-settings-btn:last-of-type, #reset-settings-btn:last-of-type {
+         margin-bottom: 0;
+    }
+
 }
+
 @media (max-width: 480px) {
+     .container {
+         padding: 20px;
+     }
+     header h1 {
+        font-size: 1.4em;
+    }
+    .ai-result-card { /* Adjust AI card padding */
+        padding: 15px;
+    }
+     .ai-result-card h3 {
+         font-size: 1.05em;
+     }
+     /* Adjust YFSP grid */
      #yfsp-results-grid {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Further adjust */
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 10px;
     }
      .yfsp-info h4 {
          font-size: 0.9em;
-         min-height: 2.2em; /* Adjust reserved space */
+         min-height: 2.2em;
      }
       .yfsp-note {
          font-size: 0.7em;
          padding: 2px 5px;
       }
+
+     .modal-content {
+         padding: 20px;
+     }
+     #settings-modal h2 {
+         font-size: 1.3em;
+     }
+     .player-modal .modal-content {
+         height: 70vh;
+     }
 }
 
-/* Small danger button style for remove interface */
-.danger-btn-small {
-     background: none !important; /* Override any background */
-     border: none;
-     color: var(--danger-color);
-     cursor: pointer;
-     font-size: 1.2em;
-     font-weight: bold;
-     padding: 0 5px;
-     line-height: 1;
-     transition: color 0.3s ease, transform 0.2s ease;
-}
-.danger-btn-small:hover {
-     color: var(--danger-hover-color);
-     transform: scale(1.1);
-}
