@@ -3,15 +3,633 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>影视智能搜索播放器</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- 1. 修改网站标题 -->
+    <title>zxy 影视搜索</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 2. 将 CSS 整合到 <style> 标签中 -->
+    <style>
+        /* public/style.css - Light Theme Adaptation */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap');
+
+        /* 2a. 定义亮色主题变量 */
+        :root {
+            --primary-color: #007bff; /* 主题蓝 */
+            --secondary-color: #6c757d; /* 次要灰 */
+            --success-color: #28a745; /* 成功绿 */
+            --danger-color: #dc3545; /* 危险红 */
+            --warning-color: #ffc107; /* 警告黄 */
+            --info-color: #17a2b8; /* 信息蓝 */
+
+            /* Light Theme Specific */
+            --light-bg: #f8f9fa; /* 页面背景 */
+            --light-card-bg: #ffffff; /* 卡片/模态框背景 */
+            --light-text: #212529; /* 主要文字颜色 */
+            --light-secondary-text: #6c757d; /* 次要文字颜色 */
+            --light-border: #dee2e6; /* 边框颜色 */
+            --light-input-bg: #ffffff; /* 输入框背景 */
+            --light-input-focus-border: #80bdff; /* 输入框聚焦边框 */
+            --light-shadow: rgba(0, 0, 0, 0.1); /* 阴影 */
+            --light-hover-bg: #e9ecef; /* 悬停背景色 */
+
+            /* Set theme variables to light */
+            --theme-bg: var(--light-bg);
+            --theme-card-bg: var(--light-card-bg);
+            --theme-text: var(--light-text);
+            --theme-secondary-text: var(--light-secondary-text);
+            --theme-border: var(--light-border);
+            --theme-shadow: var(--light-shadow);
+            --theme-primary: var(--primary-color);
+            --theme-hover-bg: var(--light-hover-bg);
+            --theme-input-bg: var(--light-input-bg);
+            --theme-input-focus-border: var(--light-input-focus-border);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--theme-bg);
+            color: var(--theme-text);
+            line-height: 1.6;
+            /* Removed flex centering to allow full width potential */
+            min-height: 100vh;
+            padding-top: 20px; /* Add some space at the top */
+            padding-bottom: 50px; /* Space at the bottom */
+        }
+
+        /* Removed background overlay */
+
+        /* 3. 调整容器宽度 */
+        .container {
+            max-width: 1400px; /* Wider max-width for desktop */
+            width: 95%;      /* Use percentage for responsiveness */
+            margin: 0 auto;  /* Center the container */
+            padding: 25px;   /* Adjust padding */
+            background-color: var(--theme-card-bg);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px var(--theme-shadow);
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--theme-border);
+            padding-bottom: 15px;
+        }
+
+        header h1 {
+            color: var(--theme-primary);
+            font-weight: 700;
+            font-size: 1.7em; /* Slightly adjust size */
+        }
+
+        #settings-btn {
+            background: none;
+            border: none;
+            color: var(--theme-secondary-text); /* Use secondary text color */
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        #settings-btn:hover {
+            color: var(--theme-primary);
+            transform: rotate(45deg);
+        }
+
+        .search-box {
+            display: flex;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+
+        #search-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            font-size: 1em;
+            border: 1px solid var(--theme-border);
+            border-radius: 6px;
+            background-color: var(--theme-input-bg);
+            color: var(--theme-text);
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #search-input:focus {
+            border-color: var(--theme-input-focus-border);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        #search-input::placeholder {
+            color: var(--theme-secondary-text);
+            opacity: 0.7;
+        }
+
+        #search-btn {
+            padding: 12px 20px;
+            font-size: 1em;
+            background-color: var(--theme-primary);
+            color: #ffffff; /* White text on primary button */
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #search-btn:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+        #search-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Results */
+        #results-container {
+            display: grid;
+            /* Adjust columns for wider layout */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background-color: var(--theme-card-bg);
+            border: 1px solid var(--theme-border);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px var(--theme-shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .result-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px var(--theme-shadow);
+        }
+
+        .result-card h3 {
+            font-size: 1.1em;
+            color: var(--theme-primary);
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .result-card p {
+            font-size: 0.9em;
+            color: var(--theme-secondary-text);
+            margin-bottom: 10px;
+        }
+         .result-card .link-preview {
+            font-size: 0.85em;
+            color: #888;
+            word-break: break-all; /* Break long links */
+         }
+
+
+        .result-card .website-badge {
+            display: inline-block;
+            background-color: rgba(0, 123, 255, 0.1); /* Lighter badge bg */
+            color: var(--theme-primary);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+
+        /* Loading Indicator */
+        .loading {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--theme-secondary-text);
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 123, 255, 0.2); /* Lighter spinner track */
+            border-left-color: var(--theme-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+            backdrop-filter: blur(3px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: var(--theme-card-bg);
+            margin: 5% auto;
+            padding: 30px;
+            border: none; /* Remove border in light theme */
+            border-radius: 8px;
+            width: 90%; /* More responsive width */
+            max-width: 700px; /* Increased max-width for settings */
+            position: relative;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.4s ease;
+        }
+
+        .close-btn {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: var(--danger-color);
+            text-decoration: none;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Settings Modal Specifics */
+        .settings-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--theme-border);
+        }
+        .settings-section:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 20px;
+        }
+
+        .settings-section h3 {
+            margin-bottom: 15px;
+            color: var(--theme-primary);
+            font-size: 1.3em;
+        }
+
+        .settings-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 0.95em;
+            color: var(--theme-text);
+        }
+
+        .settings-section input[type="text"],
+        .settings-section input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--theme-border);
+            border-radius: 5px;
+            background-color: var(--theme-input-bg);
+            color: var(--theme-text);
+            font-size: 0.95em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .settings-section input[type="text"]:focus,
+        .settings-section input[type="password"]:focus {
+             border-color: var(--theme-input-focus-border);
+             box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+             outline: none;
+        }
+
+
+        #parsing-interfaces-list .interface-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f1f1f1; /* Lighter background for items */
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            border: 1px solid var(--theme-border);
+        }
+
+        #parsing-interfaces-list span {
+            flex-grow: 1;
+            margin-right: 10px;
+            font-size: 0.9em;
+            color: var(--theme-text);
+             word-break: break-all;
+        }
+
+        #parsing-interfaces-list button {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            font-size: 1.1em; /* Make remove button slightly larger */
+            padding: 0 5px;
+             opacity: 0.7;
+             transition: opacity 0.2s ease;
+        }
+         #parsing-interfaces-list button:hover {
+             opacity: 1;
+         }
+
+
+        .add-interface-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .add-interface-form input {
+            flex: 1;
+            min-width: 180px; /* Ensure reasonable width */
+            padding: 8px 10px;
+            border: 1px solid var(--theme-border);
+            border-radius: 4px;
+            background-color: var(--theme-input-bg);
+            color: var(--theme-text);
+            font-size: 0.9em;
+        }
+
+        #add-interface-btn {
+            padding: 8px 15px;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        #add-interface-btn:hover {
+            background-color: #218838;
+        }
+
+        #save-settings-btn, #reset-settings-btn {
+            padding: 10px 20px; /* Slightly smaller buttons */
+            font-size: 0.95em;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.2s ease;
+            margin-top: 15px;
+            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        #save-settings-btn {
+            background-color: var(--theme-primary);
+            color: white;
+        }
+        #save-settings-btn:hover {
+             background-color: #0056b3;
+             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        #reset-settings-btn {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        #reset-settings-btn:hover {
+             background-color: #5a6268;
+             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .danger-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        .danger-btn:hover {
+            background-color: #c82333;
+        }
+
+
+        /* Player Modal */
+        /* 3b. Adjust Player Modal size */
+        .player-modal .modal-content {
+            max-width: 95%;    /* Allow it to use most of the width */
+            width: 1200px;     /* But cap it at 1200px */
+            height: 85vh;      /* Use viewport height */
+            margin: 3% auto;   /* Center with margin */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-modal-content {
+             padding: 15px; /* Less padding for player */
+             background-color: #f0f0f0; /* Slightly off-white bg for player modal */
+        }
+
+        #player-title {
+            color: var(--theme-primary);
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 20px; /* Add padding to prevent text hitting edges */
+        }
+
+        .parsing-selector {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .parsing-selector label {
+             margin-right: 8px;
+             font-size: 0.9em;
+             color: var(--theme-secondary-text);
+        }
+
+        #parsing-select {
+            padding: 6px 10px;
+            border: 1px solid var(--theme-border);
+            border-radius: 5px;
+            background-color: var(--theme-input-bg);
+            color: var(--theme-text);
+            min-width: 180px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .iframe-container {
+            flex-grow: 1;
+            overflow: hidden;
+            position: relative;
+            background-color: #000; /* Keep black background for iframe area */
+            border-radius: 5px;
+        }
+
+        #video-player {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Error Message */
+        .error-message {
+            background-color: #f8d7da; /* Light red background */
+            color: #721c24; /* Dark red text */
+            border: 1px solid #f5c6cb; /* Reddish border */
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+             /* Adjust container max-width for tablets */
+             .container {
+                  max-width: 95%;
+             }
+             .player-modal .modal-content {
+                  width: 95%; /* Use more width on tablets */
+             }
+        }
+
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                width: 100%; /* Full width on mobile */
+                margin: 0;
+                border-radius: 0; /* No rounded corners on full width */
+                box-shadow: none; /* No shadow needed */
+            }
+            body {
+                 padding-top: 0; /* Remove top padding on mobile */
+            }
+            header {
+                 padding-bottom: 10px;
+                 margin-bottom: 20px;
+            }
+            header h1 {
+                font-size: 1.4em;
+            }
+            .search-box {
+                flex-direction: column;
+            }
+             #results-container {
+                grid-template-columns: 1fr; /* Stack cards on mobile */
+                gap: 15px;
+            }
+            .modal-content {
+                width: 95%; /* Keep modal width responsive */
+                margin: 10% auto;
+                padding: 20px;
+            }
+            .settings-section h3 {
+                 font-size: 1.2em;
+            }
+
+            .add-interface-form {
+                flex-direction: column;
+            }
+            .add-interface-form input {
+                min-width: 0;
+            }
+            .player-modal .modal-content {
+                height: auto; /* Let height adjust */
+                 min-height: 60vh; /* Minimum height */
+                 margin: 5% auto;
+                 padding: 10px;
+            }
+            #player-title {
+                 font-size: 1.1em;
+                 margin-bottom: 8px;
+            }
+            .parsing-selector {
+                 margin-bottom: 8px;
+            }
+             #parsing-select {
+                 min-width: 150px;
+                 font-size: 0.85em;
+                 padding: 5px 8px;
+            }
+
+        }
+
+        @media (max-width: 480px) {
+             header h1 {
+                font-size: 1.2em;
+            }
+             #search-input, #search-btn {
+                 font-size: 0.9em;
+                 padding: 10px 12px;
+             }
+              #search-btn {
+                 padding: 10px 15px;
+              }
+             .result-card h3 {
+                 font-size: 1em;
+             }
+             .result-card p {
+                  font-size: 0.85em;
+             }
+             .modal-content {
+                  padding: 15px;
+             }
+             .settings-section label, .settings-section input {
+                  font-size: 0.9em;
+             }
+             #save-settings-btn, #reset-settings-btn {
+                  font-size: 0.9em;
+                  padding: 8px 15px;
+                  width: 100%; /* Full width buttons */
+                  margin-right: 0;
+                  margin-bottom: 10px; /* Space between buttons */
+                  justify-content: center;
+             }
+             #reset-settings-btn {
+                  margin-top: 0;
+             }
+
+        }
+
+    </style>
 </head>
 <body>
-    <div class="background-overlay"></div>
+    <!-- Container remains the main wrapper -->
     <div class="container">
         <header>
-            <h1>影视智能搜索播放器</h1>
+            <!-- 1. 修改网站名称 -->
+            <h1>zxy 影视搜索</h1>
             <button id="settings-btn" aria-label="设置"><i class="fas fa-cog"></i></button>
         </header>
 
@@ -20,6 +638,7 @@
             <button id="search-btn" aria-label="搜索"><i class="fas fa-search"></i> 搜索</button>
         </div>
 
+        <!-- Settings Modal Structure (Remains the same) -->
         <div id="settings-modal" class="modal">
             <div class="modal-content">
                 <span class="close-btn">&times;</span>
@@ -28,19 +647,19 @@
                 <div class="settings-section">
                     <h3>AI 配置</h3>
                     <label for="ai-api-url">API 地址:</label>
-                    <input type="text" id="ai-api-url" placeholder="例如: https://api.zetatechs.com/v1">
+                    <input type="text" id="ai-api-url" placeholder="例如: https://api.example.com/v1">
 
                     <label for="ai-api-key">API Key:</label>
-                    <input type="password" id="ai-api-key" placeholder="你的 AI API Key (sk-...)">
+                    <input type="password" id="ai-api-key" placeholder="你的 AI API Key (例如: sk-...)">
 
                     <label for="ai-model">模型:</label>
-                    <input type="text" id="ai-model" placeholder="例如: gemini-2.0-flash">
+                    <input type="text" id="ai-model" placeholder="例如: gpt-3.5-turbo">
                 </div>
 
                 <div class="settings-section">
                     <h3>搜索引擎 (SearXNG)</h3>
                     <label for="searxng-url">实例地址:</label>
-                    <input type="text" id="searxng-url" placeholder="例如: https://searxng.zetatechs.online/search">
+                    <input type="text" id="searxng-url" placeholder="例如: https://searxng.example.com/search">
                 </div>
 
                 <div class="settings-section">
@@ -51,7 +670,7 @@
                     <div class="add-interface-form">
                         <input type="text" id="new-interface-name" placeholder="接口名称 (例如: 接口X)">
                         <input type="text" id="new-interface-url" placeholder="接口URL (例如: https://jx.example.com/?url=)">
-                        <button id="add-interface-btn"><i class="fas fa-plus"></i> 添加接口</button>
+                        <button id="add-interface-btn"><i class="fas fa-plus"></i> 添加</button> <!-- Shorter button text -->
                     </div>
                 </div>
 
@@ -60,15 +679,18 @@
             </div>
         </div>
 
+        <!-- Loading Indicator Structure (Remains the same) -->
         <div id="loading-indicator" class="loading" style="display: none;">
             <div class="spinner"></div>
             <p>正在智能分析中...</p>
         </div>
 
+        <!-- Results Container Structure (Remains the same) -->
         <div id="results-container">
             <!-- Search results will be displayed here -->
         </div>
 
+         <!-- Player Modal Structure (Remains the same) -->
          <div id="player-modal" class="modal player-modal">
              <div class="modal-content player-modal-content">
                 <span class="close-player-btn close-btn">&times;</span>
@@ -85,13 +707,453 @@
             </div>
         </div>
 
+         <!-- Error Message Structure (Remains the same) -->
          <div id="error-message" class="error-message" style="display: none;">
              <!-- Error messages will be shown here -->
          </div>
 
+    </div> <!-- End of .container -->
 
-    </div>
+    <!-- 4. 将 JavaScript 整合到 <script> 标签中 -->
+    <script>
+        // public/script.js (Integrated)
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.getElementById('search-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const errorMessageDiv = document.getElementById('error-message');
 
-    <script src="script.js"></script>
+            // Settings Modal
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeSettingsBtn = settingsModal.querySelector('.close-btn');
+            const saveSettingsBtn = document.getElementById('save-settings-btn');
+            const resetSettingsBtn = document.getElementById('reset-settings-btn');
+            const aiApiUrlInput = document.getElementById('ai-api-url');
+            const aiApiKeyInput = document.getElementById('ai-api-key');
+            const aiModelInput = document.getElementById('ai-model');
+            const searxngUrlInput = document.getElementById('searxng-url');
+            const interfacesListDiv = document.getElementById('parsing-interfaces-list');
+            const newInterfaceNameInput = document.getElementById('new-interface-name');
+            const newInterfaceUrlInput = document.getElementById('new-interface-url');
+            const addInterfaceBtn = document.getElementById('add-interface-btn');
+
+            // Player Modal
+            const playerModal = document.getElementById('player-modal');
+            const closePlayerBtn = playerModal.querySelector('.close-player-btn');
+            const playerTitle = document.getElementById('player-title');
+            const parsingSelect = document.getElementById('parsing-select');
+            const videoPlayerIframe = document.getElementById('video-player');
+
+            // --- State & Configuration ---
+            let currentSettings = {};
+            let defaultSettings = { // Will be populated by /api/config or hardcoded below
+                defaultParsingInterfaces: [],
+                defaultSearxngUrl: ''
+            };
+            let currentVideoLink = ''; // To store the link when opening player
+
+            // --- Functions ---
+
+            const showLoading = (show) => {
+                loadingIndicator.style.display = show ? 'block' : 'none';
+                searchBtn.disabled = show;
+            };
+
+            const showError = (message) => {
+                errorMessageDiv.textContent = message;
+                errorMessageDiv.style.display = 'block';
+                setTimeout(() => {
+                     errorMessageDiv.style.display = 'none';
+                }, 5000);
+            };
+
+            const clearError = () => {
+                errorMessageDiv.style.display = 'none';
+                errorMessageDiv.textContent = '';
+            };
+
+            const clearResults = () => {
+                resultsContainer.innerHTML = '';
+            };
+
+            // Load settings from localStorage or fetch defaults
+            const loadSettings = async () => {
+                 // Use hardcoded fallbacks initially, attempt fetch later
+                 let fetchedDefaults = {
+                     defaultParsingInterfaces: [
+                         {"name": "接口1 - xmflv.com", "url": "https://jx.xmflv.com/?url="},
+                         {"name": "接口2 - bd.jx.cn", "url": "https://bd.jx.cn/?url="},
+                         {"name": "接口3 - xmflv.cc", "url": "https://jx.xmflv.cc/?url="},
+                         {"name": "接口4 - hls.one", "url": "https://jx.hls.one/?url="},
+                         {"name": "接口5 - 77flv.cc", "url": "https://jx.77flv.cc/?url="},
+                         {"name": "接口6 - yemu.xyz", "url": "https://www.yemu.xyz/?url="}
+                     ],
+                     defaultSearxngUrl: "https://searxng.zetatechs.online/search" // Example default
+                 };
+
+                try {
+                    // Attempt to fetch default config from backend
+                    const response = await fetch('/api/config'); // Assuming backend endpoint exists
+                    if (response.ok) {
+                        fetchedDefaults = await response.json();
+                        console.log("Fetched default config from backend.");
+                    } else {
+                         console.warn('Could not fetch default config from backend, using hardcoded fallbacks.');
+                    }
+                } catch (error) {
+                    console.error("Error fetching default config:", error);
+                     console.warn('Network error fetching default config, using hardcoded fallbacks.');
+                }
+
+                defaultSettings = fetchedDefaults; // Use fetched or hardcoded defaults
+
+                const savedSettings = localStorage.getItem('videoSearchPlayerSettings');
+                if (savedSettings) {
+                    currentSettings = JSON.parse(savedSettings);
+                     // Ensure parsingInterfaces is always an array
+                    if (!Array.isArray(currentSettings.parsingInterfaces)) {
+                        currentSettings.parsingInterfaces = defaultSettings.defaultParsingInterfaces;
+                    }
+                    console.log("Loaded settings from localStorage:", currentSettings);
+                } else {
+                    // Use defaults
+                    currentSettings = {
+                        aiApiUrl: '',
+                        aiApiKey: '',
+                        aiModel: '',
+                        searxngUrl: defaultSettings.defaultSearxngUrl,
+                        parsingInterfaces: JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces)) // Deep copy
+                    };
+                    console.log("Using default settings:", currentSettings);
+                }
+                populateSettingsForm();
+                renderParsingInterfacesList();
+                updateParsingSelect();
+            };
+
+            // Save settings to localStorage
+            const saveSettings = () => {
+                const newInterfaceUrl = newInterfaceUrlInput.value.trim();
+                // Check only if adding a new one, not on general save
+                // if (newInterfaceUrl && !newInterfaceUrl.endsWith('=')) {
+                //     showError("新解析接口URL应以 '=' 结尾");
+                //     return;
+                // }
+
+                currentSettings = {
+                    aiApiUrl: aiApiUrlInput.value.trim(),
+                    aiApiKey: aiApiKeyInput.value.trim(),
+                    aiModel: aiModelInput.value.trim(),
+                    searxngUrl: searxngUrlInput.value.trim() || defaultSettings.defaultSearxngUrl,
+                    parsingInterfaces: currentSettings.parsingInterfaces // Interfaces managed by add/remove
+                };
+                localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings));
+                console.log("Settings saved:", currentSettings);
+                alert("设置已保存！");
+                settingsModal.style.display = 'none';
+                updateParsingSelect();
+            };
+
+             // Reset settings to defaults
+            const resetToDefaults = () => {
+                 if (confirm("确定要恢复所有设置为默认值吗？您自定义的API密钥和接口将被清除。")) {
+                     currentSettings = {
+                        aiApiUrl: '',
+                        aiApiKey: '',
+                        aiModel: '',
+                        searxngUrl: defaultSettings.defaultSearxngUrl,
+                        parsingInterfaces: JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces)) // Deep copy defaults
+                     };
+                     localStorage.removeItem('videoSearchPlayerSettings');
+                     populateSettingsForm();
+                     renderParsingInterfacesList();
+                     updateParsingSelect();
+                     alert("设置已恢复为默认值。");
+                     settingsModal.style.display = 'none';
+                 }
+            };
+
+            // Populate the settings form fields
+            const populateSettingsForm = () => {
+                aiApiUrlInput.value = currentSettings.aiApiUrl || '';
+                aiApiKeyInput.value = currentSettings.aiApiKey || '';
+                aiModelInput.value = currentSettings.aiModel || '';
+                searxngUrlInput.value = currentSettings.searxngUrl || defaultSettings.defaultSearxngUrl;
+            };
+
+            // Render the list of parsing interfaces in the settings modal
+            const renderParsingInterfacesList = () => {
+                interfacesListDiv.innerHTML = '';
+                 // Ensure parsingInterfaces exists and is an array
+                 if (!currentSettings.parsingInterfaces || !Array.isArray(currentSettings.parsingInterfaces) || currentSettings.parsingInterfaces.length === 0) {
+                     interfacesListDiv.innerHTML = '<p style="color: var(--theme-secondary-text); font-style: italic;">没有配置解析接口。</p>';
+                     return;
+                 }
+                currentSettings.parsingInterfaces.forEach((iface, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.classList.add('interface-item');
+                    // Display name and URL clearly
+                    itemDiv.innerHTML = `
+                        <span><strong>${iface.name || '未命名接口'}</strong><br><small style="color: var(--theme-secondary-text);">${iface.url}</small></span>
+                        <button data-index="${index}" class="remove-interface-btn" aria-label="删除接口">&times;</button>
+                    `;
+                    interfacesListDiv.appendChild(itemDiv);
+                });
+
+                document.querySelectorAll('.remove-interface-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                         // Prevent click from bubbling up if needed
+                         e.stopPropagation();
+                        const indexToRemove = parseInt(e.currentTarget.getAttribute('data-index'));
+                        removeParsingInterface(indexToRemove);
+                    });
+                });
+            };
+
+            // Add a new parsing interface
+            const addParsingInterface = () => {
+                const name = newInterfaceNameInput.value.trim();
+                const url = newInterfaceUrlInput.value.trim();
+
+                if (!name || !url) {
+                    showError("接口名称和URL不能为空");
+                    return;
+                }
+                // Basic validation, can be enhanced
+                if (!url.includes('?url=') && !url.endsWith('=')) {
+                    showError("URL 格式似乎不正确，推荐使用包含 ?url= 或以 = 结尾的格式");
+                    // Allow adding anyway, maybe user knows better
+                }
+                // Ensure array exists
+                if (!Array.isArray(currentSettings.parsingInterfaces)) {
+                    currentSettings.parsingInterfaces = [];
+                }
+
+                currentSettings.parsingInterfaces.push({ name, url });
+                localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings));
+                renderParsingInterfacesList();
+                updateParsingSelect();
+                newInterfaceNameInput.value = '';
+                newInterfaceUrlInput.value = '';
+            };
+
+            // Remove a parsing interface
+            const removeParsingInterface = (index) => {
+                 // Confirm before removing
+                 if (confirm(`确定要删除接口 "${currentSettings.parsingInterfaces[index].name}" 吗？`)) {
+                     if (currentSettings.parsingInterfaces && currentSettings.parsingInterfaces[index]) {
+                         currentSettings.parsingInterfaces.splice(index, 1);
+                         localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings));
+                         renderParsingInterfacesList();
+                         updateParsingSelect();
+                     }
+                 }
+            };
+
+             // Update the <select> dropdown in the player modal
+            const updateParsingSelect = () => {
+                parsingSelect.innerHTML = '';
+                if (currentSettings.parsingInterfaces && Array.isArray(currentSettings.parsingInterfaces) && currentSettings.parsingInterfaces.length > 0) {
+                    currentSettings.parsingInterfaces.forEach((iface, index) => {
+                        const option = document.createElement('option');
+                        option.value = iface.url;
+                        option.textContent = iface.name;
+                        parsingSelect.appendChild(option);
+                    });
+                    parsingSelect.disabled = false;
+                } else {
+                    const option = document.createElement('option');
+                    option.textContent = '请先添加解析接口';
+                    option.disabled = true; // Disable option
+                    parsingSelect.appendChild(option);
+                    parsingSelect.disabled = true; // Disable select itself
+                }
+            };
+
+
+            // Display search results as cards
+            const displayResults = (results) => {
+                clearResults();
+                if (!results || results.length === 0) {
+                    resultsContainer.innerHTML = '<p style="text-align: center; color: var(--theme-secondary-text);">未能找到相关影视播放链接。</p>';
+                    return;
+                }
+
+                results.forEach(result => {
+                    const card = document.createElement('div');
+                    card.classList.add('result-card');
+                    card.dataset.link = result.video_link;
+                    card.dataset.title = result.title;
+
+                    card.innerHTML = `
+                        <h3>${result.title || '未知标题'}</h3>
+                        <p><span class="website-badge">${result.website || '未知来源'}</span></p>
+                        <p class="link-preview" title="${result.video_link}">${result.video_link.substring(0, 70)}${result.video_link.length > 70 ? '...' : ''}</p>
+                    `;
+                    card.addEventListener('click', () => {
+                        openPlayer(result.video_link, result.title);
+                    });
+                    resultsContainer.appendChild(card);
+                });
+            };
+
+            // Open the player modal
+            const openPlayer = (videoLink, title) => {
+                if (parsingSelect.disabled || !parsingSelect.value) {
+                     showError("没有可用的解析接口。请在设置中添加或检查接口。");
+                     return;
+                }
+                currentVideoLink = videoLink;
+                playerTitle.textContent = `${title || '未知标题'}`; // Simpler title
+
+                const selectedParserUrl = parsingSelect.value;
+                if (selectedParserUrl && currentVideoLink) {
+                     // Basic check if parser URL ends with '='
+                     const separator = selectedParserUrl.endsWith('=') ? '' : '=';
+                     try {
+                        videoPlayerIframe.src = selectedParserUrl + separator + encodeURIComponent(currentVideoLink);
+                     } catch (e) {
+                          console.error("Error encoding URI component: ", e);
+                          showError("视频链接格式错误，无法编码。");
+                          videoPlayerIframe.src = '';
+                     }
+
+                } else {
+                     videoPlayerIframe.src = '';
+                     showError("无法构建播放链接，缺少解析接口或视频链接。")
+                }
+
+                playerModal.style.display = 'block';
+                // Optional: Auto-focus the iframe or a close button for accessibility
+                // closePlayerBtn.focus();
+            };
+
+            // Close the player modal
+            const closePlayer = () => {
+                playerModal.style.display = 'none';
+                videoPlayerIframe.src = 'about:blank'; // More reliable way to stop playback
+                playerTitle.textContent = '正在播放...';
+                currentVideoLink = '';
+            };
+
+            // Perform search by calling the backend API
+            const performSearch = async () => {
+                const query = searchInput.value.trim();
+                if (!query) {
+                    showError("请输入搜索内容");
+                    return;
+                }
+
+                clearError();
+                clearResults();
+                showLoading(true);
+
+                try {
+                    // Assuming a backend endpoint /api/search exists
+                    // If running purely frontend, this needs adjustment
+                    const requestBody = {
+                         query: query,
+                         settings: {
+                             aiApiUrl: currentSettings.aiApiUrl,
+                             aiApiKey: currentSettings.aiApiKey,
+                             aiModel: currentSettings.aiModel,
+                             searxngUrl: currentSettings.searxngUrl
+                         }
+                     };
+
+                    console.log("Sending search request to backend:", requestBody);
+
+                    // Replace with your actual backend API endpoint if applicable
+                    // For demo purposes, let's simulate a response structure
+                    // const response = await fetch('/api/search', { // Your backend endpoint
+                    //     method: 'POST',
+                    //     headers: { 'Content-Type': 'application/json', },
+                    //     body: JSON.stringify(requestBody),
+                    // });
+                    // if (!response.ok) {
+                    //     const errorData = await response.json();
+                    //     throw new Error(errorData.error || `Server error: ${response.status}`);
+                    // }
+                    // const responseData = await response.json();
+
+                    // --- SIMULATED RESPONSE FOR FRONTEND DEMO ---
+                     await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+                     const responseData = [
+                         { title: `模拟结果: ${query} 剧集 1`, video_link: `https://v.qq.com/x/cover/simulated_${query}_ep1.html`, website: 'v.qq.com' },
+                         { title: `模拟结果: ${query} 电影版`, video_link: `https://www.iq.com/play/simulated_${query}_movie`, website: 'iq.com' },
+                         { title: `模拟结果: ${query} 相关资讯 (非视频)`, video_link: `https://news.example.com/${query}`, website: 'news.example.com' } // AI should filter this
+                     ];
+                     // Simulate basic AI filtering based on domain for demo
+                     const filteredDemoData = responseData.filter(item =>
+                          item.website && (item.website.includes('qq.com') || item.website.includes('iq.com') || item.website.includes('bilibili.com') || item.website.includes('youku.com'))
+                     );
+                     console.log("Simulated Filtered Data:", filteredDemoData);
+                     displayResults(filteredDemoData); // Display simulated data
+                     // --- END SIMULATED RESPONSE ---
+
+
+                } catch (error) {
+                    console.error("Search Error:", error);
+                    showError(`搜索失败: ${error.message}`);
+                    clearResults();
+                } finally {
+                    showLoading(false);
+                }
+            };
+
+
+            // --- Event Listeners ---
+            searchBtn.addEventListener('click', performSearch);
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            // Settings Modal
+            settingsBtn.addEventListener('click', () => {
+                populateSettingsForm();
+                renderParsingInterfacesList();
+                settingsModal.style.display = 'block';
+            });
+            closeSettingsBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+            });
+            saveSettingsBtn.addEventListener('click', saveSettings);
+            resetSettingsBtn.addEventListener('click', resetToDefaults);
+            addInterfaceBtn.addEventListener('click', addParsingInterface);
+
+            // Player Modal
+            closePlayerBtn.addEventListener('click', closePlayer);
+            parsingSelect.addEventListener('change', () => {
+                if (playerModal.style.display === 'block' && currentVideoLink) {
+                     const selectedParserUrl = parsingSelect.value;
+                     if (selectedParserUrl) {
+                           const separator = selectedParserUrl.endsWith('=') ? '' : '=';
+                           try {
+                                videoPlayerIframe.src = selectedParserUrl + separator + encodeURIComponent(currentVideoLink);
+                           } catch(e) { console.error("URI Encode Error on select change", e); }
+                     }
+                }
+            });
+
+            // Close modals on outside click
+            window.addEventListener('click', (event) => {
+                if (event.target === settingsModal) {
+                    settingsModal.style.display = 'none';
+                }
+                 if (event.target === playerModal) {
+                    closePlayer();
+                }
+            });
+
+            // --- Initial Load ---
+            loadSettings();
+
+        }); // End DOMContentLoaded
+    </script>
 </body>
 </html>
