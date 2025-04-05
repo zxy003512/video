@@ -39,7 +39,7 @@
                 <h2><i class="fas fa-sliders-h"></i> 应用设置</h2>
 
                 <div class="settings-section">
-                    <h3><i class="fas fa-robot"></i> AI 配置 (用于智能 AI 过滤 & YFSP播放解析)</h3>
+                    <h3><i class="fas fa-robot"></i> AI 配置 (用于智能 AI 过滤)</h3>
                     <label for="ai-api-url">API 地址:</label>
                     <input type="text" id="ai-api-url" placeholder="例如: https://api.zetatechs.com/v1">
 
@@ -48,7 +48,6 @@
 
                     <label for="ai-model">模型:</label>
                     <input type="text" id="ai-model" placeholder="例如: gemini-2.0-flash">
-                     <p class="settings-note">注意：此处的 AI 配置同时用于“智能 AI 过滤”和“YFSP 资源站”的播放链接解析。</p>
                 </div>
 
                 <div class="settings-section">
@@ -88,7 +87,7 @@
              <div class="modal-content player-modal-content">
                 <span class="close-player-btn close-btn">&times;</span>
                 <h3 id="player-title">正在播放...</h3>
-                 <div class="parsing-selector" id="parsing-selector-container" style="display: none;"> <!-- Initially hidden for YFSP -->
+                 <div class="parsing-selector" id="parsing-selector-container">
                      <label for="parsing-select">选择解析接口:</label>
                      <select id="parsing-select">
                          <!-- Options loaded by JS -->
@@ -108,6 +107,7 @@
          <div id="error-message" class="error-message" style="display: none;">
              <!-- Error messages will be shown here -->
          </div>
+
 
     </div>
 

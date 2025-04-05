@@ -20,13 +20,8 @@
     --success-color: #28a745; /* 成功绿 */
     --success-hover-color: #218838; /* 成功绿悬停 */
     --light-text-on-dark: #ffffff; /* 深色背景上的浅色文字 */
-    --yfsp-button-bg: #ff8c00; /* Orange for YFSP select button */
+    --yfsp-button-bg: #ff8c00; /* Orange for YFSP play button */
     --yfsp-button-hover-bg: #cc7000;
-    --episode-button-bg: #e9ecef; /* Light grey for episode buttons */
-    --episode-button-text: #495057;
-    --episode-button-hover-bg: #dee2e6;
-    --episode-button-active-bg: #ced4da;
-
 
     /* --- Use Light Theme Variables --- */
     --theme-bg: var(--background-color);
@@ -190,7 +185,6 @@ header h1 {
     margin-right: 2px;
      /* Accent color for modern browsers */
      accent-color: var(--theme-primary);
-     cursor: pointer; /* Indicate radio is clickable */
 }
 .search-method-selector label:hover {
     background-color: rgba(0, 123, 255, 0.1);
@@ -217,12 +211,10 @@ header h1 {
     background-color: var(--theme-card-bg);
     border: 1px solid var(--theme-border);
     border-radius: 10px;
-    padding: 0; /* Reset padding */
+    padding: 0; /* Remove padding for YFSP image */
     box-shadow: 0 5px 15px var(--theme-shadow);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
-    overflow: hidden; /* Important for image fit and radius */
-    display: flex; /* Use flex for column layout */
-    flex-direction: column;
+    overflow: hidden; /* Important for image fit */
 }
 .result-card:hover {
     transform: translateY(-6px);
@@ -262,7 +254,7 @@ header h1 {
 .ai-card .link-preview {
     font-size: 0.85em;
     color: var(--secondary-color);
-    word-break: break-all; /* Break long URLs */
+    word-break: break-all;
     line-height: 1.4;
     margin-bottom: 10px; /* Add space before hint */
 }
@@ -281,17 +273,14 @@ header h1 {
 
 /* YFSP Card Specifics */
 .yfsp-card {
-   /* Already flex column via .result-card */
+    display: flex;
+    flex-direction: column; /* Stack image and info */
 }
 .yfsp-cover {
     width: 100%;
     aspect-ratio: 2 / 3; /* Common poster aspect ratio */
     background-color: #eee; /* Placeholder bg */
     overflow: hidden;
-    position: relative; /* For 'no-cover' text */
-    display: flex; /* Center 'no-cover' text */
-    justify-content: center;
-    align-items: center;
 }
 .yfsp-cover img {
     display: block;
@@ -300,29 +289,20 @@ header h1 {
     object-fit: cover; /* Cover the area, might crop */
     border-bottom: 1px solid var(--theme-border); /* Separator */
 }
-.yfsp-cover .no-cover {
-    font-size: 0.9em;
-    color: var(--text-muted);
-}
 .yfsp-info {
     padding: 15px; /* Padding for text content */
     text-align: center;
-    flex-grow: 1; /* Allow info to take remaining space if needed */
-    display: flex;
-    flex-direction: column;
-    gap: 15px; /* Space between title, button, and episode list */
 }
 .yfsp-info h3 {
     font-size: 1.1em;
     color: var(--text-color); /* Standard text color */
-    margin-bottom: 0; /* Remove bottom margin, use gap instead */
+    margin-bottom: 15px; /* Space before button */
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-/* Button for selecting episodes */
-.select-episode-btn {
+.play-episode-btn {
     display: inline-block; /* Fit content */
     padding: 10px 20px;
     font-size: 0.95em;
@@ -332,86 +312,25 @@ header h1 {
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease, opacity 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.1s ease;
     width: auto; /* Don't force full width */
-    margin: 0 auto; /* Center button */
 }
-.select-episode-btn i {
+.play-episode-btn i {
     margin-right: 6px;
 }
-.select-episode-btn:hover:not(:disabled) {
+.play-episode-btn:hover:not(:disabled) {
     background-color: var(--yfsp-button-hover-bg);
 }
-.select-episode-btn:active:not(:disabled) {
+.play-episode-btn:active:not(:disabled) {
     transform: scale(0.97);
 }
-.select-episode-btn:disabled {
+.play-episode-btn:disabled {
     background-color: var(--secondary-color);
     cursor: not-allowed;
     opacity: 0.7;
 }
-/* Styles for the dynamically added episode list container */
-.episode-list {
-    margin-top: 10px; /* Space above episode buttons */
-    padding-top: 10px; /* Space inside container */
-    border-top: 1px solid var(--theme-border); /* Separator line */
-    display: flex;
-    flex-wrap: wrap; /* Allow buttons to wrap */
-    gap: 8px; /* Space between episode buttons */
-    justify-content: center; /* Center buttons */
-    max-height: 150px; /* Limit height and make scrollable */
-    overflow-y: auto; /* Enable vertical scrolling if needed */
-    scrollbar-width: thin; /* For Firefox */
-    scrollbar-color: var(--secondary-color) var(--background-color); /* For Firefox */
-}
-/* Styles for scrollbar (Webkit browsers) */
-.episode-list::-webkit-scrollbar {
-  width: 6px;
-}
-.episode-list::-webkit-scrollbar-track {
-  background: var(--background-color);
-  border-radius: 3px;
-}
-.episode-list::-webkit-scrollbar-thumb {
-  background-color: var(--secondary-color);
-  border-radius: 3px;
-}
-/* Styles for individual episode buttons */
-.episode-select-btn {
-    background-color: var(--episode-button-bg);
-    color: var(--episode-button-text);
-    border: 1px solid var(--theme-border);
-    border-radius: 4px;
-    padding: 5px 10px;
-    font-size: 0.85em;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
-    min-width: 40px; /* Ensure minimum width */
-    text-align: center;
-}
-.episode-select-btn:hover:not(:disabled) {
-    background-color: var(--episode-button-hover-bg);
-    border-color: #adb5bd;
-}
-.episode-select-btn:active:not(:disabled) {
-    background-color: var(--episode-button-active-bg);
-    transform: scale(0.96);
-}
-.episode-select-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-/* Style for loading spinner inside buttons */
-.fa-spinner {
-     animation: spin 1s linear infinite;
-}
-.episode-list .no-episodes,
-.episode-list .episode-error {
-    font-size: 0.9em;
-    color: var(--text-muted);
-    width: 100%; /* Take full width */
-    text-align: center;
-    padding: 10px 0;
+.play-episode-btn .fa-spinner {
+     animation: spin 1s linear infinite; /* Add spin animation */
 }
 
 
@@ -589,7 +508,7 @@ header h1 {
     margin-right: 15px;
     font-size: 0.95em;
     color: var(--text-color);
-    word-break: break-all; /* Break long URLs */
+    word-break: break-all;
 }
 
 #parsing-interfaces-list button.remove-interface-btn {
@@ -602,7 +521,6 @@ header h1 {
     padding: 0 5px;
     line-height: 1;
     transition: color 0.3s ease, transform 0.2s ease;
-    flex-shrink: 0; /* Prevent button from shrinking */
 }
 #parsing-interfaces-list button.remove-interface-btn:hover {
     color: var(--danger-hover-color);
@@ -614,12 +532,12 @@ header h1 {
     display: flex;
     gap: 10px;
     margin-top: 20px;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
+    flex-wrap: wrap;
 }
 
 .add-interface-form input {
     flex: 1;
-    min-width: 180px; /* Allow shrinking but prefer larger size */
+    min-width: 180px;
     padding: 10px 12px;
     border: 1px solid var(--theme-border);
     border-radius: 6px;
@@ -646,7 +564,6 @@ header h1 {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    flex-shrink: 0; /* Prevent button from shrinking too much */
 }
 #add-interface-btn:hover {
     background-color: var(--success-hover-color);
@@ -656,7 +573,7 @@ header h1 {
     font-size: 0.85em;
     color: var(--text-muted);
     margin-top: 15px;
-    text-align: left; /* Align notes left */
+    text-align: center;
 }
 
 #save-settings-btn, #reset-settings-btn {
@@ -711,11 +628,10 @@ header h1 {
     display: flex;
     flex-direction: column;
     padding: 25px; /* Adjust padding for player */
-    overflow: hidden; /* Prevent internal scrollbars on modal content itself */
 }
 
 .player-modal-content {
-     /* Removed overflow hidden here, handled by parent */
+     overflow: hidden; /* Prevent internal scrollbars */
 }
 
 #player-title {
@@ -731,11 +647,10 @@ header h1 {
 }
 
 .parsing-selector {
-    /* Default display: none set in HTML now */
-    margin-bottom: 15px; /* Reduced space */
+    margin-bottom: 20px; /* More space */
     text-align: center;
     flex-shrink: 0; /* Prevent selector from shrinking */
-    transition: opacity 0.3s ease, visibility 0.3s ease; /* For hiding/showing */
+    transition: opacity 0.3s ease, visibility 0.3s ease; /* For hiding */
 }
 .parsing-selector label {
      margin-right: 10px;
@@ -752,7 +667,6 @@ header h1 {
     min-width: 250px; /* Wider select */
     cursor: pointer;
     font-size: 0.95em;
-    max-width: 90%; /* Prevent overflow on small player */
 }
 #parsing-select:focus {
     border-color: var(--theme-primary);
@@ -762,7 +676,6 @@ header h1 {
 #parsing-select:disabled {
     background-color: #e9ecef; /* Disabled background */
     cursor: not-allowed;
-    opacity: 0.7;
 }
 
 
@@ -773,7 +686,6 @@ header h1 {
     background-color: #000; /* Black background while loading */
     border-radius: 8px; /* Rounded corners for iframe area */
     border: 1px solid var(--theme-border); /* Subtle border around iframe */
-    min-height: 200px; /* Ensure a minimum height */
 }
 
 #video-player {
@@ -792,11 +704,9 @@ header h1 {
     padding: 18px 25px; /* More padding */
     border-radius: 8px; /* Consistent radius */
     margin-top: 25px;
-    margin-bottom: 15px; /* Add bottom margin */
     text-align: center;
     animation: fadeIn 0.5s;
     font-size: 1.05em;
-    word-wrap: break-word; /* Wrap long error messages */
 }
 
 
@@ -844,28 +754,19 @@ header h1 {
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Adjust grid for mobile */
         gap: 20px;
     }
-     /* YFSP Card Adjustments */
-     .yfsp-info {
-         padding: 12px;
-         gap: 12px;
+     .result-card {
+         /* Keep card structure */
+     }
+    .yfsp-cover {
+         /* Aspect ratio should handle resizing */
      }
      .yfsp-info h3 {
          font-size: 1em;
      }
-     .select-episode-btn {
+     .play-episode-btn {
          font-size: 0.9em;
          padding: 8px 15px;
      }
-     .episode-list {
-         max-height: 120px; /* Reduce max height */
-         gap: 6px;
-     }
-     .episode-select-btn {
-         font-size: 0.8em;
-         padding: 4px 8px;
-         min-width: 35px;
-     }
-
 
     .modal-content {
         width: 95%;
@@ -891,10 +792,9 @@ header h1 {
      }
      /* Make iframe container proportionally smaller on mobile */
      .iframe-container {
-        min-height: 30vh; /* Adjust minimum height */
+        min-height: 40vh; /* Ensure a minimum height */
         aspect-ratio: 16 / 9; /* Maintain aspect ratio */
         flex-grow: 0; /* Don't let it grow infinitely */
-        max-height: 60vh; /* Limit height further */
      }
 
      #player-title {
@@ -931,28 +831,14 @@ header h1 {
         grid-template-columns: 1fr; /* Single column */
         gap: 15px;
     }
-    /* Further reduce YFSP card elements */
-     .yfsp-info h3 {
+    .yfsp-info h3 {
          font-size: 0.95em; /* Smaller font */
      }
-     .select-episode-btn {
-         font-size: 0.85em;
-     }
-     .episode-select-btn {
-         font-size: 0.75em;
-         padding: 3px 6px;
-         min-width: 30px;
-     }
-
      .ai-card h3 {
          font-size: 1em;
      }
      .ai-card .link-preview {
          font-size: 0.8em;
-     }
-     .ai-card .website-badge {
-         font-size: 0.8em;
-         padding: 3px 8px;
      }
 
      .modal-content {
@@ -962,19 +848,6 @@ header h1 {
          font-size: 1.3em;
      }
      .player-modal .modal-content {
-        /* Height adjusted by aspect ratio in iframe container */
-     }
-     .iframe-container {
-         min-height: 25vh;
-     }
-     #player-title {
-         font-size: 1.1em;
-     }
-     .parsing-selector {
-         margin-bottom: 10px;
-     }
-     #parsing-select {
-         font-size: 0.9em;
-         padding: 8px 10px;
+        /* Height adjusted by aspect ratio */
      }
 }
