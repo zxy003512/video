@@ -20,12 +20,11 @@
     --success-color: #28a745; /* 成功绿 */
     --success-hover-color: #218838; /* 成功绿悬停 */
     --light-text-on-dark: #ffffff; /* 深色背景上的浅色文字 */
-    --yfsp-button-bg: #ff8c00; /* Orange for YFSP play button */
+    --yfsp-button-bg: #ff8c00; /* Orange for YFSP select button */
     --yfsp-button-hover-bg: #cc7000;
-    --episode-button-bg: #e9ecef;
-    --episode-button-hover-bg: #dee2e6;
-    --episode-button-active-bg: var(--primary-color);
-    --episode-button-active-text: var(--light-text-on-dark);
+    --episode-button-bg: #e9ecef; /* Light gray for episode buttons */
+    --episode-button-hover-bg: #d3d9df;
+    --episode-button-text: #495057;
 
     /* --- Use Light Theme Variables --- */
     --theme-bg: var(--background-color);
@@ -65,6 +64,7 @@ body {
    opacity: 0.5;
 }
 
+
 .container {
     max-width: 900px;
     width: 100%;
@@ -82,7 +82,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 25px; /* Reduced spacing */
     border-bottom: 1px solid var(--theme-border);
     padding-bottom: 20px;
 }
@@ -90,7 +90,7 @@ header {
 header h1 {
     color: var(--theme-primary);
     font-weight: 700;
-    font-size: 1.8em;
+    font-size: 1.8em; /* Slightly smaller title */
 }
 
 #settings-btn {
@@ -108,7 +108,7 @@ header h1 {
 
 .search-box {
     display: flex;
-    margin-bottom: 15px;
+    margin-bottom: 15px; /* Reduced spacing */
     gap: 15px;
 }
 
@@ -141,7 +141,7 @@ header h1 {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease, opacity 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.1s ease;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -166,17 +166,17 @@ header h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 25px;
-    margin-bottom: 30px;
+    gap: 25px; /* More space between options */
+    margin-bottom: 30px; /* Space below selector */
     padding: 10px;
-    background-color: rgba(0, 123, 255, 0.05);
+    background-color: rgba(0, 123, 255, 0.05); /* Very light blue background */
     border-radius: 8px;
-    border: 1px solid rgba(0, 123, 255, 0.1);
+    border: 1px solid rgba(0, 123, 255, 0.1); /* Subtle border */
 }
 .search-method-selector label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 8px; /* Space between radio and text */
     cursor: pointer;
     font-size: 1em;
     color: var(--text-color);
@@ -186,6 +186,7 @@ header h1 {
 }
 .search-method-selector input[type="radio"] {
     margin-right: 2px;
+     /* Accent color for modern browsers */
      accent-color: var(--theme-primary);
 }
 .search-method-selector label:hover {
@@ -204,26 +205,20 @@ header h1 {
 /* Results */
 #results-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); /* Slightly smaller min width */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 25px;
-    margin-top: 25px;
-}
-
-.no-results-message {
-    text-align: center;
-    color: var(--text-muted);
-    grid-column: 1 / -1; /* Span all columns */
-    padding: 40px 0;
+    margin-top: 25px; /* Reduced spacing */
 }
 
 .result-card {
     background-color: var(--theme-card-bg);
     border: 1px solid var(--theme-border);
     border-radius: 10px;
+    padding: 0; /* Remove padding for YFSP image */
     box-shadow: 0 5px 15px var(--theme-shadow);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
-    overflow: hidden; /* Important for image fit and contained elements */
-    display: flex; /* Use flex for layout */
+    overflow: hidden; /* Important for image fit and rounded corners */
+    display: flex; /* Use flex for card layout */
     flex-direction: column; /* Stack content vertically */
 }
 .result-card:hover {
@@ -231,147 +226,217 @@ header h1 {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
 }
 
-/* Common Play Button Style */
-.play-btn {
-    display: inline-block;
-    padding: 10px 20px;
-    font-size: 0.95em;
-    font-weight: 500;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease, opacity 0.3s ease;
-    width: auto;
-    margin-top: auto; /* Push button to bottom in flex container */
-}
-.play-btn i {
-    margin-right: 6px;
-}
-.play-btn:hover:not(:disabled) {
-    filter: brightness(90%);
-}
-.play-btn:active:not(:disabled) {
-    transform: scale(0.97);
-}
-.play-btn:disabled {
-    background-color: var(--secondary-color) !important; /* Ensure override */
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-.play-btn .fa-spinner {
-     animation: spin 1s linear infinite;
-}
-
-
 /* AI Card Specifics */
 .ai-card {
-    padding: 20px; /* Padding inside card */
+    padding: 20px; /* Restore padding for AI cards */
+    cursor: pointer;
 }
 .ai-card h3 {
-    font-size: 1.1em; /* Slightly smaller */
-    color: var(--theme-text); /* Standard text */
-    margin-bottom: 8px;
+    font-size: 1.15em;
+    color: var(--theme-primary);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-weight: 500;
 }
 .ai-card p {
-    font-size: 0.9em;
+    font-size: 0.95em;
     color: var(--text-muted);
-    margin-bottom: 8px;
-    line-height: 1.4;
+    margin-bottom: 12px;
+    line-height: 1.5;
 }
 .ai-card .website-badge {
     display: inline-block;
     background-color: rgba(0, 123, 255, 0.1);
     color: var(--theme-primary);
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.8em;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85em;
     font-weight: 500;
-    margin-bottom: 8px; /* Space below badge */
+    margin-bottom: 10px;
 }
 .ai-card .link-preview {
-    font-size: 0.8em;
+    font-size: 0.85em;
     color: var(--secondary-color);
     word-break: break-all;
-    margin-bottom: 12px; /* Space before button */
+    line-height: 1.4;
+    margin-bottom: 10px; /* Add space before hint */
 }
-.ai-card .play-ai-btn {
-    background-color: var(--success-color); /* Green for AI play */
-    color: var(--light-text-on-dark);
-    width: 100%; /* Full width button */
-    text-align: center;
+.ai-card .play-hint {
+    display: block;
+    font-size: 0.85em;
+    color: var(--secondary-color);
+    text-align: right;
+    margin-top: 10px;
 }
-.ai-card .play-ai-btn:hover:not(:disabled) {
-     background-color: var(--success-hover-color);
+.ai-card .play-hint i {
+    margin-right: 4px;
+    color: var(--theme-primary);
 }
+
 
 /* YFSP Card Specifics */
 .yfsp-card {
-    /* Flex direction is column by default */
+    /* Inherits flex column layout from .result-card */
 }
 .yfsp-cover {
     width: 100%;
     aspect-ratio: 2 / 3; /* Common poster aspect ratio */
     background-color: #eee; /* Placeholder bg */
-    overflow: hidden;
-    position: relative; /* For error message positioning */
+    overflow: hidden; /* Clip image */
+    flex-shrink: 0; /* Prevent cover from shrinking */
 }
 .yfsp-cover img {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-bottom: 1px solid var(--theme-border);
+    object-fit: cover; /* Cover the area, might crop */
+    border-bottom: 1px solid var(--theme-border); /* Separator */
 }
-.yfsp-cover p { /* Style for "无法加载封面" */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--text-muted);
-    font-size: 0.9em;
+.yfsp-cover span { /* Style for error placeholder */
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     height: 100%;
+     color: #aaa;
+     font-size: 0.9em;
+     text-align: center;
+     padding: 10px;
 }
-
 .yfsp-info {
-    padding: 15px;
+    padding: 15px; /* Padding for text content */
     text-align: center;
+    flex-grow: 1; /* Allow info section to grow if needed */
     display: flex;
-    flex-direction: column;
-    flex-grow: 1; /* Allow info to grow and push button down */
+    flex-direction: column; /* Stack title and action container */
 }
 .yfsp-info h3 {
-    font-size: 1.05em; /* Slightly smaller */
-    color: var(--text-color);
-    margin-bottom: 15px;
+    font-size: 1.1em;
+    color: var(--text-color); /* Standard text color */
+    margin-bottom: 15px; /* Space before button/list */
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex-shrink: 0; /* Prevent title shrinking */
+    flex-shrink: 0; /* Prevent title from shrinking */
 }
-.yfsp-info .play-episode-btn {
-    background-color: var(--yfsp-button-bg); /* Orange for YFSP */
+/* Container for 'Select Episode' button OR the episode list */
+.yfsp-action-container {
+     margin-top: auto; /* Push to bottom if info grows */
+     flex-grow: 1; /* Take remaining space */
+     display: flex; /* Enable flex for centering list/button */
+     flex-direction: column; /* Stack items inside */
+     justify-content: flex-end; /* Align items (button or list) to bottom */
+}
+.select-episode-btn {
+    display: inline-block; /* Fit content */
+    padding: 10px 20px;
+    font-size: 0.95em;
+    font-weight: 500;
+    background-color: var(--yfsp-button-bg); /* Distinct color */
     color: var(--light-text-on-dark);
-    width: 100%; /* Full width button */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease, opacity 0.2s ease;
+    width: auto; /* Don't force full width */
+    margin: 0 auto; /* Center the button */
 }
-.yfsp-info .play-episode-btn:hover:not(:disabled) {
+.select-episode-btn i {
+    margin-right: 6px;
+}
+.select-episode-btn:hover:not(:disabled) {
     background-color: var(--yfsp-button-hover-bg);
 }
+.select-episode-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+.select-episode-btn:disabled {
+    background-color: var(--secondary-color);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+.select-episode-btn .fa-spinner {
+     animation: spin 1s linear infinite; /* Add spin animation */
+}
+.no-episodes-msg {
+     font-size: 0.9em;
+     color: var(--text-muted);
+     padding: 10px 0;
+     text-align: center;
+}
 
+/* Styling for the dynamically generated episode list */
+.episode-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); /* Responsive grid */
+    gap: 8px; /* Spacing between buttons */
+    padding-top: 10px; /* Space above the list */
+    width: 100%; /* Take full width of action container */
+    max-height: 150px; /* Limit height and enable scroll */
+    overflow-y: auto; /* Add vertical scroll if list is long */
+    border: 1px solid var(--theme-border); /* Optional border */
+    border-radius: 6px;
+    padding: 10px; /* Padding inside the list container */
+    background-color: var(--background-color); /* Slightly different bg */
+}
+
+.episode-button {
+    padding: 8px 5px; /* Adjust padding */
+    font-size: 0.85em; /* Smaller font size */
+    background-color: var(--episode-button-bg);
+    color: var(--episode-button-text);
+    border: 1px solid var(--theme-border); /* Subtle border */
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Handle long episode names */
+}
+
+.episode-button:hover:not(:disabled) {
+    background-color: var(--episode-button-hover-bg);
+    color: #333;
+}
+.episode-button:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+.episode-button:disabled {
+    background-color: var(--secondary-color);
+    color: var(--light-text-on-dark); /* Text on disabled bg */
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.episode-button .fa-spinner {
+    font-size: 1.1em; /* Make spinner visible */
+    display: inline-block; /* Ensure animation works */
+    animation: spin 1s linear infinite;
+}
 
 /* Loading Indicator */
 .loading {
     display: none; /* Hidden by default, shown by JS */
-    flex-direction: column;
+    flex-direction: column; /* Stack spinner and text */
     justify-content: center;
     align-items: center;
     text-align: center;
     padding: 50px 0;
     color: var(--text-muted);
 }
-.loading p {
-    font-size: 1.1em;
-    margin-top: 15px;
+/* Loading indicator specifically inside player */
+.player-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white overlay */
+    z-index: 5; /* Above iframe, below modal controls */
+    border-radius: 8px; /* Match iframe container */
 }
 
 .spinner {
@@ -381,78 +446,60 @@ header h1 {
     width: 45px;
     height: 45px;
     animation: spin 1s linear infinite;
+    margin: 0 auto 20px auto;
+}
+.loading p {
+    font-size: 1.1em;
 }
 
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
 
-/* Loading indicator specifically inside player */
-.player-loading {
-    position: absolute; /* Position over iframe */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); /* Darker overlay for player */
-    z-index: 5;
-    border-radius: 8px; /* Match iframe container */
-    color: #eee; /* Light text on dark overlay */
-}
-.player-loading .spinner {
-    border-left-color: #eee; /* Lighter spinner on dark overlay */
-    width: 40px;
-    height: 40px;
-}
-.player-loading p {
-    font-size: 1em;
-    margin-top: 10px;
-}
-
 /* Modal Styles */
 .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden; /* Prevent body scroll when modal is open */
-    background-color: rgba(0, 0, 0, 0.55);
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.55); /* Slightly darker overlay */
     backdrop-filter: blur(4px);
     animation: fadeIn 0.3s ease;
 }
 
 .modal-content {
     background-color: var(--theme-card-bg);
-    margin: 5% auto;
-    padding: 35px 40px;
-    border: none;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 650px; /* Default max width (for settings) */
+    margin: 5% auto; /* Centered vertically */
+    padding: 35px 40px; /* Consistent padding */
+    border: none; /* Remove border, rely on shadow */
+    border-radius: 10px; /* Consistent radius */
+    width: 90%; /* Responsive width */
+    max-width: 650px; /* Max width for settings */
     position: relative;
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
-    animation: slideIn 0.4s ease-out;
-    color: var(--theme-text);
-    max-height: 90vh; /* Limit height */
-    overflow-y: auto; /* Allow scrolling within modal content if needed */
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
+    animation: slideIn 0.4s ease-out; /* Smoother animation */
+    color: var(--theme-text); /* Ensure text color is set */
 }
 
 .close-btn {
-    color: #999;
+    color: #999; /* Lighter close icon */
     position: absolute;
     top: 18px;
     right: 25px;
-    font-size: 32px;
-    font-weight: 300;
+    font-size: 32px; /* Larger icon */
+    font-weight: 300; /* Thinner icon */
     line-height: 1;
     cursor: pointer;
     transition: color 0.3s ease, transform 0.2s ease;
-    z-index: 10;
+    z-index: 10; /* Ensure above other content */
 }
-.close-btn:hover, .close-btn:focus {
+
+.close-btn:hover,
+.close-btn:focus {
     color: var(--danger-color);
     transform: scale(1.1);
     text-decoration: none;
@@ -469,17 +516,20 @@ header h1 {
     text-align: center;
     font-weight: 500;
 }
-#settings-modal h2 i { margin-right: 10px; font-size: 0.9em; }
+#settings-modal h2 i {
+    margin-right: 10px;
+    font-size: 0.9em;
+}
 
 .settings-section {
-    margin-bottom: 25px; /* Consistent spacing */
+    margin-bottom: 30px;
     padding-bottom: 25px;
     border-bottom: 1px solid var(--theme-border);
 }
 .settings-section:last-of-type {
     border-bottom: none;
     padding-bottom: 0;
-    margin-bottom: 20px; /* Less margin before actions */
+    margin-bottom: 25px;
 }
 
 .settings-section h3 {
@@ -491,7 +541,11 @@ header h1 {
     align-items: center;
     gap: 8px;
 }
-.settings-section h3 i { font-size: 1em; color: var(--primary-color); }
+.settings-section h3 i {
+    font-size: 1em;
+    color: var(--primary-color); /* Match title color */
+}
+
 
 .settings-section label {
     display: block;
@@ -505,7 +559,7 @@ header h1 {
 .settings-section input[type="password"] {
     width: 100%;
     padding: 12px 15px;
-    margin-bottom: 10px; /* Less space below input */
+    margin-bottom: 18px;
     border: 1px solid var(--theme-border);
     border-radius: 6px;
     background-color: var(--input-bg);
@@ -520,7 +574,7 @@ header h1 {
     outline: none;
 }
 
-#parsing-interfaces-list { margin-bottom: 15px; }
+
 #parsing-interfaces-list .interface-item {
     display: flex;
     align-items: center;
@@ -528,16 +582,21 @@ header h1 {
     background-color: var(--background-color);
     padding: 10px 15px;
     border-radius: 6px;
-    margin-bottom: 8px; /* Tighter spacing */
+    margin-bottom: 10px;
     border: 1px solid var(--theme-border);
 }
+
 #parsing-interfaces-list span {
     flex-grow: 1;
     margin-right: 15px;
     font-size: 0.95em;
     color: var(--text-color);
-    word-break: break-all;
+    word-break: break-all; /* Wrap long URLs */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Show ellipsis */
+    white-space: nowrap; /* Prevent wrapping */
 }
+
 #parsing-interfaces-list button.remove-interface-btn {
     background: none;
     border: none;
@@ -548,18 +607,21 @@ header h1 {
     padding: 0 5px;
     line-height: 1;
     transition: color 0.3s ease, transform 0.2s ease;
+    flex-shrink: 0; /* Prevent button from shrinking */
 }
 #parsing-interfaces-list button.remove-interface-btn:hover {
     color: var(--danger-hover-color);
     transform: scale(1.1);
 }
 
+
 .add-interface-form {
     display: flex;
     gap: 10px;
-    margin-top: 15px; /* Closer to list */
+    margin-top: 20px;
     flex-wrap: wrap;
 }
+
 .add-interface-form input {
     flex: 1;
     min-width: 180px;
@@ -575,6 +637,7 @@ header h1 {
      box-shadow: 0 0 0 3px var(--input-border-focus);
      outline: none;
 }
+
 #add-interface-btn {
     padding: 10px 18px;
     background-color: var(--success-color);
@@ -589,20 +652,15 @@ header h1 {
     align-items: center;
     gap: 6px;
 }
-#add-interface-btn:hover { background-color: var(--success-hover-color); }
+#add-interface-btn:hover {
+    background-color: var(--success-hover-color);
+}
 
 .settings-note {
     font-size: 0.85em;
     color: var(--text-muted);
-    margin-top: 10px; /* Closer to related element */
-    /* text-align: center; */ /* Removed center align */
-}
-
-.settings-actions {
-    display: flex;
-    justify-content: flex-end; /* Align buttons right */
-    gap: 15px;
-    margin-top: 25px;
+    margin-top: 15px;
+    text-align: center;
 }
 
 #save-settings-btn, #reset-settings-btn {
@@ -613,198 +671,133 @@ header h1 {
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-top: 20px;
+    margin-right: 15px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
 }
-#save-settings-btn:active, #reset-settings-btn:active { transform: scale(0.98); }
+#save-settings-btn:active, #reset-settings-btn:active {
+    transform: scale(0.98);
+}
 
-#save-settings-btn { background-color: var(--theme-primary); color: var(--light-text-on-dark); }
-#save-settings-btn:hover { background-color: var(--primary-hover-color); }
+#save-settings-btn {
+    background-color: var(--theme-primary);
+    color: var(--light-text-on-dark);
+}
+#save-settings-btn:hover {
+     background-color: var(--primary-hover-color);
+}
 
-#reset-settings-btn { background-color: var(--danger-color); color: white; } /* Make reset danger */
-#reset-settings-btn:hover { background-color: var(--danger-hover-color); }
+#reset-settings-btn {
+    background-color: var(--secondary-color);
+    color: var(--light-text-on-dark);
+}
+#reset-settings-btn:hover {
+     background-color: var(--secondary-hover-color);
+}
+
+.danger-btn { /* Applied to reset button */
+    background-color: var(--danger-color);
+    color: white;
+}
+.danger-btn:hover {
+    background-color: var(--danger-hover-color);
+}
 
 
 /* Player Modal */
 .player-modal .modal-content {
-    max-width: 95%; /* Responsive width */
-    width: 1200px; /* Wider for player + episodes */
-    height: 90vh; /* Use most of viewport height */
-    margin: 2vh auto; /* Center vertically better */
+    max-width: 90%; /* Responsive width */
+    width: 1100px; /* Larger max width for player on desktop */
+    height: 90vh; /* Use more viewport height */
+    margin: 2% auto; /* Adjust vertical centering for larger modal */
     display: flex;
     flex-direction: column;
-    padding: 20px; /* Slightly less padding */
-    overflow: hidden; /* Prevent modal scrollbars */
+    padding: 25px; /* Adjust padding for player */
+}
+
+.player-modal-content {
+     overflow: hidden; /* Prevent internal scrollbars */
 }
 
 #player-title {
     color: var(--theme-primary);
     margin-bottom: 15px;
-    font-size: 1.3em; /* Adjust size */
+    font-size: 1.4em; /* Larger title */
     font-weight: 500;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex-shrink: 0;
+    flex-shrink: 0; /* Prevent title from shrinking */
 }
 
 .parsing-selector {
-    margin-bottom: 15px;
+    margin-bottom: 20px; /* More space */
     text-align: center;
-    flex-shrink: 0;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    flex-shrink: 0; /* Prevent selector from shrinking */
+    /* transition: opacity 0.3s ease, visibility 0.3s ease; */ /* Might cause issues if display:none is used */
 }
-.parsing-selector label { margin-right: 10px; font-size: 0.95em; color: var(--text-muted); }
+.parsing-selector label {
+     margin-right: 10px;
+     font-size: 1em;
+     color: var(--text-muted);
+}
+
 #parsing-select {
-    padding: 8px 12px; /* Smaller padding */
+    padding: 10px 15px;
     border: 1px solid var(--theme-border);
     border-radius: 6px;
     background-color: var(--input-bg);
     color: var(--theme-text);
-    min-width: 200px; /* Adjust width */
+    min-width: 250px; /* Wider select */
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.95em;
 }
 #parsing-select:focus {
     border-color: var(--theme-primary);
     box-shadow: 0 0 0 3px var(--input-border-focus);
     outline: none;
 }
-#parsing-select:disabled { background-color: #e9ecef; cursor: not-allowed; }
-
-/* Layout for Player + Episode List */
-.player-area {
-    display: flex;
-    flex-grow: 1; /* Take remaining space */
-    gap: 20px; /* Space between player and list */
-    overflow: hidden; /* Prevent overflow within area */
-    height: calc(100% - 60px); /* Adjust based on title/selector height */
+#parsing-select:disabled {
+    background-color: #e9ecef; /* Disabled background */
+    cursor: not-allowed;
 }
 
+
 .iframe-container {
-    flex-grow: 1; /* Player takes most space */
-    overflow: hidden;
-    position: relative;
-    background-color: #000;
-    border-radius: 8px;
-    border: 1px solid var(--theme-border);
-    min-width: 0; /* Allow shrinking */
+    flex-grow: 1; /* Take remaining vertical space */
+    overflow: hidden; /* Hide potential scrollbars if iframe fits */
+    position: relative; /* Needed for absolute positioning of loading indicator */
+    background-color: #000; /* Black background while loading */
+    border-radius: 8px; /* Rounded corners for iframe area */
+    border: 1px solid var(--theme-border); /* Subtle border around iframe */
 }
 
 #video-player {
     width: 100%;
     height: 100%;
     border: none;
-    display: block;
-    transition: opacity 0.3s ease;
+    display: block; /* Remove potential bottom space */
+    transition: opacity 0.3s ease; /* Fade in */
 }
-
-.episode-list-container {
-    flex-basis: 280px; /* Fixed width for episode list */
-    flex-shrink: 0; /* Don't shrink episode list */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Hide overflow for the container */
-    background-color: var(--background-color); /* Light bg for list area */
-    border-radius: 8px;
-    border: 1px solid var(--theme-border);
-    padding: 10px;
-}
-.episode-list-container h4 {
-    font-size: 1em;
-    font-weight: 500;
-    color: var(--theme-text);
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--theme-border);
-    text-align: center;
-    flex-shrink: 0; /* Prevent shrinking */
-}
-
-.episode-list-scrollable {
-    flex-grow: 1; /* Allow list to take remaining space */
-    overflow-y: auto; /* Enable vertical scrolling for episodes */
-    padding-right: 5px; /* Space for scrollbar */
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); /* Grid layout for buttons */
-    gap: 8px;
-    align-content: flex-start; /* Start items from top */
-}
-/* Scrollbar styling (optional, webkit only) */
-.episode-list-scrollable::-webkit-scrollbar { width: 6px; }
-.episode-list-scrollable::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
-.episode-list-scrollable::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
-.episode-list-scrollable::-webkit-scrollbar-thumb:hover { background: #aaa; }
-
-.episode-button {
-    padding: 8px 5px; /* Adjust padding */
-    font-size: 0.85em; /* Smaller font for buttons */
-    background-color: var(--episode-button-bg);
-    color: var(--text-color);
-    border: 1px solid var(--theme-border);
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.episode-button:hover {
-    background-color: var(--episode-button-hover-bg);
-    border-color: #adb5bd;
-}
-.episode-button.active {
-    background-color: var(--episode-button-active-bg);
-    color: var(--episode-button-active-text);
-    border-color: var(--episode-button-active-bg);
-    font-weight: 500;
-}
-
 
 /* Error Message */
 .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-    padding: 15px 20px; /* Adjusted padding */
-    border-radius: 8px;
-    margin-top: 20px; /* Consistent spacing */
+    background-color: #f8d7da; /* Danger background (Bootstrap light) */
+    color: #721c24; /* Danger text color */
+    border: 1px solid #f5c6cb; /* Danger border color */
+    padding: 18px 25px; /* More padding */
+    border-radius: 8px; /* Consistent radius */
+    margin-top: 25px;
     text-align: center;
     animation: fadeIn 0.5s;
-    font-size: 1em; /* Slightly smaller */
-    position: relative; /* For potential close button */
+    font-size: 1.05em;
 }
 
 
 /* Responsive Design */
-@media (max-width: 992px) { /* Adjust breakpoint for player layout */
-    .player-area {
-        flex-direction: column; /* Stack player and list vertically */
-        height: auto; /* Let content define height */
-        gap: 15px;
-    }
-    .episode-list-container {
-        flex-basis: auto; /* Allow height to adjust */
-        max-height: 200px; /* Limit episode list height */
-        flex-shrink: 1; /* Allow shrinking if needed */
-        width: 100%; /* Full width */
-    }
-    .iframe-container {
-         aspect-ratio: 16 / 9; /* Maintain aspect ratio on smaller screens */
-         flex-grow: 0; /* Don't grow infinitely */
-    }
-     .player-modal .modal-content {
-        width: 95%;
-        max-width: 800px; /* Adjust max-width for tablet */
-        height: auto; /* Auto height */
-        max-height: 90vh; /* Still limit overall height */
-     }
-}
-
-
 @media (max-width: 768px) {
     .container {
         padding: 25px;
@@ -813,69 +806,146 @@ header h1 {
     header {
         margin-bottom: 20px;
         padding-bottom: 15px;
-        flex-direction: column;
+        flex-direction: column; /* Stack title and button */
         align-items: flex-start;
         gap: 10px;
     }
-    header h1 { font-size: 1.6em; }
-    #settings-btn { align-self: flex-end; font-size: 1.5em; }
-    .search-box { flex-direction: column; gap: 10px; margin-bottom: 20px; }
-    #search-input, #search-btn { font-size: 1em; padding: 12px 15px; }
+    header h1 {
+        font-size: 1.6em;
+    }
+    #settings-btn {
+        align-self: flex-end; /* Move button to right */
+        font-size: 1.5em;
+    }
+    .search-box {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px; /* Adjust spacing */
+    }
+     #search-input, #search-btn {
+         font-size: 1em;
+         padding: 12px 15px;
+     }
      .search-method-selector {
-         flex-direction: column;
-         align-items: flex-start;
-         gap: 10px;
+         flex-direction: column; /* Stack radio buttons */
+         align-items: flex-start; /* Align left */
+         gap: 10px; /* Reduce gap */
          padding: 15px;
          margin-bottom: 25px;
      }
-     .search-method-selector label { width: 100%; }
+     .search-method-selector label {
+         width: 100%; /* Make labels full width */
+     }
 
      #results-container {
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Adjust grid for mobile */
         gap: 20px;
     }
-     .play-btn { font-size: 0.9em; padding: 8px 15px; }
+     /* Adjust YFSP card for mobile */
+     .yfsp-info h3 {
+         font-size: 1em;
+     }
+     .select-episode-btn {
+         font-size: 0.9em;
+         padding: 8px 15px;
+     }
+     .episode-list {
+        grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); /* Smaller buttons on mobile */
+        gap: 6px;
+        max-height: 120px; /* Slightly less height */
+     }
+     .episode-button {
+         font-size: 0.8em;
+         padding: 6px 4px;
+     }
 
     .modal-content {
         width: 95%;
-        margin: 5% auto; /* Adjust margin */
+        margin: 8% auto; /* Adjust margin for mobile */
         padding: 25px;
-        max-width: none;
-        max-height: 90vh;
+        max-width: none; /* Remove max-width constraint */
     }
-    #settings-modal h2 { font-size: 1.4em; }
-    .add-interface-form { flex-direction: column; }
-    .add-interface-form input { min-width: 0; width: 100%; }
-    .settings-actions { flex-direction: column; align-items: stretch; gap: 10px; }
-    #save-settings-btn, #reset-settings-btn { width: 100%; justify-content: center; }
-
+    #settings-modal h2 {
+        font-size: 1.4em;
+    }
+    .add-interface-form {
+        flex-direction: column;
+    }
+    .add-interface-form input {
+        min-width: 0; /* Reset min-width */
+        width: 100%;
+    }
      .player-modal .modal-content {
+        height: auto; /* Let content define height */
+        max-height: 85vh; /* Limit height */
+        width: 95%;
         padding: 15px;
-        height: auto;
-        max-height: 90vh;
      }
-     .player-area { /* Stacked already */ }
-     .iframe-container { /* Uses aspect ratio */ }
-     .episode-list-container { max-height: 150px; /* Shorter list on mobile */ }
-     .episode-list-scrollable { grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); } /* Adjust grid */
+     /* Make iframe container proportionally smaller on mobile */
+     .iframe-container {
+        min-height: 40vh; /* Ensure a minimum height */
+        aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+        flex-grow: 0; /* Don't let it grow infinitely */
+     }
 
-     #player-title { font-size: 1.1em; }
-     .parsing-selector label { display: block; margin-bottom: 5px; }
-     #parsing-select { width: 100%; min-width: 0; }
+     #player-title {
+         font-size: 1.2em;
+     }
+     .parsing-selector label {
+         display: block; /* Stack label */
+         margin-bottom: 5px;
+     }
+     #parsing-select {
+         width: 100%; /* Full width select */
+         min-width: 0;
+     }
+    #save-settings-btn, #reset-settings-btn {
+        width: 100%; /* Full width buttons */
+        margin-right: 0;
+        margin-bottom: 10px; /* Space between stacked buttons */
+        justify-content: center; /* Center button content */
+    }
+    #save-settings-btn:last-of-type, #reset-settings-btn:last-of-type {
+         margin-bottom: 0;
+    }
 
 }
 
 @media (max-width: 480px) {
-     .container { padding: 15px; }
-     header h1 { font-size: 1.4em; }
-    #results-container { grid-template-columns: 1fr; gap: 15px; } /* Single column */
-    .ai-card h3, .yfsp-info h3 { font-size: 1em; }
+     .container {
+         padding: 15px; /* Reduce padding further */
+     }
+     header h1 {
+        font-size: 1.4em;
+    }
+    #results-container {
+        grid-template-columns: 1fr; /* Single column */
+        gap: 15px;
+    }
+    .yfsp-info h3 {
+         font-size: 0.95em; /* Smaller font */
+     }
+     .ai-card h3 {
+         font-size: 1em;
+     }
+     .ai-card .link-preview {
+         font-size: 0.8em;
+     }
+      .episode-list {
+        grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); /* Even smaller buttons */
+        gap: 5px;
+     }
+     .episode-button {
+         font-size: 0.75em; /* Tiny font */
+     }
 
-     .modal-content { padding: 20px; }
-     #settings-modal h2 { font-size: 1.3em; }
-     .episode-list-scrollable { grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); } /* Smaller buttons */
-     .episode-button { font-size: 0.8em; padding: 6px 4px;}
-     #player-title { font-size: 1em; }
-
+     .modal-content {
+         padding: 20px;
+     }
+     #settings-modal h2 {
+         font-size: 1.3em;
+     }
+     .player-modal .modal-content {
+        /* Height adjusted by aspect ratio */
+     }
 }
-

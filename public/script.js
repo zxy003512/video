@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.getElementById('search-btn');
     const resultsContainer = document.getElementById('results-container');
     const loadingIndicator = document.getElementById('loading-indicator');
-    const loadingText = document.getElementById('loading-text');
+    const loadingText = document.getElementById('loading-text'); // Text inside loading indicator
     const errorMessageDiv = document.getElementById('error-message');
     const searchMethodRadios = document.querySelectorAll('input[name="search-method"]');
 
@@ -28,50 +28,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerModal = document.getElementById('player-modal');
     const closePlayerBtn = playerModal.querySelector('.close-player-btn');
     const playerTitle = document.getElementById('player-title');
-    const parsingSelectorContainer = document.getElementById('parsing-selector-container');
+    const parsingSelectorContainer = document.getElementById('parsing-selector-container'); // Container for select+label
     const parsingSelect = document.getElementById('parsing-select');
     const videoPlayerIframe = document.getElementById('video-player');
-    const playerLoadingIndicator = document.getElementById('player-loading-indicator');
-    const episodeListContainer = document.getElementById('episode-list-container'); // Container for episode list
-    const episodeListDiv = document.getElementById('episode-list'); // Where episode buttons go
+    const playerLoadingIndicator = document.getElementById('player-loading-indicator'); // Loading inside player
 
     // --- State & Configuration ---
     let currentSettings = {};
-    let defaultSettings = {
+    let defaultSettings = { // Will be populated by /api/config
         defaultParsingInterfaces: [],
         defaultSearxngUrl: ''
-        // defaultAiApiUrl: '', // Optionally load defaults from backend
-        // defaultAiModel: '',
     };
-    let currentVideoLink = ''; // Stores the link needing parsing (AI method)
-    let currentYfspData = null; // Stores {id, baseUrl, title} for current YFSP item
-    let currentSearchMethod = 'ai';
-    let currentEpisodeList = []; // Stores the fetched episode list for YFSP
+    let currentVideoLink = ''; // To store the link for AI method results requiring parsing
+    let currentSearchMethod = 'ai'; // Default search method
 
     // --- Functions ---
 
     const showLoading = (show, method = 'ai') => {
-        loadingText.textContent = method === 'ai' ? '正在智能分析中...' : '正在搜索 YFSP 资源...';
-        loadingIndicator.style.display = show ? 'flex' : 'none';
+        if (show) {
+            loadingText.textContent = method === 'ai' ? '正在智能分析中...' : '正在搜索 YFSP 资源...';
+            loadingIndicator.style.display = 'flex'; // Use flex for centering
+        } else {
+            loadingIndicator.style.display = 'none';
+        }
         searchBtn.disabled = show;
     };
 
     const showPlayerLoading = (show) => {
-        playerLoadingIndicator.style.display = show ? 'flex' : 'none';
-        videoPlayerIframe.style.opacity = show ? '0.3' : '1'; // Dim iframe while loading
-    };
+         playerLoadingIndicator.style.display = show ? 'flex' : 'none';
+         videoPlayerIframe.style.opacity = show ? '0' : '1'; // Hide iframe while loading
+    }
 
     const showError = (message) => {
         errorMessageDiv.textContent = message;
         errorMessageDiv.style.display = 'block';
-        // Auto-hide after a while, but allow manual dismissal if needed
-        // Consider adding a close button to the error message div in HTML/CSS
+        // Automatically hide after a delay
         setTimeout(() => {
              // Check if the message is still the same before hiding
              if (errorMessageDiv.textContent === message) {
-                errorMessageDiv.style.display = 'none';
+                 errorMessageDiv.style.display = 'none';
              }
-        }, 8000); // Longer display time
+        }, 7000); // Longer display time
     };
 
     const clearError = () => {
@@ -83,73 +80,87 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.innerHTML = '';
     };
 
-    // Load settings from localStorage or fetch defaults from backend
+    // Load settings from localStorage or fetch defaults
     const loadSettings = async () => {
-        console.log("Fetching default config from /api/config...");
         try {
             const response = await fetch('/api/config');
-            if (!response.ok) {
-                throw new Error(`无法加载默认配置 (${response.status})`);
-            }
+            if (!response.ok) throw new Error(`无法加载默认配置 (${response.status})`);
             defaultSettings = await response.json();
-            console.log("Default config loaded:", defaultSettings);
+            console.log("Fetched default settings:", defaultSettings);
         } catch (error) {
             console.error("Error fetching default config:", error);
-            showError("无法从服务器加载默认配置，将使用内置后备设置。请检查后端服务是否运行。");
-            // Hardcoded fallbacks ONLY if fetch fails
+            showError("无法从服务器加载默认配置，将使用内置后备设置。");
+            // Hardcoded fallbacks ONLY if fetch fails catastrophically
             defaultSettings = {
                 defaultParsingInterfaces: [
-                    {"name": "接口1 - xmflv.com", "url": "https://jx.xmflv.com/?url="}, {"name": "接口2 - bd.jx.cn", "url": "https://bd.jx.cn/?url="},
-                    {"name": "接口3 - xmflv.cc", "url": "https://jx.xmflv.cc/?url="}, {"name": "接口4 - hls.one", "url": "https://jx.hls.one/?url="},
-                    {"name": "接口5 - 77flv.cc", "url": "https://jx.77flv.cc/?url="}, {"name": "接口6 - yemu.xyz", "url": "https://www.yemu.xyz/?url="}
+                    {"name": "接口1 - xmflv.com", "url": "https://jx.xmflv.com/?url="},
+                    {"name": "接口2 - bd.jx.cn", "url": "https://bd.jx.cn/?url="},
+                    {"name": "接口3 - xmflv.cc", "url": "https://jx.xmflv.cc/?url="},
+                    {"name": "接口4 - hls.one", "url": "https://jx.hls.one/?url="},
+                    {"name": "接口5 - 77flv.cc", "url": "https://jx.77flv.cc/?url="},
+                    {"name": "接口6 - yemu.xyz", "url": "https://www.yemu.xyz/?url="}
                 ],
-                defaultSearxngUrl: "https://searxng.zetatechs.online/search"
+                defaultSearxngUrl: "https://searxng.zetatechs.online/search" // Example fallback
              };
         }
 
         const savedSettings = localStorage.getItem('videoSearchPlayerSettings');
         if (savedSettings) {
-            currentSettings = JSON.parse(savedSettings);
-            console.log("Loaded settings from localStorage:", currentSettings);
-            // Ensure parsingInterfaces is always an array
-            if (!Array.isArray(currentSettings.parsingInterfaces)) {
-                currentSettings.parsingInterfaces = defaultSettings.defaultParsingInterfaces || [];
+            try {
+                currentSettings = JSON.parse(savedSettings);
+                // Ensure essential keys exist, merge with defaults if necessary
+                currentSettings.parsingInterfaces = currentSettings.parsingInterfaces || defaultSettings.defaultParsingInterfaces || [];
+                currentSettings.searxngUrl = currentSettings.searxngUrl || defaultSettings.defaultSearxngUrl || '';
+                console.log("Loaded settings from localStorage:", currentSettings);
+            } catch (e) {
+                 console.error("Error parsing saved settings, resetting to default:", e);
+                 localStorage.removeItem('videoSearchPlayerSettings'); // Clear corrupted data
+                 currentSettings = {
+                     aiApiUrl: '', aiApiKey: '', aiModel: '',
+                     searxngUrl: defaultSettings.defaultSearxngUrl,
+                     parsingInterfaces: defaultSettings.defaultParsingInterfaces
+                 };
             }
         } else {
-            // Initialize with defaults if nothing is saved
+            // No saved settings, use defaults
             currentSettings = {
-                aiApiUrl: '', // User must provide or backend must have default
-                aiApiKey: '', // User must provide or backend must have default
-                aiModel: '', // User must provide or backend must have default
+                aiApiUrl: '', aiApiKey: '', aiModel: '',
                 searxngUrl: defaultSettings.defaultSearxngUrl,
-                // Deep copy default interfaces to avoid mutation issues
-                parsingInterfaces: JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces || []))
+                parsingInterfaces: defaultSettings.defaultParsingInterfaces || [] // Ensure it's an array
             };
-            console.log("Using default settings structure:", currentSettings);
+            console.log("Using default settings:", currentSettings);
         }
 
         // Load saved search method or default to 'ai'
         currentSearchMethod = localStorage.getItem('videoSearchMethod') || 'ai';
-        const currentMethodRadio = document.querySelector(`input[name="search-method"][value="${currentSearchMethod}"]`);
-        if (currentMethodRadio) {
-            currentMethodRadio.checked = true;
-        } else {
-            // Fallback if saved value is invalid
-            document.querySelector(`input[name="search-method"][value="ai"]`).checked = true;
-            currentSearchMethod = 'ai';
+        try {
+            const radioToCheck = document.querySelector(`input[name="search-method"][value="${currentSearchMethod}"]`);
+            if (radioToCheck) {
+                 radioToCheck.checked = true;
+            } else {
+                // If saved value is invalid, default to 'ai'
+                document.querySelector(`input[name="search-method"][value="ai"]`).checked = true;
+                currentSearchMethod = 'ai';
+                localStorage.setItem('videoSearchMethod', currentSearchMethod);
+            }
+        } catch (e) {
+             console.error("Error setting search method radio:", e);
+             // Default to 'ai' if querySelector fails
+             document.querySelector(`input[name="search-method"][value="ai"]`).checked = true;
+             currentSearchMethod = 'ai';
         }
 
         populateSettingsForm();
         renderParsingInterfacesList();
-        updateParsingSelect();
+        updateParsingSelect(); // Update player dropdown
     };
 
     // Save settings to localStorage
     const saveSettings = () => {
-        // Basic validation for new interface URL before adding (if fields aren't empty)
+         // Validation for new interface (optional but good)
          const newName = newInterfaceNameInput.value.trim();
          const newUrl = newInterfaceUrlInput.value.trim();
-         if (newName || newUrl) { // Only validate if user tried to add something
+         if (newName || newUrl) { // Only validate if user tried to add one
              if (!newName || !newUrl) {
                  showError("如果要添加新接口，名称和 URL 都不能为空。");
                  return;
@@ -158,429 +169,469 @@ document.addEventListener('DOMContentLoaded', () => {
                  showError("新解析接口 URL 格式似乎不正确，应包含 '?url='");
                  return;
              }
-             if (!newUrl.endsWith('=')) {
-                 // Be a bit lenient, some might forget the final =
-                 // showError("新解析接口URL通常以 '=' 结尾");
-                 console.warn("新解析接口URL最好以 '=' 结尾");
-                // return;
+              if (!newUrl.endsWith('=')) {
+                 // Many interfaces don't end with '=', allow flexibility?
+                 // showError("新解析接口 URL 最好以 '=' 结尾");
+                 // return;
              }
-             // If validation passes, add it before saving
-             addParsingInterface(false); // Add without showing alert
+             // If validation passed or user didn't try to add, proceed with saving
+             if (newName && newUrl) {
+                 addParsingInterface(newName, newUrl, false); // Add but don't clear fields yet
+                 newInterfaceNameInput.value = ''; // Clear fields after potential successful add
+                 newInterfaceUrlInput.value = '';
+             }
          }
 
 
         currentSettings = {
             aiApiUrl: aiApiUrlInput.value.trim(),
-            aiApiKey: aiApiKeyInput.value.trim(), // Save user's key (even if empty)
+            aiApiKey: aiApiKeyInput.value.trim(),
             aiModel: aiModelInput.value.trim(),
             searxngUrl: searxngUrlInput.value.trim() || defaultSettings.defaultSearxngUrl, // Fallback to default if empty
-            parsingInterfaces: currentSettings.parsingInterfaces || [] // Ensure it's an array
+            parsingInterfaces: currentSettings.parsingInterfaces || [] // Ensure it exists
         };
         localStorage.setItem('videoSearchPlayerSettings', JSON.stringify(currentSettings));
-        localStorage.setItem('videoSearchMethod', currentSearchMethod); // Save current search method too
+        localStorage.setItem('videoSearchMethod', currentSearchMethod); // Save search method too
         console.log("Settings saved:", currentSettings);
         alert("设置已保存！");
         settingsModal.style.display = 'none';
-        updateParsingSelect(); // Update player dropdown in case interfaces changed
+        updateParsingSelect(); // Update dropdown in player
     };
 
      // Reset settings to defaults fetched from backend
     const resetToDefaults = () => {
-         if (confirm("确定要恢复所有设置为默认值吗？这将清除您自定义的API密钥、模型、搜索引擎地址和解析接口。")) {
+         if (confirm("确定要恢复所有设置为默认值吗？这将清除您自定义的AI密钥、模型、搜索引擎地址和解析接口。")) {
+             // Use deep copy for arrays/objects from defaults
              currentSettings = {
-                aiApiUrl: '', // Clear user overrides
-                aiApiKey: '',
-                aiModel: '',
-                searxngUrl: defaultSettings.defaultSearxngUrl, // Reset to fetched default
-                // Deep copy default interfaces again
-                parsingInterfaces: JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces || []))
+                aiApiUrl: '', aiApiKey: '', aiModel: '',
+                searxngUrl: defaultSettings.defaultSearxngUrl,
+                parsingInterfaces: JSON.parse(JSON.stringify(defaultSettings.defaultParsingInterfaces || [])) // Deep copy default interfaces
              };
              localStorage.removeItem('videoSearchPlayerSettings'); // Remove saved settings
 
-             // Reset search method to default ('ai')
-             currentSearchMethod = 'ai';
+             currentSearchMethod = 'ai'; // Reset search method to default
              localStorage.setItem('videoSearchMethod', currentSearchMethod);
-             const aiRadio = document.querySelector(`input[name="search-method"][value="ai"]`);
-             if(aiRadio) aiRadio.checked = true;
+             document.querySelector(`input[name="search-method"][value="ai"]`).checked = true;
 
              populateSettingsForm(); // Update form fields
-             renderParsingInterfacesList(); // Update interface list in settings
+             renderParsingInterfacesList(); // Update interface list display
              updateParsingSelect(); // Update player dropdown
              alert("设置已恢复为默认值。");
-             settingsModal.style.display = 'none'; // Close modal
+             settingsModal.style.display = 'none';
          }
     };
 
-    // Populate the settings form fields based on currentSettings
+    // Populate the settings form fields
     const populateSettingsForm = () => {
-        aiApiUrlInput.value = currentSettings.aiApiUrl || ''; // Use defaults if available? No, let user provide.
+        aiApiUrlInput.value = currentSettings.aiApiUrl || '';
         aiApiKeyInput.value = currentSettings.aiApiKey || '';
         aiModelInput.value = currentSettings.aiModel || '';
-        searxngUrlInput.value = currentSettings.searxngUrl || defaultSettings.defaultSearxngUrl || ''; // Use fetched default if user's is empty
+        searxngUrlInput.value = currentSettings.searxngUrl || defaultSettings.defaultSearxngUrl; // Use default as placeholder too
     };
 
     // Render the list of parsing interfaces in the settings modal
     const renderParsingInterfacesList = () => {
         interfacesListDiv.innerHTML = ''; // Clear existing list
-        const interfaces = currentSettings.parsingInterfaces || [];
-        if (interfaces.length === 0) {
+        if (!currentSettings.parsingInterfaces || currentSettings.parsingInterfaces.length === 0) {
              interfacesListDiv.innerHTML = '<p>没有配置解析接口。</p>';
              return;
         }
-        interfaces.forEach((iface, index) => {
+        currentSettings.parsingInterfaces.forEach((iface, index) => {
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('interface-item');
-            itemDiv.innerHTML = `
-                <span>${iface.name || '未命名接口'} (${iface.url || '无效URL'})</span>
-                <button data-index="${index}" class="remove-interface-btn" aria-label="删除接口 ${iface.name}">&times;</button>
-            `;
-            interfacesListDiv.appendChild(itemDiv);
+            // Make sure name and URL are displayed safely
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = `${iface.name} (${iface.url})`;
+            nameSpan.title = `${iface.name} (${iface.url})`; // Tooltip for long URLs
 
-            // Add event listener directly to the button
-            itemDiv.querySelector('.remove-interface-btn').addEventListener('click', (e) => {
-                 // Prevent click bubbling if needed, though likely not necessary here
-                 // e.stopPropagation();
+            const removeButton = document.createElement('button');
+            removeButton.dataset.index = index;
+            removeButton.classList.add('remove-interface-btn');
+            removeButton.setAttribute('aria-label', `删除接口 ${iface.name}`);
+            removeButton.innerHTML = '&times;'; // Use HTML entity for 'x'
+
+            itemDiv.appendChild(nameSpan);
+            itemDiv.appendChild(removeButton);
+            interfacesListDiv.appendChild(itemDiv);
+        });
+
+        // Add event listeners AFTER creating all buttons
+        document.querySelectorAll('.remove-interface-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
                 const indexToRemove = parseInt(e.target.getAttribute('data-index'));
                 removeParsingInterface(indexToRemove);
             });
         });
     };
 
-    // Add a new parsing interface (called by saveSettings or Add button)
-    const addParsingInterface = (showAlert = true) => {
-        const name = newInterfaceNameInput.value.trim();
-        const url = newInterfaceUrlInput.value.trim();
-
-        // Validation is done in saveSettings or button listener now
+    // Add a new parsing interface (modified to be called by save/add buttons)
+    const addParsingInterface = (name, url, updateUI = true) => {
         if (!name || !url) {
-            if (showAlert) showError("接口名称和URL不能为空");
-            return;
+            showError("接口名称和URL不能为空");
+            return false; // Indicate failure
         }
-        // Basic validation (can be enhanced)
+        // Basic validation (already done in saveSettings, but good to have here too)
         if (!url.includes('?url=')) {
-             if (showAlert) showError("URL 格式似乎不正确，应包含 '?url='");
-             return;
+             // Relaxing this based on previous thought: some might not have it
+             // showError("URL 格式似乎不正确，应包含 '?url='"); return false;
+             console.warn(`Adding interface URL without '?url=': ${url}`);
         }
 
-        if (!currentSettings.parsingInterfaces) { currentSettings.parsingInterfaces = []; }
+        if (!currentSettings.parsingInterfaces) { currentSettings.parsingInterfaces = []; } // Initialize if needed
+
+        // Check for duplicates (optional)
+        const exists = currentSettings.parsingInterfaces.some(iface => iface.url === url);
+        if (exists) {
+             showError(`接口 URL "${url}" 已存在。`);
+             return false;
+        }
+
         currentSettings.parsingInterfaces.push({ name, url });
-        // Note: We don't save to localStorage here, saveSettings does that
-        renderParsingInterfacesList(); // Update display in settings modal
-        updateParsingSelect(); // Update player dropdown
-        newInterfaceNameInput.value = ''; // Clear input fields
-        newInterfaceUrlInput.value = '';
-        if (showAlert) {
-             alert("接口已添加，请记得点击“保存设置”来持久化更改。");
-        }
-    };
 
+        if (updateUI) {
+             // Don't save to localStorage here, let saveSettings handle final save
+             renderParsingInterfacesList();
+             updateParsingSelect();
+             // Clear input fields only if called directly from add button
+             newInterfaceNameInput.value = '';
+             newInterfaceUrlInput.value = '';
+        }
+        return true; // Indicate success
+    };
 
     // Remove a parsing interface
     const removeParsingInterface = (index) => {
-        const interfaces = currentSettings.parsingInterfaces || [];
-        if (interfaces[index]) {
-            const removedName = interfaces[index].name;
-            interfaces.splice(index, 1); // Remove the item
-            // Note: We don't save to localStorage here, saveSettings does that
-            renderParsingInterfacesList(); // Update display in settings modal
-            updateParsingSelect(); // Update player dropdown
-            // alert(`接口 "${removedName}" 已移除。请记得保存设置。`); // Maybe too noisy
-            console.log(`Interface "${removedName}" removed from list (pending save).`);
-        } else {
-            console.error("Attempted to remove interface at invalid index:", index);
+        if (currentSettings.parsingInterfaces && currentSettings.parsingInterfaces[index]) {
+            const removedInterface = currentSettings.parsingInterfaces.splice(index, 1);
+            console.log("Removed interface:", removedInterface[0]);
+            // Don't save to localStorage immediately, let saveSettings handle it
+            renderParsingInterfacesList(); // Update the list display
+            updateParsingSelect(); // Update the player dropdown
         }
     };
 
-     // Update the <select> dropdown in the player modal for AI method links
+     // Update the <select> dropdown in the player modal
     const updateParsingSelect = () => {
         parsingSelect.innerHTML = ''; // Clear existing options
-        const interfaces = currentSettings.parsingInterfaces || [];
-        if (interfaces.length > 0) {
-            interfaces.forEach((iface) => {
+        if (currentSettings.parsingInterfaces && currentSettings.parsingInterfaces.length > 0) {
+            currentSettings.parsingInterfaces.forEach((iface) => {
                 const option = document.createElement('option');
                 option.value = iface.url;
                 option.textContent = iface.name;
+                option.title = iface.url; // Show URL on hover
                 parsingSelect.appendChild(option);
             });
             parsingSelect.disabled = false;
-            // parsingSelectorContainer.style.display = ''; // Let openPlayer control visibility
+             // Container visibility is handled by openPlayer based on context
+             // parsingSelectorContainer.style.display = ''; // Don't force show here
         } else {
-            // No interfaces configured
             const option = document.createElement('option');
             option.textContent = '没有可用的解析接口';
-            option.value = '';
             option.disabled = true; // Make the placeholder unselectable
             parsingSelect.appendChild(option);
             parsingSelect.disabled = true;
-            // parsingSelectorContainer.style.display = 'none'; // Hide if no options? Or show disabled? Let openPlayer decide.
+            // Container visibility handled by openPlayer
+             // parsingSelectorContainer.style.display = ''; // Don't force show here
         }
     };
 
-    // Display search results (Handles both AI and YFSP)
+    // --- Display Search Results (Handles AI and YFSP) ---
     const displayResults = (results) => {
-        clearResults();
+        clearResults(); // Clear previous results
         if (!results || results.length === 0) {
-            resultsContainer.innerHTML = `<p class="no-results-message">未能找到相关资源。请尝试更换关键词或搜索方式。</p>`;
+            resultsContainer.innerHTML = `<p style="text-align: center;">未能找到相关资源。请尝试更换关键词或搜索方式。</p>`;
             return;
         }
 
         results.forEach(result => {
             const card = document.createElement('div');
             card.classList.add('result-card');
-            card.dataset.title = result.title; // Store title
+            card.dataset.title = result.title; // Store title for player/logging
 
-            if (result.method === 'yfsp' && result.id && result.base_url && result.cover) {
+            if (result.method === 'yfsp' && result.id && result.base_url) {
                 // --- YFSP Card ---
-                card.classList.add('yfsp-card');
+                card.classList.add('yfsp-card'); // Add specific class
                 card.dataset.id = result.id;
                 card.dataset.baseUrl = result.base_url;
-                card.dataset.method = 'yfsp';
-                card.innerHTML = `
-                    <div class="yfsp-cover">
-                        <img src="${result.cover}" alt="${result.title || '封面'}" loading="lazy" onerror="this.parentElement.innerHTML='<p>无法加载封面</p>';">
-                    </div>
-                    <div class="yfsp-info">
-                         <h3>${result.title || '未知标题'}</h3>
-                         <button class="play-btn play-episode-btn" data-initial="true"><i class="fas fa-list-ul"></i> 选择剧集</button>
-                    </div>
-                `;
-                // Add event listener FOR THE BUTTON
-                const playButton = card.querySelector('.play-episode-btn');
-                playButton.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent card click if necessary
-                    const buttonElement = e.currentTarget;
-                    // Request details for the first episode to get the list
-                    playYfspEpisode(result.id, result.base_url, result.title, 1, buttonElement);
+                card.dataset.method = 'yfsp'; // Store method
+
+                const coverDiv = document.createElement('div');
+                coverDiv.classList.add('yfsp-cover');
+                const img = document.createElement('img');
+                img.src = result.cover || ''; // Handle potentially missing cover
+                img.alt = `${result.title} Cover`;
+                img.loading = 'lazy';
+                img.onerror = () => { // Handle image loading errors
+                    img.style.display = 'none'; // Hide broken image
+                    coverDiv.style.backgroundColor = '#eee'; // Show placeholder bg
+                    // Optionally add text placeholder
+                    const placeholder = document.createElement('span');
+                    placeholder.textContent = '封面加载失败';
+                    placeholder.style.cssText = 'display:flex; align-items:center; justify-content:center; height:100%; color:#aaa; font-size:0.9em;';
+                    coverDiv.appendChild(placeholder);
+                 };
+                coverDiv.appendChild(img);
+
+                const infoDiv = document.createElement('div');
+                infoDiv.classList.add('yfsp-info');
+                const titleH3 = document.createElement('h3');
+                titleH3.textContent = result.title;
+                titleH3.title = result.title; // Tooltip for long titles
+
+                // Container for buttons/episode list
+                const actionContainer = document.createElement('div');
+                actionContainer.classList.add('yfsp-action-container'); // Add class for styling
+
+                const selectEpisodeBtn = document.createElement('button');
+                selectEpisodeBtn.classList.add('select-episode-btn'); // New class for the button
+                selectEpisodeBtn.innerHTML = '<i class="fas fa-list-ul"></i> 选择剧集';
+                selectEpisodeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent card click if needed
+                    showEpisodeList(result.id, result.base_url, result.title, card, selectEpisodeBtn);
                 });
+
+                actionContainer.appendChild(selectEpisodeBtn);
+                infoDiv.appendChild(titleH3);
+                infoDiv.appendChild(actionContainer); // Add button container to info div
+                card.appendChild(coverDiv);
+                card.appendChild(infoDiv);
+
             } else if (result.method === 'ai' && result.video_link) {
-                // --- AI Card ---
+                // --- AI Card (Original - requires parsing) ---
                  card.classList.add('ai-card');
                  card.dataset.link = result.video_link;
-                 card.dataset.method = 'ai';
+                 card.dataset.method = 'ai'; // Store method
                  card.innerHTML = `
-                    <h3>${result.title || '未知标题'}</h3>
-                    <p><span class="website-badge">${result.website || getDomainFromUrl(result.video_link) || '未知来源'}</span></p>
+                    <h3>${result.title}</h3>
+                    <p><span class="website-badge" title="来源: ${result.website || '未知'}">${result.website || '未知来源'}</span></p>
                     <p class="link-preview" title="${result.video_link}">${result.video_link.substring(0, 60)}${result.video_link.length > 60 ? '...' : ''}</p>
-                    <button class="play-btn play-ai-btn"><i class="fas fa-play-circle"></i> 点击播放</button>
+                    <span class="play-hint"><i class="fas fa-play-circle"></i> 点击播放 (使用解析接口)</span>
                  `;
-                 // Add event listener FOR THE BUTTON
-                 const playButton = card.querySelector('.play-ai-btn');
-                 playButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (parsingSelect.disabled || !parsingSelect.value) {
-                         showError("请先在设置中添加并选择一个视频解析接口才能播放此链接。");
-                         settingsBtn.click(); // Open settings modal
+                 // Add event listener for the whole card to open AI player
+                 card.addEventListener('click', () => {
+                    if (parsingSelect.disabled) {
+                         showError("请先在设置中添加至少一个视频解析接口才能播放此链接。");
                          return;
                     }
-                    openPlayer(result.video_link, result.title, false); // false = requires parsing
+                    openPlayer(result.video_link, result.title, false); // false indicates not a direct URL, needs parsing
                  });
             } else {
-                console.warn("Skipping result due to missing data:", result);
+                 console.warn("Skipping result with unexpected structure:", result);
+                 return; // Skip rendering this card
             }
-            // Only append card if it was populated correctly
-            if (card.innerHTML.trim() !== '') {
-                 resultsContainer.appendChild(card);
-            }
+            resultsContainer.appendChild(card);
         });
     };
 
-    // Helper to get domain for display if AI missed it
-    const getDomainFromUrl = (url) => {
-        try {
-            return new URL(url).hostname.replace(/^www\./, '');
-        } catch (e) {
-            return null;
-        }
+    // --- NEW: Function to Fetch and Display YFSP Episode List ---
+    const showEpisodeList = async (id, baseUrl, title, cardElement, buttonElement) => {
+         console.log(`Fetching episode list for YFSP: id=${id}, title=${title}`);
+         const actionContainer = cardElement.querySelector('.yfsp-action-container');
+         if (!actionContainer) return; // Should not happen
+
+         // Show loading state on the button
+         const originalButtonHTML = buttonElement.innerHTML;
+         buttonElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 加载剧集...`;
+         buttonElement.disabled = true;
+         clearError(); // Clear previous errors
+
+         try {
+             const response = await fetch('/api/get_yfsp_episode_list', {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ id: id, base_url: baseUrl })
+             });
+
+             const episodes = await response.json();
+
+             if (!response.ok) {
+                 // Try to get error message from JSON response, else use status text
+                 const errorMsg = episodes.error || `服务器错误 (${response.status})`;
+                 throw new Error(errorMsg);
+             }
+
+             // Clear the action container (remove the 'Select Episode' button)
+             actionContainer.innerHTML = '';
+
+             if (!episodes || episodes.length === 0) {
+                 actionContainer.innerHTML = '<p class="no-episodes-msg">未能获取到剧集列表。</p>';
+                 return;
+             }
+
+             // Create the episode list container
+             const episodeListDiv = document.createElement('div');
+             episodeListDiv.classList.add('episode-list'); // Add class for styling
+
+             episodes.forEach(ep => {
+                 const episodeButton = document.createElement('button');
+                 episodeButton.classList.add('episode-button');
+                 episodeButton.textContent = ep.episode; // Display episode number/name
+                 episodeButton.title = `播放 ${title} - ${ep.episode}`; // Tooltip
+                 // Store necessary data on the button itself
+                 episodeButton.dataset.episodeNum = ep.episode; // Store the episode identifier AI returned
+
+                 episodeButton.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      // Pass the actual episode number/identifier to the play function
+                      playYfspEpisode(id, baseUrl, title, ep.episode, episodeButton);
+                 });
+                 episodeListDiv.appendChild(episodeButton);
+             });
+
+             // Append the list to the action container
+             actionContainer.appendChild(episodeListDiv);
+
+         } catch (error) {
+             console.error("Error fetching/displaying YFSP episode list:", error);
+             showError(`获取剧集列表时出错: ${error.message}`);
+             // Restore the original button if list fetching failed
+             buttonElement.innerHTML = originalButtonHTML;
+             buttonElement.disabled = false;
+             // Optionally add the button back to the container if it was removed
+             if (!actionContainer.contains(buttonElement)) {
+                 actionContainer.innerHTML = ''; // Clear potential error messages
+                 actionContainer.appendChild(buttonElement);
+             }
+         }
+         // No finally block needed for button state, handled in catch or on success
     };
 
-    // Fetch YFSP episode details and potentially open player
-    const playYfspEpisode = async (id, baseUrl, title, episodeNum, buttonElement) => {
-        console.log(`Requesting YFSP details: id=${id}, ep=${episodeNum}, title=${title}`);
-        const isInitialClick = buttonElement && buttonElement.dataset.initial === 'true';
-        let originalButtonHTML = '';
-        if (buttonElement) {
-             originalButtonHTML = buttonElement.innerHTML;
-             buttonElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 加载中...`;
-             buttonElement.disabled = true;
-             delete buttonElement.dataset.initial; // Remove flag after first click
-        } else {
-            // If called without button (e.g., switching episode in modal), show player loading
-            showPlayerLoading(true);
-        }
-        clearError();
+
+    // --- MODIFIED: Function to handle playing a SPECIFIC YFSP episode ---
+    const playYfspEpisode = async (id, baseUrl, title, episodeNum, clickedButtonElement) => {
+        // episodeNum is now the specific episode identifier (e.g., "01", "52")
+        console.log(`Attempting to play YFSP: id=${id}, ep=${episodeNum}, title=${title}`);
+
+        // Show loading state ON THE CLICKED EPISODE BUTTON
+        const originalButtonText = clickedButtonElement.textContent; // Store text content
+        clickedButtonElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; // Show spinner
+        clickedButtonElement.disabled = true;
+        clearError(); // Clear previous errors
 
         try {
             const response = await fetch('/api/get_episode_details', {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({ id: id, episode: episodeNum, base_url: baseUrl })
+                 body: JSON.stringify({ id: id, episode: episodeNum, base_url: baseUrl }) // Pass the correct episode number
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                 throw new Error(data.error || `无法获取剧集 ${episodeNum} 的播放信息 (HTTP ${response.status})`);
+                 // Try to get error message from JSON response, else use status text
+                 const errorMsg = data.error || `服务器错误 (${response.status})`;
+                 throw new Error(errorMsg);
             }
 
             if (data.player_url) {
-                 console.log(`Received player URL: ${data.player_url}, Episodes:`, data.episodes);
-                 currentYfspData = { id, baseUrl, title }; // Store context for episode switching
-                 currentEpisodeList = data.episodes || []; // Store episode list
-
-                 // Open player with the fetched URL and episode list
-                 openPlayer(data.player_url, `${title} - 第 ${episodeNum} 集`, true, currentEpisodeList, episodeNum); // true = direct URL
+                 // Open player with the direct URL obtained for this specific episode
+                 openPlayer(data.player_url, `${title} - ${episodeNum}`, true); // true indicates direct URL
             } else {
-                throw new Error(data.error || `未能从服务器获取到有效的播放链接`);
+                // This case might happen if backend logic changes but 'ok' is true
+                throw new Error(`未能从服务器获取到有效的播放链接`);
             }
 
         } catch (error) {
              console.error("Error fetching/playing YFSP episode:", error);
              showError(`播放剧集 ${episodeNum} 时出错: ${error.message}`);
-             if (!isInitialClick) showPlayerLoading(false); // Hide loading if it was inside player
         } finally {
-             // Restore button state ONLY if it was the initial click from the card
-             if (buttonElement && isInitialClick) {
-                 buttonElement.innerHTML = originalButtonHTML; // Restore original text/icon
-                 buttonElement.disabled = false;
-             }
-             // Loading indicator inside player is handled by openPlayer/iframe load
+             // Restore button state AFTER attempting to play
+             clickedButtonElement.innerHTML = originalButtonText; // Restore original text
+             clickedButtonElement.disabled = false;
         }
     };
 
-    // Open the player modal
-    // isDirectUrl: true for YFSP, false for AI links needing parsing
-    // episodes: array of episode objects for YFSP
-    // currentEpisodeNum: The number of the episode initially loaded (for highlighting)
-    const openPlayer = (urlOrLink, title, isDirectUrl = false, episodes = [], currentEpisodeNum = null) => {
-        playerTitle.textContent = title;
-        videoPlayerIframe.src = 'about:blank'; // Clear previous content
-        episodeListDiv.innerHTML = ''; // Clear previous episode list
-        currentVideoLink = ''; // Reset AI link state
-        showPlayerLoading(true); // Show loading indicator
+
+    // Open the player modal - Handles both direct URLs and links needing parsing
+    const openPlayer = (urlOrLink, title, isDirectUrl = false) => {
+        playerTitle.textContent = title; // Set title
+
+        // Reset player state
+        videoPlayerIframe.src = 'about:blank'; // Clear previous content immediately
+        showPlayerLoading(true); // Show loading indicator inside player
 
         if (isDirectUrl) {
-            // --- Direct URL (from YFSP) ---
-            console.log("Opening player (YFSP - Direct):", urlOrLink);
-            parsingSelectorContainer.style.display = 'none'; // Hide parsing selector
-            episodeListContainer.style.display = 'none'; // Hide episode list initially
-
-            if (episodes && episodes.length > 0) {
-                episodeListContainer.style.display = ''; // Show episode container
-                renderEpisodeList(episodes, currentEpisodeNum); // Populate episode list
-            } else {
-                console.log("No episodes provided or list is empty.");
-            }
-
+            // --- Direct URL (from YFSP episode detail) ---
+            console.log("Opening player with direct URL:", urlOrLink);
+            currentVideoLink = ''; // Clear parsing link state
+            parsingSelectorContainer.style.display = 'none'; // Hide parsing selector for direct links
             videoPlayerIframe.src = urlOrLink; // Set iframe src directly
 
-        } else {
-            // --- Link requires parsing (from AI method) ---
-            console.log("Opening player (AI - Needs Parsing):", urlOrLink);
-            episodeListContainer.style.display = 'none'; // Hide episode list for AI sources
-
-            if (parsingSelect.disabled || !parsingSelect.value) {
+            // Setup load/error handlers for the iframe
+             videoPlayerIframe.onload = () => {
+                 console.log("Player iframe loaded:", urlOrLink);
                  showPlayerLoading(false);
-                 showError("请先在设置中添加并选择一个视频解析接口。");
-                 // Optionally open settings modal here: settingsBtn.click();
+             };
+             videoPlayerIframe.onerror = (e) => {
+                 console.error("Player iframe failed to load:", urlOrLink, e);
+                 showPlayerLoading(false);
+                 showError("加载播放器资源时出错。请检查链接或网络。");
+                 // Optionally try to provide more info if possible from 'e'
+             };
+
+        } else {
+            // --- Link requires parsing (from AI method search result) ---
+            console.log("Opening player, needs parsing:", urlOrLink);
+            if (parsingSelect.disabled) {
+                 showPlayerLoading(false); // Hide loading as we can't proceed
+                 showError("请先在设置中添加至少一个视频解析接口。");
+                 closePlayer(); // Close the modal if we can't play
                  return; // Exit if no parsers available
             }
 
-            currentVideoLink = urlOrLink; // Store the raw video link for the parser
+            currentVideoLink = urlOrLink; // Store the raw video link that needs parsing
             parsingSelectorContainer.style.display = ''; // Show parsing selector
-            updatePlayerWithParser(); // Call function to set initial parser URL
+            updatePlayerWithParser(); // Call helper to set initial iframe src
 
         }
-
-        // Common iframe load/error handling
-        videoPlayerIframe.onload = () => {
-            console.log("Iframe loaded:", videoPlayerIframe.src);
-            showPlayerLoading(false);
-        }
-        videoPlayerIframe.onerror = () => {
-             console.error("Iframe failed to load:", videoPlayerIframe.src);
-             showPlayerLoading(false);
-             showError("加载播放器资源时出错。可能是链接已失效、需要特定地区或解析接口不支持。");
-        };
-
         playerModal.style.display = 'block'; // Show the modal
     };
 
-    // Sets or updates the iframe source based on the selected parser (for AI links)
+    // Helper function to set player source based on selected parser
     const updatePlayerWithParser = () => {
-         if (!currentVideoLink || parsingSelect.disabled || !parsingSelect.value) {
-             console.warn("Cannot update player with parser: missing link or parser.");
-             showPlayerLoading(false); // Hide loading if we can't proceed
-             // showError("无法更新播放器，缺少视频链接或解析接口。"); // Maybe too noisy
+        if (!currentVideoLink || parsingSelect.disabled) {
+             // Should not happen if openPlayer logic is correct, but safety check
+             console.warn("updatePlayerWithParser called without link or disabled select");
+             videoPlayerIframe.src = 'about:blank';
+             showPlayerLoading(false);
              return;
-         }
-         const selectedParserUrl = parsingSelect.value;
-         const finalUrl = selectedParserUrl + encodeURIComponent(currentVideoLink);
-         console.log("Updating player with parser:", selectedParserUrl, "Final URL:", finalUrl);
+        }
 
-         // Avoid reloading if the src is already the same
-         if (videoPlayerIframe.src !== finalUrl) {
-             showPlayerLoading(true); // Show loading before changing source
-             videoPlayerIframe.src = finalUrl;
-             // onload/onerror handlers attached in openPlayer will handle hiding loading
-         }
-    };
+        const selectedParserUrl = parsingSelect.value;
+        if (selectedParserUrl) {
+             const finalUrl = selectedParserUrl + encodeURIComponent(currentVideoLink);
+             console.log("Using parser:", selectedParserUrl, "Final URL:", finalUrl);
+             videoPlayerIframe.src = 'about:blank'; // Clear first
+             showPlayerLoading(true); // Show loading for parser change
+             videoPlayerIframe.src = finalUrl; // Set new source
 
-    // Render episode list inside the player modal for YFSP
-    const renderEpisodeList = (episodes, currentNum) => {
-        episodeListDiv.innerHTML = ''; // Clear previous
-        if (!episodes || episodes.length === 0) return;
-
-        console.log(`Rendering ${episodes.length} episodes, current: ${currentNum}`);
-
-        episodes.forEach(ep => {
-            const button = document.createElement('button');
-            button.classList.add('episode-button');
-            button.textContent = ep.num || '??'; // Display episode number
-            button.dataset.epNum = ep.link_num || ep.num; // Use number from link if available, fallback to text
-            button.dataset.title = currentYfspData?.title || '视频'; // Get base title from stored data
-
-            // Highlight the currently playing episode
-            // Convert both to string for comparison, as currentNum might be number, ep.num might be string
-            if (String(ep.num) === String(currentNum) || String(ep.link_num) === String(currentNum)) {
-                button.classList.add('active');
-            }
-
-            button.addEventListener('click', () => {
-                const targetEpNum = button.dataset.epNum;
-                const baseTitle = button.dataset.title;
-                if (targetEpNum && currentYfspData) {
-                    console.log(`Episode button clicked: switching to ${targetEpNum}`);
-                    // Update title immediately (visual feedback)
-                    playerTitle.textContent = `${baseTitle} - 第 ${targetEpNum} 集 (加载中...)`;
-                    // Call backend to get the new player URL and reload
-                    // Pass null for buttonElement as this isn't the initial card click
-                    playYfspEpisode(currentYfspData.id, currentYfspData.baseUrl, baseTitle, targetEpNum, null);
-                } else {
-                    console.error("Cannot switch episode: missing data", {targetEpNum, currentYfspData});
-                    showError("切换剧集时出错：缺少必要信息。");
-                }
-            });
-            episodeListDiv.appendChild(button);
-        });
-
-        // Scroll the current episode into view if possible
-        const activeButton = episodeListDiv.querySelector('.episode-button.active');
-        if (activeButton) {
-             // Use scrollIntoView with options for smoother behavior
-             activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+             // Re-attach load/error handlers as src changes
+             videoPlayerIframe.onload = () => {
+                  console.log("Player iframe loaded with parser:", finalUrl);
+                  showPlayerLoading(false);
+             };
+             videoPlayerIframe.onerror = (e) => {
+                  console.error("Player iframe failed to load with parser:", finalUrl, e);
+                  showPlayerLoading(false);
+                  showError("加载解析接口或视频时出错。请尝试更换接口或检查网络。");
+             };
+        } else {
+            // This case means the select is enabled but somehow no value selected (shouldn't happen)
+            showPlayerLoading(false);
+            videoPlayerIframe.src = 'about:blank';
+            showError("无法构建播放链接，未选择有效的解析接口。");
         }
     };
+
 
     // Close the player modal
     const closePlayer = () => {
         playerModal.style.display = 'none';
         videoPlayerIframe.src = 'about:blank'; // Stop video playback and clear iframe
-        playerTitle.textContent = '正在播放...';
-        episodeListDiv.innerHTML = ''; // Clear episode list
-        currentVideoLink = ''; // Clear AI link state
-        currentYfspData = null; // Clear YFSP context
-        currentEpisodeList = [];
+        playerTitle.textContent = '正在播放...'; // Reset title
+        currentVideoLink = ''; // Clear the link that required parsing
         showPlayerLoading(false); // Ensure player loading is hidden
+        parsingSelectorContainer.style.display = 'none'; // Hide selector when closed
     };
 
     // Perform search by calling the backend API
@@ -591,8 +642,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Get selected search method at the time of search
-        const selectedMethod = document.querySelector('input[name="search-method"]:checked').value;
+        // Get selected search method
+        const selectedMethodRadio = document.querySelector('input[name="search-method"]:checked');
+        const selectedMethod = selectedMethodRadio ? selectedMethodRadio.value : 'ai'; // Default to 'ai' if somehow none selected
         currentSearchMethod = selectedMethod; // Update state
         localStorage.setItem('videoSearchMethod', currentSearchMethod); // Save preference
 
@@ -601,46 +653,53 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoading(true, selectedMethod); // Pass method to loading text
 
         try {
+            // Prepare request body
             const requestBody = {
                  query: query,
                  method: selectedMethod,
-                 // Send current settings, backend decides what to use based on method
+                 // Always send settings, backend decides if needed based on method
                  settings: {
                      aiApiUrl: currentSettings.aiApiUrl,
-                     aiApiKey: currentSettings.aiApiKey, // Send user's key (or empty string)
+                     aiApiKey: currentSettings.aiApiKey,
                      aiModel: currentSettings.aiModel,
                      searxngUrl: currentSettings.searxngUrl
+                     // Do NOT send parsingInterfaces here
                  }
              };
 
             console.log("Sending search request to backend:", requestBody);
 
+            // Make the API call
             const response = await fetch('/api/search', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody),
             });
 
-            const responseData = await response.json();
-            console.log("Backend Response Status:", response.status);
-            // console.log("Backend Response Data:", responseData); // Log data only if needed
+             console.log("Backend Response Status:", response.status, response.statusText);
+             const responseData = await response.json(); // Read response body once
 
-            if (!response.ok) {
-                const errorMsg = responseData.error || `搜索失败 (代码: ${response.status})`;
-                throw new Error(errorMsg);
-            }
+             if (!response.ok) {
+                 // Use error message from responseData if available, otherwise create one
+                 const errorMsg = responseData?.error || `搜索请求失败 (${response.status})`;
+                 console.error("Backend Error Response:", responseData);
+                 throw new Error(errorMsg);
+             }
 
-            // Backend adds 'method' property, displayResults handles it
-            displayResults(responseData);
+             console.log("Backend Response Data:", responseData);
+             // Backend should now add 'method' property to results
+             displayResults(responseData); // Display results
 
         } catch (error) {
             console.error("Search Error:", error);
-            showError(`搜索时出错: ${error.message}`);
-            clearResults(); // Clear any partial results/loading state
+            // Display the error message from the caught error
+            showError(`搜索或分析时出错: ${error.message}`);
+            clearResults(); // Clear results area on error
         } finally {
-            showLoading(false);
+            showLoading(false); // Hide loading indicator regardless of success/failure
         }
     };
+
 
     // --- Event Listeners ---
     searchBtn.addEventListener('click', performSearch);
@@ -653,14 +712,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update search method state when radio button changes
     searchMethodRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
-            currentSearchMethod = e.target.value;
-            localStorage.setItem('videoSearchMethod', currentSearchMethod);
-             console.log("Search method changed to:", currentSearchMethod);
-             // Maybe clear results when method changes? Optional.
-             // clearResults();
-             // clearError();
+            if (e.target.checked) {
+                currentSearchMethod = e.target.value;
+                localStorage.setItem('videoSearchMethod', currentSearchMethod); // Save preference immediately
+                console.log("Search method changed to:", currentSearchMethod);
+                // Optional: Clear results when method changes? Or keep them? Let's keep them for now.
+                // clearResults();
+                // clearError();
+            }
         });
     });
+
 
     // Settings Modal Listeners
     settingsBtn.addEventListener('click', () => {
@@ -671,22 +733,33 @@ document.addEventListener('DOMContentLoaded', () => {
     closeSettingsBtn.addEventListener('click', () => {
         settingsModal.style.display = 'none';
     });
-    saveSettingsBtn.addEventListener('click', saveSettings);
-    resetSettingsBtn.addEventListener('click', resetToDefaults);
-    addInterfaceBtn.addEventListener('click', () => addParsingInterface(true)); // Add button triggers add with alert
+    saveSettingsBtn.addEventListener('click', saveSettings); // Save settings
+     resetSettingsBtn.addEventListener('click', resetToDefaults); // Reset settings
+     // Add button for new interface within settings modal
+     addInterfaceBtn.addEventListener('click', () => {
+         const name = newInterfaceNameInput.value.trim();
+         const url = newInterfaceUrlInput.value.trim();
+         addParsingInterface(name, url, true); // Add and update UI immediately
+         // Note: This adds visually but doesn't *save* until 'Save Settings' is clicked
+         // Consider if this UX is clear, or if add should push directly and save?
+         // Current setup: Add is temporary until Save Settings.
+     });
 
     // Player Modal Listeners
-    closePlayerBtn.addEventListener('click', closePlayer);
+    closePlayerBtn.addEventListener('click', closePlayer); // Close player
 
-     // Update iframe src when user changes parsing interface (only for AI links)
+     // Update iframe src when user changes parsing interface in the player
     parsingSelect.addEventListener('change', () => {
-        // Only update if the player is open AND it's currently showing an AI link (parsing selector is visible)
-        if (playerModal.style.display === 'block' && parsingSelectorContainer.style.display !== 'none' && currentVideoLink) {
-             updatePlayerWithParser();
+        // Only re-parse if the player is open AND it's currently using a parsing link (currentVideoLink is set)
+        // AND the parsing selector is actually visible (meaning it's an AI result)
+        if (playerModal.style.display === 'block' && currentVideoLink && parsingSelectorContainer.style.display !== 'none') {
+             console.log("Parser selection changed.");
+             updatePlayerWithParser(); // Use helper to update player source
         }
     });
 
-    // Close modals if clicked outside the content area
+
+    // Global listener to close modals if clicked outside the content area
     window.addEventListener('click', (event) => {
         if (event.target === settingsModal) {
             settingsModal.style.display = 'none';
@@ -700,3 +773,4 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSettings(); // Load settings when the page loads
 
 }); // End DOMContentLoaded
+
