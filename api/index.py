@@ -36,6 +36,8 @@ AI_RETRY_DELAY = 5 # seconds
 # --- YFSP Configuration ---
 YFSP_BASE_URL = "https://www.yfsp.lv"
 YFSP_SEARCH_URL_TEMPLATE = "https://www.yfsp.lv/s/-------------/?wd={}"
+# --- NEW: YFSP Detail Page URL Template (Assuming structure) ---
+YFSP_DETAIL_URL_TEMPLATE = "https://www.yfsp.lv/iyftv/{}/" # Placeholder for video_id
 YFSP_PLAYER_URL_PREFIX = "https://b.212133.xyz/player/ec.php?code=qw&if=1&url=" # Your target player prefix
 COMMON_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -51,13 +53,12 @@ def get_domain(url):
     except:
         return "Unknown"
 
-# --- SearXNG Search Function (Adapted - Keep existing) ---
+# --- SearXNG Search Function ---
 def search_searxng_backend(query, searxng_url):
     params = {
         'q': query, 'categories': 'general', 'language': 'auto',
         'time_range': '', 'safesearch': '0', 'theme': 'simple', 'format': 'html'
     }
-    # Use COMMON_HEADERS defined above
     search_results = []
     print(f"Backend: Searching SearXNG ({searxng_url}) for: {query}")
     try:
@@ -73,7 +74,6 @@ def search_searxng_backend(query, searxng_url):
                 if link_tag:
                     title = link_tag.get_text(strip=True)
                     link = link_tag['href']
-                    # Basic filter for obviously bad links early
                     if title and link.startswith('http') and len(link) > 10:
                         search_results.append({'title': title, 'link': link})
     except Exception as e:
@@ -81,13 +81,14 @@ def search_searxng_backend(query, searxng_url):
     print(f"Backend: Extracted {len(search_results)} valid SearXNG results.")
     return search_results
 
-# --- AI Filtering Function (Adapted - Keep existing) ---
+# --- AI Filtering Function ---
 def filter_links_with_ai_backend(results_list, ai_url, ai_key, ai_model):
     if not results_list: return []
 
     print(f"Backend: Sending {len(results_list)} results to AI ({ai_url}, model: {ai_model})")
     input_data_for_ai = "\n".join([f"Title: {item['title']}\nURL: {item['link']}" for item in results_list])
 
+    # --- AI Prompt (Kept the same refined version) ---
     prompt = f"""
 Analyze the following list of search results (each with a Title and URL).
 Your task is to identify ONLY the URLs that point DIRECTLY to video playback pages for movies or TV series episodes.
@@ -140,7 +141,6 @@ Your JSON output:
                 if content:
                     print("Backend: AI response received, attempting JSON parsing...")
                     try:
-                        # Improved JSON cleaning
                         json_match = re.search(r'```json\s*([\s\S]*?)\s*```|(\[.*\]|\{.*\})', content, re.DOTALL)
                         if json_match:
                             json_content = json_match.group(1) or json_match.group(2)
@@ -157,13 +157,13 @@ Your JSON output:
                                 return validated_data
                             else:
                                 print(f"Backend: AI did not return a JSON list after parsing. Parsed type: {type(parsed_data)}")
-                                return [] # Return empty list if format is wrong
+                                return []
                         else:
                             print(f"Backend: Could not find JSON block in AI response. Content starts with: {content[:200]}...")
                             return []
                     except json.JSONDecodeError as json_e:
                         print(f"Backend: AI JSON parsing error: {json_e}. Content fragment: {content[:200]}...")
-                        return [] # Return empty list on parsing error
+                        return []
                 else: print("Backend: AI response content is empty.")
             else: print(f"Backend: Unexpected AI response structure: {ai_response}")
 
@@ -173,15 +173,15 @@ Your JSON output:
             print(f"Backend: AI API request error (Attempt {attempt + 1}): {e} (Status: {status_code})")
             if status_code in [401, 403]:
                 print("Backend: AI Auth error, stopping retries.")
-                return None
+                return None # Indicate critical auth failure
         except Exception as e: print(f"Backend: Unknown error during AI processing: {e}")
 
         if attempt < AI_MAX_RETRIES - 1: time.sleep(AI_RETRY_DELAY)
         else: print("Backend: AI API max retries reached.")
 
-    return None
+    return None # Indicate failure after retries
 
-# --- NEW: YFSP Search Function ---
+# --- YFSP Search Function ---
 def search_yfsp(query):
     search_url = YFSP_SEARCH_URL_TEMPLATE.format(requests.utils.quote(query))
     results = []
@@ -189,11 +189,9 @@ def search_yfsp(query):
     try:
         response = requests.get(search_url, headers=COMMON_HEADERS, timeout=15)
         response.raise_for_status()
-        response.encoding = response.apparent_encoding # Ensure correct encoding
+        response.encoding = response.apparent_encoding
 
         soup = BeautifulSoup(response.text, 'html.parser')
-
-        # Find result items
         items = soup.select('div.module-main div.module-items div.module-card-item.module-item')
         print(f"Backend: YFSP found {len(items)} potential result items.")
 
@@ -203,41 +201,40 @@ def search_yfsp(query):
                 title = title_tag.text.strip() if title_tag else None
 
                 poster_link_tag = item.select_one('a.module-card-item-poster')
+                # --- MODIFIED: Get detail href, not play href ---
                 detail_href = poster_link_tag['href'] if poster_link_tag else None
-                detail_url = urljoin(YFSP_BASE_URL, detail_href) if detail_href else None
+                detail_url = urljoin(YFSP_BASE_URL, detail_href) if detail_href else None # Full URL to detail page
 
                 cover_img_tag = item.select_one('.module-item-pic img.lazyload')
                 cover_img = cover_img_tag['data-original'] if cover_img_tag and 'data-original' in cover_img_tag.attrs else None
-                # Prepend base URL if the cover image URL is relative
                 if cover_img and not cover_img.startswith(('http://', 'https://')):
                     cover_img = urljoin(YFSP_BASE_URL, cover_img)
 
                 note_tag = item.select_one('.module-item-note')
                 note = note_tag.text.strip() if note_tag else "N/A"
 
-                play_btn_tag = item.select_one('.module-card-item-footer a.play-btn')
-                first_episode_href = play_btn_tag['href'] if play_btn_tag else None
-                first_episode_url = urljoin(YFSP_BASE_URL, first_episode_href) if first_episode_href else None
-
-                # Extract ID from href (e.g., /iyfplay/78888-1-1/ -> 78888)
+                # --- Extract video ID from detail_href ---
                 video_id = None
-                if first_episode_href:
-                    match = re.search(r'/(\d+)-\d+-\d+/', first_episode_href)
+                if detail_href:
+                    # Example detail href: /iyftv/78888/ -> extract 78888
+                    match = re.search(r'/(\d+)/?$', detail_href) # Match digits at the end, optionally followed by /
                     if match:
                         video_id = match.group(1)
 
-                if title and first_episode_url and video_id:
+                if title and detail_url and video_id:
                     results.append({
                         "title": title,
                         "cover_img": cover_img,
                         "note": note,
-                        "video_id": video_id,
-                        "first_episode_play_page_url": first_episode_url, # URL for the /api/yfsp/episode endpoint
-                        "detail_page_url": detail_url # Optional: for future use
+                        "video_id": video_id, # ID needed to fetch episodes
+                        "detail_page_url": detail_url # URL for fetching episodes
                     })
+                else:
+                    print(f"Backend: Skipping item, missing title, detail_url, or video_id. Title: {title}, DetailURL: {detail_url}, VideoID: {video_id}")
+
             except Exception as e:
                 print(f"Backend: Error parsing one YFSP item: {e}")
-                continue # Skip this item
+                continue
 
     except requests.exceptions.RequestException as e:
         print(f"Backend: YFSP Search Error: {e}")
@@ -247,8 +244,62 @@ def search_yfsp(query):
     print(f"Backend: Extracted {len(results)} valid YFSP results.")
     return results
 
-# --- NEW: YFSP M3U8 Extraction Function ---
-# --- NEW: YFSP M3U8 Extraction Function (REVISED) ---
+# --- NEW: YFSP Episode List Extraction Function ---
+def get_yfsp_episodes_by_id(video_id):
+    detail_url = YFSP_DETAIL_URL_TEMPLATE.format(video_id)
+    print(f"Backend: Fetching episode list from YFSP detail page: {detail_url}")
+    episodes = []
+    try:
+        response = requests.get(detail_url, headers=COMMON_HEADERS, timeout=20)
+        response.raise_for_status()
+        response.encoding = response.apparent_encoding
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # --- Find episode list container(s) ---
+        # This selector might need adjustment based on the actual YFSP detail page structure
+        # Common patterns: Look for divs/uls containing playlists or episode links
+        # Example selectors (adjust as needed):
+        # 'div.module-play-list .module-play-list-content a'
+        # 'ul.episode-list li a'
+        # 'div#play-list a'
+        episode_list_containers = soup.select('div.module-play-list') # Select the main container first
+        if not episode_list_containers:
+             print(f"Backend: ERROR - Could not find episode list container (e.g., 'div.module-play-list') on {detail_url}")
+             return [] # Return empty list if container not found
+
+        # Assume first container is the one we want, or iterate if multiple sources
+        container = episode_list_containers[0]
+        episode_links = container.select('.module-play-list-content a') # Find links within the container
+
+        print(f"Backend: Found {len(episode_links)} potential episode links in container.")
+
+        for link_tag in episode_links:
+            href = link_tag.get('href')
+            title = link_tag.get_text(strip=True)
+
+            if href and title:
+                play_page_url = urljoin(YFSP_BASE_URL, href) # Construct full URL
+                 # Basic validation: ensure it looks like a play page URL
+                if video_id in play_page_url and '/iyfplay/' in play_page_url:
+                    episodes.append({
+                        "episode_name": title,
+                        "play_page_url": play_page_url
+                    })
+                else:
+                    print(f"Backend: Skipping invalid-looking episode link: {title} - {play_page_url}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Backend: ERROR fetching YFSP detail page {detail_url}: {e}")
+    except Exception as e:
+        import traceback
+        print(f"Backend: ERROR parsing episodes from {detail_url}: {e}")
+        print(traceback.format_exc())
+
+    print(f"Backend: Extracted {len(episodes)} valid episodes for video ID {video_id}.")
+    return episodes
+
+
+# --- YFSP M3U8 Extraction Function (Using the previously refined version) ---
 def get_yfsp_m3u8_url(play_page_url):
     print(f"Backend: Fetching M3U8 from YFSP play page: {play_page_url}")
     try:
@@ -258,24 +309,18 @@ def get_yfsp_m3u8_url(play_page_url):
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Find the script containing 'var player_aaaa' more reliably
         script_tags = soup.find_all('script')
         player_script_content = None
         for script in script_tags:
-            # Check if script content exists and contains the variable definition start
             if script.string and 'var player_aaaa' in script.string:
                 player_script_content = script.string
                 print("Backend: Found script tag containing 'var player_aaaa'.")
-                break # Found the script, exit loop
+                break
 
         if not player_script_content:
             print("Backend: ERROR - Script tag containing 'var player_aaaa' not found.")
             return None
 
-        # --- Refined Regex and JSON Extraction ---
-        # Regex targets 'var player_aaaa = {' followed by the JSON object ending '};' or possibly just '}'
-        # It captures the content within the outermost curly braces { ... }
-        # re.DOTALL allows '.' to match newline characters
         match = re.search(r'var\s+player_aaaa\s*=\s*(\{[\s\S]*?\})\s*;?', player_script_content, re.DOTALL)
 
         if match:
@@ -283,22 +328,13 @@ def get_yfsp_m3u8_url(play_page_url):
             print(f"Backend: Regex matched. Extracted JSON string (first 100 chars): {json_str[:100]}...")
 
             try:
-                # --- Attempt 1: Direct JSON Loading ---
-                # Replace escaped slashes which might cause issues sometimes, although json.loads usually handles them
-                # json_str_cleaned = json_str.replace('\\/', '/') # Optional: Try if direct loading fails
                 player_data = json.loads(json_str)
                 m3u8_url = player_data.get('url')
 
                 if m3u8_url:
-                     # Sometimes the URL itself might have unicode escapes (less common)
-                     try:
-                         m3u8_url = m3u8_url.encode('utf-8').decode('unicode_escape')
-                     except Exception:
-                         pass # Ignore if decoding fails, use original
-
-                     # Further clean URL (remove potential extra escaping)
+                     try: m3u8_url = m3u8_url.encode('utf-8').decode('unicode_escape')
+                     except Exception: pass
                      m3u8_url = m3u8_url.replace('\\/', '/')
-
                      print(f"Backend: Successfully extracted M3U8 URL: {m3u8_url}")
                      return m3u8_url
                 else:
@@ -307,19 +343,14 @@ def get_yfsp_m3u8_url(play_page_url):
 
             except json.JSONDecodeError as e:
                 print(f"Backend: JSONDecodeError: {e}. Trying potential fixes...")
-                # --- Attempt 2: Fix common issues (like potential unicode escapes in keys/values before parsing) ---
                 try:
-                    # Fix potential unicode escapes within the string *before* parsing
                     json_str_fixed = json_str.encode('utf-8').decode('unicode_escape')
-                    # Also unescape slashes here as unicode_escape might re-introduce them weirdly
                     json_str_fixed = json_str_fixed.replace('\\/', '/')
                     print(f"Backend: Attempting parse after unicode/slash fixes...")
-
                     player_data = json.loads(json_str_fixed)
                     m3u8_url = player_data.get('url')
 
                     if m3u8_url:
-                        # Clean the final URL again
                         m3u8_url = m3u8_url.replace('\\/', '/')
                         print(f"Backend: Successfully extracted M3U8 URL after fixes: {m3u8_url}")
                         return m3u8_url
@@ -327,7 +358,6 @@ def get_yfsp_m3u8_url(play_page_url):
                         print("Backend: ERROR - 'url' key not found in player_aaaa JSON (after fixes).")
                         return None
                 except Exception as fix_e:
-                     # Log the problematic string fragment for debugging if all else fails
                      print(f"Backend: ERROR - Could not parse player_aaaa JSON even after fixes: {fix_e}. Problematic string fragment: {json_str[:200]}...")
                      return None
         else:
@@ -341,90 +371,109 @@ def get_yfsp_m3u8_url(play_page_url):
         print(f"Backend: ERROR - RequestException fetching YFSP play page {play_page_url}: {e}")
         return None
     except Exception as e:
-        # Catch any other unexpected error during processing
         import traceback
         print(f"Backend: ERROR - General error extracting M3U8 from {play_page_url}: {e}")
-        print(traceback.format_exc()) # Print full traceback for debugging
+        print(traceback.format_exc())
         return None
-
 
 # --- API Endpoints ---
 
-@app.route('/api/search', methods=['POST'])
-def handle_search():
+# --- NEW: Endpoint for AI-Filtered Search Results ---
+@app.route('/api/ai-search', methods=['POST'])
+def handle_ai_search():
     data = request.json
     query = data.get('query')
     settings = data.get('settings', {})
     searxng_url = settings.get('searxngUrl') or DEFAULT_SEARXNG_URL
     ai_url = settings.get('aiApiUrl') or DEFAULT_AI_API_URL
-    ai_key = settings.get('aiApiKey') # User key takes precedence if provided
+    ai_key = settings.get('aiApiKey') # User key takes precedence
     ai_model = settings.get('aiModel') or DEFAULT_AI_MODEL
 
-    # Validate mandatory fields
+    # Validation
     if not query: return jsonify({"error": "Query parameter is required"}), 400
-
-    # Determine AI Key: Use user's if provided, else backend default
     effective_ai_key = ai_key or DEFAULT_AI_API_KEY
     if not effective_ai_key or "PLACEHOLDER" in effective_ai_key:
-         return jsonify({"error": "AI API Key is missing. Please configure it in settings or on the server."}), 500
-
-    # Validate URLs
+         return jsonify({"error": "AI API Key is missing. Please configure it."}), 500
     if not ai_url: return jsonify({"error": "AI API URL is not configured."}), 500
     if not ai_model: return jsonify({"error": "AI Model is not configured."}), 500
     if not searxng_url: return jsonify({"error": "SearXNG URL is not configured."}), 500
 
-    print(f"Backend: Received search query: '{query}'")
-
-    # 1. Search SearXNG + AI Filter (Standard results)
+    print(f"Backend: Received AI search query: '{query}'")
     ai_filtered_results = []
     try:
         raw_results = search_searxng_backend(query, searxng_url)
         if raw_results:
             filtered = filter_links_with_ai_backend(raw_results, ai_url, effective_ai_key, ai_model)
-            if filtered is not None: # Check for AI failure
+            if filtered is not None: # Check for AI failure (None indicates failure)
                  ai_filtered_results = filtered
             else:
-                 print("Backend: AI filtering failed, returning empty AI results.")
-                 # Optionally return an error message here if AI failure should stop the whole process
-                 # return jsonify({"error": "AI processing failed"}), 500
+                 # Return specific error if AI failed critically (e.g., auth)
+                 return jsonify({"error": "AI processing failed. Check API key or backend logs."}), 500
         else:
-            print("Backend: No results from SearXNG.")
+            print("Backend: No results from SearXNG for AI filtering.")
     except Exception as e:
         print(f"Backend: Error during SearXNG/AI search phase: {e}")
-        # Decide if this error is critical or if we should proceed to YFSP search
+        return jsonify({"error": f"An error occurred during AI search: {e}"}), 500
 
-    # 2. Search YFSP (New source)
+    return jsonify({"ai_results": ai_filtered_results})
+
+# --- NEW: Endpoint for YFSP Search Results ---
+@app.route('/api/yfsp-search', methods=['POST'])
+def handle_yfsp_search():
+    data = request.json
+    query = data.get('query')
+    if not query: return jsonify({"error": "Query parameter is required"}), 400
+
+    print(f"Backend: Received YFSP search query: '{query}'")
     yfsp_results = []
     try:
         yfsp_results = search_yfsp(query)
     except Exception as e:
         print(f"Backend: Error during YFSP search phase: {e}")
-        # Decide if this error is critical
+        return jsonify({"error": f"An error occurred during YFSP search: {e}"}), 500
 
-    # 3. Combine results and return
-    # We return them separately so the frontend can distinguish
-    final_results = {
-        "ai_results": ai_filtered_results,
-        "yfsp_results": yfsp_results
-    }
-    return jsonify(final_results)
+    return jsonify({"yfsp_results": yfsp_results})
 
-# --- NEW: API Endpoint for YFSP Episode M3U8 ---
-@app.route('/api/yfsp/episode', methods=['POST'])
-def handle_yfsp_episode():
+# --- NEW: Endpoint to get Episodes for a YFSP video ID ---
+@app.route('/api/yfsp/episodes', methods=['POST'])
+def handle_yfsp_episodes():
+    data = request.json
+    video_id = data.get('video_id')
+
+    if not video_id:
+        return jsonify({"error": "video_id is required"}), 400
+
+    print(f"Backend: Requesting episodes for video_id: {video_id}")
+    try:
+        episodes = get_yfsp_episodes_by_id(video_id)
+        if not episodes:
+             # It's possible a movie only has one implicit episode handled differently
+             # Or the parsing failed. Return empty list or error? Let's return empty for now.
+             print(f"Backend: No episodes found or extracted for video_id {video_id}. Might be a movie or parsing issue.")
+        return jsonify({"episodes": episodes})
+    except Exception as e:
+        print(f"Backend: Error getting episodes for video_id {video_id}: {e}")
+        return jsonify({"error": f"Failed to get episodes: {e}"}), 500
+
+
+# --- NEW: Endpoint to get final Player URL for a specific YFSP episode's play page ---
+@app.route('/api/yfsp/play', methods=['POST'])
+def handle_yfsp_play():
     data = request.json
     play_page_url = data.get('play_page_url')
 
     if not play_page_url or not play_page_url.startswith(YFSP_BASE_URL):
         return jsonify({"error": "Valid play_page_url starting with YFSP base URL is required"}), 400
 
-    m3u8_url = get_yfsp_m3u8_url(play_page_url)
+    print(f"Backend: Requesting M3U8/Player URL for: {play_page_url}")
+    m3u8_url = get_yfsp_m3u8_url(play_page_url) # Use the refined function
 
     if m3u8_url:
-        # Construct the final player URL using the prefix
         final_player_url = YFSP_PLAYER_URL_PREFIX + requests.utils.quote(m3u8_url)
+        print(f"Backend: Constructed final player URL: {final_player_url}")
         return jsonify({"final_player_url": final_player_url})
     else:
+        print(f"Backend: Failed to get M3U8 for {play_page_url}")
         return jsonify({"error": "Failed to extract M3U8 URL from the provided page."}), 500
 
 
@@ -449,7 +498,6 @@ def serve_index():
 
 @app.route('/<path:path>')
 def serve_static(path):
-    # Ensure it serves from the correct relative path
     return send_from_directory(app.static_folder, path)
 
 # No need for if __name__ == '__main__' for Vercel
