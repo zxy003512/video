@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZXY视频网站 - 在线视频解析与同步观影</title> <!-- 修改标题 -->
+    <meta name="description" content="ZXY视频网站提供简洁高效的在线视频解析工具，支持主流视频平台，并新增同步观影功能。"> <!-- 修改描述 -->
+    <meta name="keywords" content="ZXY视频, 视频解析, 同步看电影, 在线解析, VIP视频解析, 免广告看视频"> <!-- 修改关键词 -->
+    <!-- Preload Fonts and Icons for performance -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
+    <!-- PeerJS Library -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script> <!-- 新增 PeerJS 库 -->
+
+    <!-- Fonts and Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS Reset & Base Styles --- */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            /* == 全新色彩方案 == */
+            --primary-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* 主渐变色 (紫 -> 蓝) */
+            --primary-color-start: #6a11cb; /* 渐变起始色 */
+            --primary-color-end: #2575fc; /* 渐变结束色 */
+            --accent-color: #34e89e; /* 强调色 (亮青绿) */
+            --accent-hover: #2bc48a;
+            --sync-color: #ff6b6b; /* 同步功能颜色 (珊瑚红) */
+            --sync-hover: #ee5253;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --danger-hover: #c82333;
+            --success-color: #28a745; /* 保留，或使用 accent-color */
+            --info-color: #17a2b8; /* 信息颜色 */
+
+            /* == 背景与文本色 == */
+            --body-bg: linear-gradient(to top, #f3e7e9 0%, #e3eeff 100%); /* 柔和渐变背景 (粉 -> 蓝) */
+            --container-bg: rgba(255, 255, 255, 0.95); /* 容器背景，轻微透明 */
+            --card-bg: #ffffff; /* 卡片背景 */
+            --text-color: #333; /* 深灰色文本 */
+            --text-light: #667; /* 浅灰色文本 */
+            --border-color: rgba(0, 0, 0, 0.08); /* 更柔和的边框色 */
+
+            /* == 阴影与圆角 == */
+            --shadow-light: rgba(0, 0, 0, 0.06);
+            --shadow-medium: rgba(0, 0, 0, 0.1);
+            --shadow-strong: rgba(50, 50, 93, 0.15); /* 更自然的阴影 */
+            --border-radius-sm: 8px;
+            --border-radius-md: 16px; /* 更大的圆角 */
+            --border-radius-lg: 24px;
+
+            /* == 动画与过渡 == */
+            --animation-speed: 0.3s;
+            --transition-smooth: all var(--animation-speed) cubic-bezier(0.25, 0.8, 0.25, 1); /* 平滑过渡 */
+
+            /* 移动端限制接口提示 */
+            --restricted-interface-bg: rgba(255, 193, 7, 0.1);
+            --restricted-interface-color: #b98900;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            background: var(--body-bg);
+            background-attachment: fixed;
+            line-height: 1.7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 3rem 1rem;
+            overflow-x: hidden;
+        }
+
+        /* --- 主容器 --- */
+        .container {
+            width: 100%;
+            max-width: 950px;
+            background-color: var(--container-bg);
+            padding: 3rem 3.5rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 15px 35px var(--shadow-strong), 0 5px 15px rgba(0,0,0,0.07);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeInScale 0.8s ease-out forwards;
+            opacity: 0;
+            transform: scale(0.97);
+        }
+
+        @keyframes fadeInScale {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* --- 排版 --- */
+        h1 {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            text-align: center;
+            margin-bottom: 2.5rem;
+            font-weight: 700;
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+        }
+        h1 i { margin-right: 0.8rem; }
+
+        h2 {
+            color: var(--primary-color-start);
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        h2 i { color: var(--primary-color-end); } /* H2 icon color */
+        h2.sync-heading i { color: var(--sync-color); } /* Sync heading icon color */
+
+
+        p {
+            margin-bottom: 1.2rem;
+            color: var(--text-light);
+        }
+
+        strong {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        /* --- 按钮 --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            padding: 0.85rem 1.8rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #fff;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translateY(-1px) scale(0.98);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            filter: brightness(0.95);
+        }
+
+        .btn:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+            filter: none;
+            opacity: 0.65;
+        }
+
+        /* 特别突出按钮 */
+        #autoTestButton {
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
+        }
+        /* Sync Buttons */
+        .btn-sync-create {
+            background: linear-gradient(135deg, var(--sync-color) 0%, var(--sync-hover) 100%);
+        }
+        .btn-sync-join {
+            background: linear-gradient(135deg, var(--info-color) 0%, #138496 100%); /* Join button color */
+        }
+        .btn-sync-leave {
+             background: linear-gradient(135deg, var(--warning-color) 0%, #e0a800 100%); /* Leave button color */
+        }
+
+        .platform-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .platform-btn {
+            flex-grow: 1;
+            min-width: 130px;
+        }
+
+        /* --- 表单元素 --- */
+        .parser-form, .sync-section { /* Apply similar styling */
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            margin-bottom: 0.7rem;
+            font-weight: 500;
+            color: var(--primary-color-start);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .form-label i { color: var(--primary-color-end); }
+        .sync-section .form-label i { color: var(--sync-color); } /* Sync label icon color */
+
+
+        .form-control {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            color: var(--text-color);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color var(--animation-speed) ease, box-shadow var(--animation-speed) ease;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color-end);
+            box-shadow: 0 0 0 4px rgba(37, 117, 252, 0.15), inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* Style for Sync Room ID Input */
+        #syncRoomIdInput:focus {
+             border-color: var(--sync-color);
+             box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.25), inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="%236a11cb"><path fill-rule="evenodd" d="M4.646 5.646a.5.5 0 0 1 .708 0L8 8.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 1.2rem center;
+            background-size: 1.2em;
+            padding-right: 3.5rem;
+        }
+
+        .form-control option.restricted-mobile {
+            background-color: var(--restricted-interface-bg);
+            color: var(--restricted-interface-color);
+            font-style: italic;
+        }
+        .form-control option { padding: 5px 10px; }
+
+        .parser-actions, .sync-actions { /* Apply similar styling */
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .parser-actions .btn, .sync-actions .btn { /* Apply similar styling */
+            flex-grow: 1;
+        }
+
+        /* --- 说明框 --- */
+        .instructions {
+            background-color: rgba(230, 240, 255, 0.5);
+            border-left: 6px solid var(--primary-color-end);
+            padding: 1.8rem 2rem;
+            margin-bottom: 3rem;
+            border-radius: var(--border-radius-md);
+            font-size: 0.98rem;
+            box-shadow: 0 4px 10px var(--shadow-light);
+        }
+        .instructions p:last-child { margin-bottom: 0; }
+        .instructions strong { color: var(--primary-color-start); font-weight: 600; }
+        .instructions strong i { color: var(--primary-color-end); }
+        .instructions ol { padding-left: 1.8rem; margin-bottom: 1.2rem; list-style-type: decimal-leading-zero; }
+        .instructions li { margin-bottom: 0.5rem; }
+
+        /* --- 视频播放器 --- */
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 */
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+            background-color: #111;
+            margin-top: 2.5rem;
+            display: none;
+            box-shadow: 0 10px 30px var(--shadow-medium);
+            animation: fadeIn 0.6s ease;
+        }
+
+        .video-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* --- 状态消息 --- */
+        .status-message {
+            text-align: center;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius-md);
+            margin-top: 1rem; /* Reduced margin-top */
+            display: none;
+            font-weight: 500;
+            animation: slideDown 0.4s ease-out;
+            border: 1px solid transparent;
+            box-shadow: 0 3px 8px var(--shadow-light);
+            display: flex; /* Use flex for alignment */
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem; /* Gap between icon and text */
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status-loading,
+        .status-testing {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #a37b00;
+            border-color: rgba(255, 193, 7, 0.4);
+        }
+        .status-error {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+            border-color: rgba(220, 53, 69, 0.4);
+        }
+        .status-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            border-color: rgba(40, 167, 69, 0.4);
+        }
+         /* Sync Status */
+        .status-sync {
+            background-color: rgba(255, 107, 107, 0.1); /* Sync color background */
+            color: var(--sync-color);
+            border-color: rgba(255, 107, 107, 0.4);
+            margin-top: 0.5rem; /* Smaller margin */
+            padding: 0.8rem 1rem; /* Smaller padding */
+            font-size: 0.95rem;
+        }
+         .status-sync strong {
+             color: #c82333; /* Darker red for emphasis */
+             cursor: pointer;
+             text-decoration: underline;
+         }
+
+
+        /* --- 同步观影区域 --- */
+        .sync-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px dashed var(--border-color); /* Separator */
+        }
+
+        .sync-status-display {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: rgba(23, 162, 184, 0.05); /* Light info background */
+            border-radius: var(--border-radius-md);
+            border: 1px solid rgba(23, 162, 184, 0.2);
+            color: var(--info-color);
+            font-size: 0.95rem;
+            display: none; /* Initially hidden */
+            text-align: center;
+        }
+         .sync-status-display code {
+             background-color: rgba(0,0,0,0.05);
+             padding: 0.2em 0.4em;
+             border-radius: 4px;
+             font-weight: bold;
+             color: var(--sync-color);
+             cursor: pointer; /* Make it look clickable */
+             user-select: all; /* Allow easy selection */
+         }
+        .sync-status-display p { margin-bottom: 0.5rem; } /* Adjust spacing */
+
+
+        /* --- 电影站点卡片 (保持不变) --- */
+        .movie-sites { margin-top: 3.5rem; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 2rem; }
+        .movie-card { background-color: var(--card-bg); border-radius: var(--border-radius-md); overflow: hidden; box-shadow: 0 8px 20px var(--shadow-light); transition: var(--transition-smooth); text-decoration: none; color: var(--text-color); display: flex; flex-direction: column; border: 1px solid var(--border-color); }
+        .movie-card:hover { transform: translateY(-8px) scale(1.03); box-shadow: 0 15px 35px var(--shadow-medium); border-color: var(--primary-color-end); }
+        .movie-card-image { height: 140px; background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.8); font-size: 3.5rem; transition: var(--transition-smooth); }
+        .movie-card:hover .movie-card-image { background: linear-gradient(135deg, #fda085 0%, #f6d365 100%); color: #fff; }
+        .movie-card-content { padding: 1.2rem; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .movie-card-title { font-weight: 600; margin-bottom: 0.4rem; font-size: 1.15rem; color: var(--primary-color-start); transition: color var(--animation-speed) ease; }
+        .movie-card:hover .movie-card-title { color: var(--primary-color-end); }
+        .movie-card-link { font-size: 0.88rem; color: var(--text-light); word-break: break-all; }
+        .movie-warning { margin-top: 1.5rem; padding: 1.2rem; background-color: rgba(255, 193, 7, 0.1); color: #b98900; border: 1px solid rgba(255, 193, 7, 0.3); border-radius: var(--border-radius-md); font-size: 0.95rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.6rem; box-shadow: 0 3px 8px var(--shadow-light); }
+        .movie-warning i { font-size: 1.1rem; }
+
+        /* --- 页脚 (保持不变) --- */
+        footer { text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-color); font-size: 0.9em; color: var(--text-light); opacity: 0.8; }
+        footer p { margin-bottom: 0.5rem; }
+
+        /* --- 可访问性 --- */
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+
+        /* --- 响应式设计 --- */
+        @media (max-width: 768px) {
+            body { padding: 2rem 0.8rem; }
+            .container { padding: 2.5rem 1.5rem; border-radius: var(--border-radius-md); }
+            h1 { font-size: 2rem; }
+            .platform-buttons { flex-direction: column; gap: 0.8rem; margin-bottom: 2rem; }
+            .platform-btn { width: 100%; padding: 0.8rem 1.5rem; }
+            .parser-actions, .sync-actions { flex-direction: column; gap: 0.8rem; }
+            .parser-actions .btn, .sync-actions .btn { width: 100%; padding: 0.8rem 1.5rem; }
+            .card-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.2rem; }
+            .movie-card-image { height: 120px; font-size: 3rem; }
+            .movie-card-title { font-size: 1.05rem; }
+            h2 { font-size: 1.3rem; }
+            .sync-section { margin-top: 2rem; padding-top: 1.5rem; }
+        }
+
+         @media (max-width: 480px) {
+             body { padding: 1.5rem 0.5rem; }
+             .container { padding: 2rem 1rem; border-radius: var(--border-radius-sm); }
+             h1 { font-size: 1.8rem; }
+             .btn, .platform-btn, .parser-actions .btn, .sync-actions .btn { padding: 0.75rem 1.4rem; font-size: 0.95rem; }
+             .form-control { padding: 0.8rem 1rem; font-size: 0.95rem; }
+             select.form-control { background-position: right 0.8rem center; padding-right: 3rem; }
+             .card-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+             .movie-card-image { height: 100px; font-size: 2.5rem; }
+             .movie-card-title { font-size: 1rem; }
+             .instructions { padding: 1.5rem 1.2rem; font-size: 0.92rem; }
+             .movie-warning { padding: 1rem; font-size: 0.9rem; }
+             footer { margin-top: 3rem; padding-top: 1.5rem; font-size: 0.85em; }
+         }
+
+    </style>
+</head>
+<body>
+
+    <main class="container">
+        <h1><i class="fas fa-film fa-fw"></i> ZXY视频网站</h1>
+
+        <nav class="platform-buttons" aria-label="视频平台导航">
+            <a href="https://v.qq.com/" target="_blank" rel="noopener noreferrer" class="btn platform-btn" title="访问腾讯视频官网">
+                <i class="fab fa-qq" aria-hidden="true"></i> 腾讯视频
+            </a>
+            <a href="https://www.iqiyi.com/" target="_blank" rel="noopener noreferrer" class="btn platform-btn" title="访问爱奇艺官网">
+                <i class="fas fa-play-circle" aria-hidden="true"></i> 爱奇艺
+            </a>
+            <a href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer" class="btn platform-btn" title="访问哔哩哔哩官网">
+                <i class="fas fa-tv" aria-hidden="true"></i> Bilibili
+            </a>
+        </nav>
+
+        <section class="instructions" aria-labelledby="instructions-heading">
+            <h2 id="instructions-heading" class="sr-only">使用说明</h2>
+            <p><strong><i class="fas fa-info-circle fa-fw"></i> 如何使用解析功能:</strong></p>
+            <ol>
+                <li>点击上方按钮前往视频平台，或直接打开视频网站。</li>
+                <li>找到想看的视频，复制浏览器地址栏中的完整链接 (URL)。</li>
+                <li>返回本页面，将链接粘贴到下方的“视频链接”输入框中。</li>
+                <li>选择一个解析接口（推荐点击 <strong style="color: var(--accent-color);">自动测试</strong>）。</li>
+                <li>点击 <strong style="color: var(--primary-color-end);">立即解析</strong> 按钮（如果未加入同步房间）。</li>
+            </ol>
+             <p><strong><i class="fas fa-users fa-fw" style="color: var(--sync-color);"></i> 如何使用同步观影:</strong></p>
+             <ol>
+                 <li><strong>创建房间:</strong> 输入视频链接，选择好接口，点击 <strong style="color: var(--sync-color);">创建同步房间</strong>。将生成的 6 位密码分享给朋友。房主点击“立即解析”后，成员会自动加载。</li>
+                 <li><strong>加入房间:</strong> 输入朋友分享的 6 位密码和相同的视频链接，点击 <strong style="color: var(--info-color);">加入同步房间</strong>。等待房主加载视频。</li>
+                 <li><strong>同步播放:</strong> 目前仅同步加载视频。播放/暂停/快进等操作请大家自行协调。</li>
+                 <li><strong>离开房间:</strong> 点击 <strong style="color: var(--warning-color);">离开房间</strong> 即可退出同步。</li>
+             </ol>
+            <p><strong>注意：</strong> 若播放失败或卡顿，请尝试切换其他解析接口。同步观影功能依赖网络连接，可能存在延迟。本工具仅供学习交流。</p>
+        </section>
+
+        <!-- 视频解析 -->
+        <section class="parser-form" aria-labelledby="parser-heading">
+            <h2 id="parser-heading"><i class="fas fa-cogs fa-fw"></i> 视频解析设置</h2>
+            <div class="form-group">
+                <label for="parserInterface" class="form-label"><i class="fas fa-server fa-fw"></i> 解析接口:</label>
+                <select id="parserInterface" class="form-control" aria-describedby="interface-description">
+                    <option value="https://jx.xmflv.com/?url=" data-restricted-mobile="true">接口 1 (xmflv.com)</option>
+                    <option value="https://bd.jx.cn/?url=">接口 2 (bd.jx.cn)</option>
+                    <option value="https://jx.xmflv.cc/?url=" data-restricted-mobile="true">接口 3 (xmflv.cc)</option>
+                    <option value="https://jx.hls.one/?url=">接口 4 (hls.one) [推荐]</option>
+                    <option value="https://jx.77flv.cc/?url=">接口 5 (77flv.cc) [推荐]</option>
+                    <option value="https://www.yemu.xyz/?url=" data-restricted-mobile="true">接口 6 (yemu.xyz)</option>
+                    <option value="https://yparse.jn1.cc/index.php?url=">接口 7 (聚合) [备用]</option>
+                    <option value="https://player.q168.vip/?url=">接口 8 (q168.vip) [备用]</option>
+                </select>
+                <small id="interface-description" class="text-light" style="margin-top: 0.5rem;">带 <i class="fas fa-mobile-alt fa-fw" style="color: var(--restricted-interface-color);"></i> 标记的接口在手机端可能体验不佳。</small>
+            </div>
+
+            <div class="form-group">
+                <label for="videoUrl" class="form-label"><i class="fas fa-link fa-fw"></i> 视频链接:</label>
+                <input type="url" id="videoUrl" class="form-control" placeholder="请在此处粘贴视频播放页面的完整链接..." required autocomplete="off">
+            </div>
+
+            <div class="parser-actions">
+                <button class="btn" type="button" id="autoTestButton" title="自动测试查找可用接口">
+                    <i class="fas fa-magic fa-fw" aria-hidden="true"></i> 自动测试
+                </button>
+                <button class="btn" type="button" id="parseButton" title="使用选定接口解析视频">
+                    <i class="fas fa-play fa-fw" aria-hidden="true"></i> 立即解析
+                </button>
+            </div>
+        </section>
+
+        <!-- 同步观影 -->
+        <section class="sync-section" aria-labelledby="sync-heading">
+             <h2 id="sync-heading" class="sync-heading"><i class="fas fa-sync-alt fa-fw"></i> 同步观影 (实验性)</h2>
+             <div class="form-group">
+                <label for="syncRoomIdInput" class="form-label"><i class="fas fa-key fa-fw"></i> 房间密码 (6位数字):</label>
+                <input type="text" id="syncRoomIdInput" class="form-control" placeholder="创建房间则留空，加入房间则输入密码" maxlength="6" pattern="\d{6}">
+             </div>
+             <div class="sync-actions">
+                <button class="btn btn-sync-create" type="button" id="createRoomButton" title="创建新的同步房间">
+                    <i class="fas fa-plus-circle fa-fw" aria-hidden="true"></i> 创建同步房间
+                </button>
+                <button class="btn btn-sync-join" type="button" id="joinRoomButton" title="加入已有的同步房间">
+                    <i class="fas fa-sign-in-alt fa-fw" aria-hidden="true"></i> 加入同步房间
+                </button>
+                <button class="btn btn-sync-leave" type="button" id="leaveRoomButton" title="离开当前同步房间" style="display: none;"> <!-- Initially hidden -->
+                     <i class="fas fa-sign-out-alt fa-fw" aria-hidden="true"></i> 离开房间
+                </button>
+             </div>
+             <!-- Sync Status Display Area -->
+             <div class="sync-status-display" id="syncStatusDisplay">
+                 <!-- Status content will be added by JS -->
+             </div>
+        </section>
+
+        <!-- 状态消息 -->
+        <div class="status-message status-loading" id="loadingMessage" role="status" aria-live="polite"><i class="fas fa-spinner fa-spin fa-fw"></i> 解析中，请稍候...</div>
+        <div class="status-message status-testing" id="testingInterfaceMessage" role="status" aria-live="polite"><i class="fas fa-vial fa-fw"></i> 正在自动测试接口...</div>
+        <div class="status-message status-success" id="successMessage" role="status" aria-live="polite"><i class="fas fa-check-circle fa-fw"></i> <span id="successText">操作成功！</span></div>
+        <div class="status-message status-error" id="errorMessage" role="alert" aria-live="assertive"><i class="fas fa-exclamation-triangle fa-fw"></i> <span id="errorText">发生错误</span></div>
+        <div class="status-message status-sync" id="syncInfoMessage" role="status" aria-live="polite"><i class="fas fa-info-circle fa-fw"></i> <span id="syncInfoText">同步信息</span></div>
+
+
+        <!-- 视频播放器 -->
+        <div class="video-container" id="videoContainer">
+            <iframe class="video-iframe" id="videoPlayer" title="视频播放器" allow="autoplay; fullscreen" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe> <!-- Added allow-forms for potential login popups in iframe -->
+        </div>
+
+        <!-- 影视站点推荐 -->
+        <section class="movie-sites" aria-labelledby="movie-sites-heading">
+            <h2 id="movie-sites-heading"><i class="fas fa-tv fa-fw"></i> 免费影视站点推荐</h2>
+            <div class="movie-warning">
+                <i class="fas fa-exclamation-triangle"></i> <strong>注意:</strong> 以下网站非本站所有，内容可能包含广告、弹窗或潜在风险，请谨慎访问和使用！
+            </div>
+            <div class="card-grid">
+                 <!-- 推荐网站 1 -->
+                 <a href="https://vip1280.net/" target="_blank" rel="noopener noreferrer" class="movie-card">
+                     <div class="movie-card-image"><i class="fas fa-film"></i></div>
+                     <div class="movie-card-content">
+                         <h3 class="movie-card-title">影视站 1</h3>
+                         <span class="movie-card-link">vip1280.net</span>
+                     </div>
+                 </a>
+                 <!-- 推荐网站 2 -->
+                 <a href="https://wniutv.com/" target="_blank" rel="noopener noreferrer" class="movie-card">
+                     <div class="movie-card-image"><i class="fas fa-video"></i></div>
+                     <div class="movie-card-content">
+                         <h3 class="movie-card-title">影视站 2</h3>
+                         <span class="movie-card-link">wniutv.com</span>
+                     </div>
+                 </a>
+                 <!-- 推荐网站 3 -->
+                 <a href="https://www.hainatv.net/" target="_blank" rel="noopener noreferrer" class="movie-card">
+                      <div class="movie-card-image"><i class="fas fa-desktop"></i></div>
+                     <div class="movie-card-content">
+                         <h3 class="movie-card-title">影视站 3</h3>
+                         <span class="movie-card-link">hainatv.net</span>
+                     </div>
+                 </a>
+                 <!-- 推荐网站 4 -->
+                 <a href="https://www.yfsp.lv/" target="_blank" rel="noopener noreferrer" class="movie-card">
+                      <div class="movie-card-image"><i class="fas fa-compact-disc"></i></div>
+                     <div class="movie-card-content">
+                         <h3 class="movie-card-title">影视站 4 [推荐]</h3>
+                         <span class="movie-card-link">yfsp.lv</span>
+                     </div>
+                 </a>
+                 <!-- 推荐网站 5 -->
+                 <a href="https://www.fsyuyou.com/" target="_blank" rel="noopener noreferrer" class="movie-card">
+                     <div class="movie-card-image"><i class="fas fa-play"></i></div>
+                     <div class="movie-card-content">
+                         <h3 class="movie-card-title">影视站 5 [推荐]</h3>
+                         <span class="movie-card-link">fsyuyou.com</span>
+                     </div>
+                 </a>
+                 <!-- 推荐网站 6 -->
+                 <a href="https://www.luhuitang.com/" target="_blank" rel="noopener noreferrer" class="movie-card">
+                     <div class="movie-card-image"><i class="fas fa-ticket-alt"></i></div>
+                     <div class="movie-card-content">
+                         <h3 class="movie-card-title">影视站 6</h3>
+                         <span class="movie-card-link">luhuitang.com</span>
+                     </div>
+                 </a>
+                 <!-- 推荐网站 7 -->
+                 <a href="https://www.yingshidaquantv.com/" target="_blank" rel="noopener noreferrer" class="movie-card">
+                     <div class="movie-card-image"><i class="fas fa-photo-video"></i></div>
+                     <div class="movie-card-content">
+                         <h3 class="movie-card-title">影视站 7 [推荐]</h3>
+                         <span class="movie-card-link">yingshidaquantv.com</span>
+                     </div>
+                 </a>
+                 <!-- 推荐网站 8 -->
+                 <a href="https://www.yhdm.mom/" target="_blank" rel="noopener noreferrer" class="movie-card">
+                     <div class="movie-card-image"><i class="fas fa-star"></i></div>
+                     <div class="movie-card-content">
+                         <h3 class="movie-card-title">影视站 8 [推荐]</h3>
+                         <span class="movie-card-link">yhdm.mom</span>
+                     </div>
+                 </a>
+             </div>
+        </section>
+
+        <footer>
+            <p>免责声明：本站仅提供视频解析与同步观影技术学习与演示，不存储任何视频资源。所有解析结果均来自第三方接口，本站不对其内容和可用性负责。同步观影功能为实验性功能。请勿将本站用于任何商业或非法用途，否则后果自负。</p>
+            <p>&copy; 2024 ZXY视频网站. All Rights Reserved.</p>
+        </footer>
+    </main>
+
+<script>
+// Wrap everything in an IIFE to avoid polluting the global scope
+(function() {
+    'use strict';
+
+    // --- Configuration ---
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    const interfaceTestTimeout = 6000; // Timeout for interface testing (ms)
+    const restrictedMobileInterfaces = Array.from(document.querySelectorAll('#parserInterface option[data-restricted-mobile="true"]'))
+                                           .map(option => option.value);
+    const doubleParseInterfaces = []; // Keep this if some interfaces need it
+    const defaultMobileInterface = "https://bd.jx.cn/?url="; // Safer default for mobile
+
+    // PeerJS Config
+    const peerConfig = {
+        // Use PeerJS's public cloud server (replace with your own if needed)
+        // host: 'localhost', // Example for local testing
+        // port: 9000,        // Example for local testing
+        // path: '/myapp'     // Example for local testing
+        // For cloud: Leave host, port, path commented out or provide specific PeerServer Cloud options if you have them.
+        // The library defaults to the public PeerServer cloud.
+         debug: 2 // 0: Errors only, 1: Errors & Warnings, 2: Full Debug, 3: Verbose
+    };
+    const ROOM_ID_PREFIX = 'zxy-sync-'; // Prefix for PeerJS IDs to avoid collisions
+
+    // --- DOM Elements ---
+    const interfaceSelect = document.getElementById('parserInterface');
+    const videoUrlInput = document.getElementById('videoUrl');
+    const parseButton = document.getElementById('parseButton');
+    const autoTestButton = document.getElementById('autoTestButton');
+    const videoContainer = document.getElementById('videoContainer');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const testingMessage = document.getElementById('testingInterfaceMessage');
+    const successMessage = document.getElementById('successMessage');
+    const successText = document.getElementById('successText'); // Span inside success message
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText'); // Span inside error message
+    const syncInfoMessage = document.getElementById('syncInfoMessage'); // New sync info message
+    const syncInfoText = document.getElementById('syncInfoText'); // Span inside sync info message
+
+    // Sync Elements
+    const syncRoomIdInput = document.getElementById('syncRoomIdInput');
+    const createRoomButton = document.getElementById('createRoomButton');
+    const joinRoomButton = document.getElementById('joinRoomButton');
+    const leaveRoomButton = document.getElementById('leaveRoomButton');
+    const syncStatusDisplay = document.getElementById('syncStatusDisplay');
+
+    // --- Application State ---
+    let peer = null; // PeerJS instance
+    let roomID = null; // Current room ID (numeric part)
+    let isHost = false; // Is the current user the host?
+    let connections = []; // Array to hold active DataConnections (for host)
+    let hostConnection = null; // DataConnection to the host (for client)
+    let currentParseTimeout = null; // Timeout ID for iframe loading
+
+    // --- PeerJS Logic ---
+
+    /** Generates a random 6-digit room ID */
+    function generateRoomID() {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+
+    /** Initializes PeerJS and sets up listeners */
+    function initializePeer(id) {
+        if (peer) {
+            console.warn("PeerJS already initialized. Destroying existing instance.");
+            destroyPeer(); // Clean up previous instance first
+        }
+        try {
+            peer = new Peer(ROOM_ID_PREFIX + id, peerConfig);
+            console.log(`PeerJS initialized with ID: ${peer.id}`);
+
+            peer.on('open', (peerId) => {
+                console.log(`PeerJS connection open. Full ID: ${peerId}`);
+                roomID = peerId.replace(ROOM_ID_PREFIX, ''); // Store the numeric part
+                if (isHost) {
+                    updateSyncStatus(`房间创建成功！密码: <code title="点击复制密码">${roomID}</code> (点击密码复制)`);
+                    showSuccess(`房间创建成功！密码: ${roomID}`);
+                } else {
+                    // If client, attempt connection immediately after open
+                    if (hostConnection) { // Should have been set in joinRoom
+                        console.log(`Client PeerJS opened, host connection available, ready.`);
+                    } else {
+                         console.warn("Client PeerJS opened, but no host connection set yet.");
+                    }
+                }
+                setupPeerListeners(); // Setup listeners after peer is open
+                updateUIForRoomState(); // Reflect the new state in UI
+            });
+
+            peer.on('error', (err) => {
+                console.error('PeerJS Error:', err);
+                let message = '同步连接发生错误。';
+                if (err.type === 'unavailable-id') {
+                    message = `房间密码 "${id}" 已被占用，请尝试其他密码或刷新页面重试。`;
+                    if (isHost) roomID = null; // Reset room ID if host creation failed
+                } else if (err.type === 'peer-unavailable') {
+                    message = `无法连接到房主（密码 ${id}），请确认密码是否正确且房主在线。`;
+                } else if (err.type === 'network') {
+                     message = '网络错误，无法连接到信令服务器。请检查网络连接。';
+                } else if (err.type === 'disconnected' || err.type === 'server-error') {
+                     message = '与同步服务器的连接断开。请尝试刷新页面。';
+                }
+                showError(message);
+                destroyPeer(); // Clean up on critical error
+                updateUIForRoomState();
+            });
+
+        } catch (error) {
+            console.error("Failed to initialize PeerJS:", error);
+            showError("无法初始化同步功能。请刷新页面重试。");
+            destroyPeer();
+            updateUIForRoomState();
+        }
+    }
+
+    /** Sets up common PeerJS event listeners */
+    function setupPeerListeners() {
+         if (!peer) return;
+
+         // Listener for incoming connections (for Host)
+         peer.on('connection', (conn) => {
+             console.log(`Incoming connection from ${conn.peer}`);
+             if (isHost) {
+                 setupConnectionListeners(conn);
+                 connections.push(conn);
+                 updateSyncStatus(`用户 ${conn.peer.replace(ROOM_ID_PREFIX,'???')} 加入房间。当前人数: ${connections.length + 1}`);
+                 showSyncInfo(`用户加入房间。当前人数: ${connections.length + 1}`);
+                 // Optionally send current state to new client? (e.g., current video URL)
+                 // conn.send({ type: 'initial_state', payload: { videoUrl: videoUrlInput.value, interfaceUrl: interfaceSelect.value } });
+             } else {
+                 console.warn("Received connection as a client, ignoring.");
+                 conn.close(); // Clients shouldn't accept connections in this model
+             }
+         });
+
+         // Listener for disconnection from the signaling server
+         peer.on('disconnected', () => {
+             console.warn('PeerJS disconnected from signaling server.');
+             showError('与同步服务器的连接已断开，尝试重新连接...');
+             // PeerJS attempts to reconnect automatically. If it fails, an 'error' event might be triggered.
+             // We might want to clean up or notify the user if reconnection fails after some time.
+             // For now, rely on automatic reconnection or user refresh.
+         });
+
+        // Listener for peer closing
+        peer.on('close', () => {
+            console.log('PeerJS connection closed.');
+            // Don't show error message here, could be intentional (leaveRoom)
+            // destroyPeer will handle cleanup
+        });
+    }
+
+
+    /** Sets up listeners for a specific DataConnection */
+    function setupConnectionListeners(conn) {
+        conn.on('open', () => {
+            console.log(`Connection opened with ${conn.peer}`);
+            if (!isHost) { // Client successfully connected to Host
+                hostConnection = conn;
+                showSuccess(`成功加入房间 ${roomID}！等待房主操作...`);
+                updateSyncStatus(`已加入房间 <code title="点击复制密码">${roomID}</code>。等待房主加载视频...`);
+            }
+        });
+
+        conn.on('data', (data) => {
+            console.log(`Received data from ${conn.peer}:`, data);
+            if (data && data.type) {
+                handleReceivedData(data, conn.peer);
+            } else {
+                console.warn("Received malformed data:", data);
+            }
+        });
+
+        conn.on('close', () => {
+            console.log(`Connection closed with ${conn.peer}`);
+            if (isHost) {
+                connections = connections.filter(c => c.peer !== conn.peer);
+                updateSyncStatus(`用户 ${conn.peer.replace(ROOM_ID_PREFIX,'???')} 离开房间。当前人数: ${connections.length + 1}`);
+                showSyncInfo(`用户离开房间。当前人数: ${connections.length + 1}`);
+            } else {
+                showError(`与房主的连接已断开。`);
+                // Client disconnected from host
+                destroyPeer(); // Leave the room fully if host disconnects
+            }
+            updateUIForRoomState();
+        });
+
+        conn.on('error', (err) => {
+            console.error(`Connection error with ${conn.peer}:`, err);
+            showError(`与 ${isHost ? '成员' : '房主'} 的连接发生错误。`);
+            // Handle connection errors, potentially remove connection
+            if (isHost) {
+                 connections = connections.filter(c => c.peer !== conn.peer);
+                 updateSyncStatus(`与用户 ${conn.peer.replace(ROOM_ID_PREFIX,'???')} 的连接出错。当前人数: ${connections.length + 1}`);
+            } else {
+                 destroyPeer(); // Leave room if connection to host fails critically
+            }
+            updateUIForRoomState();
+        });
+    }
+
+    /** Handles data received via PeerJS */
+    function handleReceivedData(data, senderPeerId) {
+        if (!data || !data.type) return;
+
+        switch (data.type) {
+            case 'load_video':
+                if (!isHost) { // Only clients should react to 'load_video'
+                    console.log(`Received load_video command:`, data.payload);
+                    showSyncInfo(`房主发起了视频加载...`);
+                    const { interfaceUrl, videoUrl } = data.payload;
+                    if (interfaceUrl && videoUrl) {
+                        // Update UI elements
+                        interfaceSelect.value = interfaceUrl;
+                        videoUrlInput.value = videoUrl;
+                        // Trigger parsing
+                         parseVideo(interfaceUrl, videoUrl)
+                             .then(() => {
+                                 console.log("Client successfully loaded video triggered by host.");
+                                 // Maybe show a temporary success message specific to sync loading?
+                             })
+                             .catch(err => {
+                                 console.error("Client failed to load video triggered by host:", err);
+                                 showError("尝试自动加载视频失败，请检查链接或手动尝试。");
+                             });
+                    } else {
+                         console.warn("Received incomplete load_video data:", data.payload);
+                    }
+                }
+                break;
+            // Add other message types here if needed (e.g., chat, status updates)
+            default:
+                console.log(`Received unhandled data type: ${data.type}`);
+        }
+    }
+
+    /** Broadcasts data to all connected peers (Host only) */
+    function broadcastData(data) {
+        if (!isHost || !peer || connections.length === 0) {
+            console.log("Cannot broadcast: Not host or no connections.");
+            return;
+        }
+        console.log(`Broadcasting data to ${connections.length} peers:`, data);
+        connections.forEach(conn => {
+            if (conn && conn.open) {
+                conn.send(data);
+            } else {
+                 console.warn(`Skipping broadcast to non-open connection: ${conn?.peer}`);
+            }
+        });
+    }
+
+    /** Destroys the PeerJS instance and cleans up state */
+    function destroyPeer() {
+        if (peer) {
+            peer.destroy(); // This closes connections and disconnects from server
+            console.log("PeerJS instance destroyed.");
+        }
+        peer = null;
+        roomID = null;
+        isHost = false;
+        connections = [];
+        hostConnection = null;
+        // Don't hide error/success messages here, let them fade naturally
+        updateUIForRoomState(); // Update UI to reflect no longer being in a room
+        syncStatusDisplay.style.display = 'none'; // Hide status display
+        syncStatusDisplay.innerHTML = ''; // Clear status content
+    }
+
+    /** Updates the UI based on whether the user is in a room, hosting, or neither */
+    function updateUIForRoomState() {
+        if (peer && roomID) { // In a room (either host or client)
+            createRoomButton.disabled = true;
+            joinRoomButton.disabled = true;
+            syncRoomIdInput.disabled = true;
+            leaveRoomButton.style.display = 'inline-flex';
+            // Host specific UI changes
+            if (isHost) {
+                parseButton.disabled = false; // Host can trigger parse
+                autoTestButton.disabled = false; // Host can auto-test
+                syncRoomIdInput.value = roomID; // Display the room ID
+            } else { // Client specific UI changes
+                parseButton.disabled = true; // Client cannot trigger parse directly
+                autoTestButton.disabled = true; // Client cannot auto-test
+                syncRoomIdInput.value = roomID; // Display the room ID they joined
+            }
+            syncStatusDisplay.style.display = 'block'; // Show status area
+        } else { // Not in a room
+            createRoomButton.disabled = false;
+            joinRoomButton.disabled = false;
+            syncRoomIdInput.disabled = false;
+            leaveRoomButton.style.display = 'none';
+            parseButton.disabled = false; // Enable parse button for non-sync use
+            autoTestButton.disabled = false; // Enable auto-test for non-sync use
+            // syncRoomIdInput.value = ''; // Clear the input only if not trying to join
+            syncStatusDisplay.style.display = 'none'; // Hide status area
+            syncStatusDisplay.innerHTML = ''; // Clear status content
+        }
+    }
+
+    /** Update the sync status display area */
+     function updateSyncStatus(htmlContent) {
+         if (syncStatusDisplay) {
+             syncStatusDisplay.innerHTML = `<p>${htmlContent}</p>`;
+             syncStatusDisplay.style.display = 'block'; // Make sure it's visible
+
+             // Add click-to-copy functionality for room ID code elements
+             const codeElement = syncStatusDisplay.querySelector('code');
+             if (codeElement) {
+                 codeElement.style.cursor = 'pointer';
+                 codeElement.title = '点击复制密码';
+                 codeElement.onclick = () => {
+                     navigator.clipboard.writeText(codeElement.textContent)
+                         .then(() => {
+                             showSyncInfo('房间密码已复制到剪贴板！');
+                         })
+                         .catch(err => {
+                             console.error('无法复制文本:', err);
+                             showError('复制密码失败。');
+                         });
+                 };
+             }
+         }
+     }
+
+
+    // --- Event Handlers ---
+
+    function handleCreateRoom() {
+        // Optionally validate video URL first?
+        // const videoUrl = videoUrlInput.value.trim();
+        // if (!isValidUrl(videoUrl)) {
+        //     showError('请输入有效的视频链接后再创建房间。');
+        //     return;
+        // }
+        console.log("Attempting to create room...");
+        isHost = true;
+        const newRoomID = generateRoomID();
+        initializePeer(newRoomID); // PeerJS will handle ID availability
+    }
+
+    function handleJoinRoom() {
+        const targetRoomID = syncRoomIdInput.value.trim();
+        if (!/^\d{6}$/.test(targetRoomID)) {
+            showError('请输入有效的 6 位数字房间密码。');
+            return;
+        }
+        // Optionally validate video URL first?
+        // const videoUrl = videoUrlInput.value.trim();
+        // if (!isValidUrl(videoUrl)) {
+        //     showError('请输入有效的视频链接后再加入房间。');
+        //     return;
+        // }
+
+        console.log(`Attempting to join room: ${targetRoomID}`);
+        isHost = false;
+        // Initialize PeerJS *without* a fixed ID, it will get a random one
+        // The connection attempt happens *after* PeerJS opens.
+         try {
+             if (peer) {
+                 console.warn("PeerJS already initialized. Destroying existing instance before joining.");
+                 destroyPeer();
+             }
+             peer = new Peer(peerConfig); // Initialize with random ID
+
+             peer.on('open', (peerId) => {
+                 console.log(`Client PeerJS opened with random ID: ${peerId}. Connecting to host: ${ROOM_ID_PREFIX + targetRoomID}`);
+                 // Now attempt to connect to the host
+                 const conn = peer.connect(ROOM_ID_PREFIX + targetRoomID, { reliable: true }); // Use reliable connection
+                 if (conn) {
+                     roomID = targetRoomID; // Store the target room ID
+                     setupConnectionListeners(conn); // Setup listeners immediately
+                 } else {
+                     console.error("peer.connect failed immediately.");
+                     showError(`无法发起对房间 ${targetRoomID} 的连接。`);
+                     destroyPeer();
+                 }
+                 setupPeerListeners(); // Setup general peer listeners
+                 updateUIForRoomState(); // Update UI based on attempting to join
+             });
+
+              peer.on('error', (err) => { // Add error handling for the peer itself during join init
+                 console.error('PeerJS Error during client initialization:', err);
+                 let message = '加入房间时发生同步连接错误。';
+                  if (err.type === 'network') {
+                      message = '网络错误，无法连接到信令服务器。请检查网络连接。';
+                  } else if (err.type === 'disconnected' || err.type === 'server-error') {
+                      message = '与同步服务器的连接断开。请尝试刷新页面。';
+                  }
+                 showError(message);
+                 destroyPeer(); // Clean up on critical error
+                 updateUIForRoomState();
+             });
+
+         } catch (error) {
+             console.error("Failed to initialize PeerJS for joining:", error);
+             showError("无法初始化同步功能以加入房间。请刷新页面重试。");
+             destroyPeer();
+             updateUIForRoomState();
+         }
+    }
+
+    function handleLeaveRoom() {
+        console.log("Leaving room...");
+        if (isHost) {
+             showSyncInfo("您已解散房间。");
+        } else {
+             showSyncInfo("您已离开房间。");
+        }
+        destroyPeer(); // This handles closing connections and cleaning up state
+    }
+
+    function handleParseButtonClick() {
+        const selectedInterface = interfaceSelect.value;
+        const videoUrl = videoUrlInput.value.trim();
+
+        if (!videoUrl) {
+            showError('请输入有效的视频链接！');
+            return;
+        }
+         if (!isValidUrl(videoUrl)) {
+             showError('链接格式不正确，请输入包含 http:// 或 https:// 的完整网址。');
+             return;
+         }
+
+
+        if (peer && roomID) { // In a sync room
+            if (isHost) {
+                console.log("Host parsing video, will broadcast...");
+                 if (checkMobileRestriction(selectedInterface)) {
+                     // Parse for host first
+                     parseVideo(selectedInterface, videoUrl)
+                         .then(() => {
+                             console.log("Host parsed successfully. Broadcasting to clients...");
+                             // Broadcast load command to clients
+                             broadcastData({
+                                 type: 'load_video',
+                                 payload: {
+                                     interfaceUrl: selectedInterface,
+                                     videoUrl: videoUrl
+                                 }
+                             });
+                         })
+                         .catch(err => {
+                             console.error("Host failed to parse, not broadcasting.", err);
+                             // Error shown by parseVideo already
+                         });
+                 } else {
+                      console.log("Host mobile restriction cancelled.");
+                      // Re-enable buttons if confirm is cancelled
+                      disableButtons(false);
+                 }
+            } else {
+                // Client should not be able to click this button when in room, but handle defensively
+                console.warn("Client clicked parse button while in room - action blocked.");
+                showSyncInfo("请等待房主操作视频加载。");
+            }
+        } else { // Not in a sync room, normal parsing
+            console.log("Normal parsing (not in sync room)...");
+             if (checkMobileRestriction(selectedInterface)) {
+                 parseVideo(selectedInterface, videoUrl).catch(err => {
+                    console.log("Normal parse button click resulted in error (handled).");
+                 });
+             } else {
+                 console.log("Normal parse mobile restriction cancelled.");
+                 // Re-enable buttons if confirm is cancelled
+                 disableButtons(false);
+             }
+        }
+    }
+
+    // --- Core Parsing Logic (Modified slightly) ---
+
+    /**
+     * Loads URL into iframe, handling timeout and errors.
+     * @param {string} interfaceUrl - Base URL of the parsing interface.
+     * @param {string} videoUrl - Full URL of the video to parse.
+     * @returns {Promise<void>} Resolves on successful load attempt, rejects on error/timeout.
+     */
+    function _loadVideoInIframe(interfaceUrl, videoUrl) {
+        return new Promise((resolve, reject) => {
+            clearTimeout(currentParseTimeout);
+            const parsedUrl = interfaceUrl + encodeURIComponent(videoUrl);
+            console.log(`Attempting to load in iframe: ${parsedUrl}`);
+            videoPlayer.src = 'about:blank'; // Clear previous content
+
+            // Use a small delay before setting src to ensure 'about:blank' is processed
+            setTimeout(() => { videoPlayer.src = parsedUrl; }, 50);
+
+            videoContainer.style.display = 'block'; // Show container early
+
+            let resolved = false; // Flag to prevent double resolution/rejection
+            const timeoutId = setTimeout(() => {
+                if (resolved) return;
+                resolved = true;
+                console.warn(`Iframe timeout for ${parsedUrl}`);
+                removeListeners();
+                // Don't clear src here, let the user see the potentially stuck iframe
+                // videoPlayer.src = 'about:blank';
+                reject(new Error(`解析超时 (${interfaceTestTimeout / 1000}秒)，接口可能无响应。`));
+            }, interfaceTestTimeout);
+
+            currentParseTimeout = timeoutId;
+
+            const onLoad = () => {
+                if (resolved) return;
+                resolved = true;
+                console.log(`Iframe 'load' event fired for: ${parsedUrl}`);
+                clearTimeout(timeoutId);
+                removeListeners();
+                 // Even if loading technically 'succeeds', the content might be an error page from the interface
+                 // We resolve here because the loading itself didn't time out or throw a network error.
+                 // Actual playback success depends on the interface.
+                resolve();
+            };
+
+            const onError = (event) => {
+                if (resolved) return;
+                resolved = true;
+                console.error(`Iframe 'error' event for ${parsedUrl}:`, event);
+                clearTimeout(timeoutId);
+                removeListeners();
+                reject(new Error('解析接口加载失败（iframe 错误），可能是接口失效或网络问题。'));
+            };
+
+             const removeListeners = () => {
+                 videoPlayer.removeEventListener('load', onLoad);
+                 videoPlayer.removeEventListener('error', onError);
+             };
+
+            videoPlayer.addEventListener('load', onLoad);
+            videoPlayer.addEventListener('error', onError);
+        });
+    }
+
+
+    /**
+     * Main function to parse the video using a selected interface.
+     * Accepts URL override for sync functionality.
+     * @param {string} interfaceUrl - The selected parsing interface URL.
+     * @param {string} [urlOverride] - Optional video URL override.
+     * @returns {Promise<void>} Resolves if parsing initiates successfully. Rejects on failure.
+     */
+    async function parseVideo(interfaceUrl, urlOverride) {
+        const videoUrl = urlOverride || videoUrlInput.value.trim(); // Use override if provided
+        hideAllStatusMessages();
+
+        if (!videoUrl) {
+            showError('无法解析：缺少视频链接。');
+            return Promise.reject(new Error('No video URL'));
+        }
+         if (!isValidUrl(videoUrl)) {
+             showError('链接格式不正确，请输入包含 http:// 或 https:// 的完整网址。');
+             return Promise.reject(new Error('Invalid video URL format'));
+         }
+        // No need to prepend http/https here, isValidUrl checks it
+
+        // Disable buttons based on sync state *before* async operation
+        disableButtons(true); // Disable all relevant buttons during processing
+        showLoading();
+
+        try {
+            // Double parsing logic (if needed)
+            if (doubleParseInterfaces.includes(interfaceUrl)) {
+                console.log(`Using double parse for interface: ${interfaceUrl}`);
+                await _loadVideoInIframe(interfaceUrl, videoUrl);
+                await _loadVideoInIframe(interfaceUrl, videoUrl);
+            } else {
+                console.log(`Using single parse for interface: ${interfaceUrl}`);
+                await _loadVideoInIframe(interfaceUrl, videoUrl);
+            }
+
+            hideLoading();
+            // Success is implied by video container showing
+            videoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            disableButtons(false); // Re-enable buttons based on sync state
+            return Promise.resolve();
+
+        } catch (err) {
+            console.error('Parsing failed:', err);
+            showError(err.message || '解析视频时发生未知错误。');
+            hideLoading();
+            videoContainer.style.display = 'none';
+            videoPlayer.src = 'about:blank';
+            disableButtons(false); // Re-enable buttons based on sync state
+            return Promise.reject(err);
+        }
+    }
+
+
+    /**
+     * Automatically tests available interfaces. (Mostly unchanged, but considers sync state for buttons)
+     */
+    async function autoTestInterfaces() {
+        const videoUrl = videoUrlInput.value.trim();
+        if (!videoUrl) {
+            showError('请先输入视频链接再进行测试！');
+            return;
+        }
+         if (!isValidUrl(videoUrl)) {
+             showError('链接格式不正确，请输入包含 http:// 或 https:// 的完整网址。');
+             return;
+         }
+
+
+        hideAllStatusMessages();
+        showTestingInterface();
+        disableButtons(true); // Disable buttons during test
+
+        const options = Array.from(interfaceSelect.options);
+        const interfacesToTest = options
+            .filter(option => !(isMobile && restrictedMobileInterfaces.includes(option.value)))
+            .map(option => ({ value: option.value, text: option.text }));
+
+         if (interfacesToTest.length === 0) {
+            showError('当前设备没有可用的自动测试接口。');
+            hideTestingInterface();
+            disableButtons(false); // Re-enable based on sync state
+            return;
+        }
+
+        console.log("Starting auto-test with interfaces:", interfacesToTest.map(i => i.text));
+        let bestInterface = null;
+
+        for (const iface of interfacesToTest) {
+            console.log(`Testing interface: ${iface.text} (${iface.value})`);
+            testingMessage.innerHTML = `<i class="fas fa-vial fa-fw"></i> 正在测试接口: ${iface.text}...`;
+
+            try {
+                // We need to await the result of the load attempt from parseVideo
+                await parseVideo(iface.value, videoUrl); // Use parseVideo for consistency
+                bestInterface = iface.value;
+                console.log(`Interface ${iface.text} succeeded.`);
+                break; // Stop testing on the first success
+            } catch (error) {
+                console.warn(`Interface ${iface.text} failed test: ${error.message}`);
+                // parseVideo hides the container on error, so no need to do it here
+                // Continue to the next interface
+            } finally {
+                 // Ensure loading/testing message is hidden before next iteration or final result
+                 hideLoading();
+                 hideTestingInterface();
+            }
+        }
+
+        hideTestingInterface(); // Ensure it's hidden finally
+
+        if (bestInterface) {
+            interfaceSelect.value = bestInterface;
+            showSuccess('接口测试成功，已选择可用接口！');
+            // Ensure the video remains visible and scroll to it
+            videoContainer.style.display = 'block';
+            videoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            showError('所有可用接口测试失败，请检查链接或手动选择接口尝试。');
+            videoContainer.style.display = 'none'; // Ensure container is hidden if all fail
+            videoPlayer.src = 'about:blank';
+        }
+        disableButtons(false); // Re-enable buttons based on sync state
+    }
+
+    // --- UI Helper Functions ---
+    function showLoading() { hideAllStatusMessages(); loadingMessage.style.display = 'flex'; }
+    function hideLoading() { loadingMessage.style.display = 'none'; }
+    function showTestingInterface() { hideAllStatusMessages(); testingMessage.style.display = 'flex'; testingMessage.innerHTML = '<i class="fas fa-vial fa-fw"></i> 正在自动测试接口...'; }
+    function hideTestingInterface() { testingMessage.style.display = 'none'; }
+
+    function showSuccess(message = '操作成功！') { // Allow custom success messages
+        hideAllStatusMessages();
+        successText.textContent = message;
+        successMessage.style.display = 'flex';
+        setTimeout(() => { if (successMessage.style.display === 'flex') successMessage.style.display = 'none'; }, 3500);
+    }
+
+    function showError(message) {
+        hideAllStatusMessages();
+        errorText.textContent = message;
+        errorMessage.style.display = 'flex';
+        setTimeout(() => { if (errorMessage.style.display === 'flex') errorMessage.style.display = 'none'; }, 7000); // Keep error longer
+    }
+
+    function showSyncInfo(message) { // New function for sync-related info
+        hideAllStatusMessages();
+        syncInfoText.textContent = message;
+        syncInfoMessage.style.display = 'flex';
+        setTimeout(() => { if (syncInfoMessage.style.display === 'flex') syncInfoMessage.style.display = 'none'; }, 4000); // Show info for a medium duration
+    }
+
+
+    function hideAllStatusMessages() {
+        loadingMessage.style.display = 'none';
+        testingMessage.style.display = 'none';
+        successMessage.style.display = 'none';
+        errorMessage.style.display = 'none';
+        syncInfoMessage.style.display = 'none'; // Hide sync info too
+    }
+
+    /** Disables/enables buttons based on sync state */
+    function disableButtons(disabled) {
+        // Always disable sync buttons during actions
+        createRoomButton.disabled = disabled;
+        joinRoomButton.disabled = disabled;
+        // Leave button might still be enabled during some actions unless 'disabled' is true
+        leaveRoomButton.disabled = disabled;
+
+        // Disable parse/test buttons based on sync state AND the 'disabled' flag
+        if (peer && roomID) { // In a room
+            if (isHost) {
+                // Host can parse/test, disable only if 'disabled' is true
+                parseButton.disabled = disabled;
+                autoTestButton.disabled = disabled;
+            } else {
+                // Client cannot parse/test directly, always disabled
+                parseButton.disabled = true;
+                autoTestButton.disabled = true;
+            }
+        } else { // Not in a room
+            // Can parse/test, disable only if 'disabled' is true
+            parseButton.disabled = disabled;
+            autoTestButton.disabled = disabled;
+        }
+
+        // Ensure UI reflects the final state after potential async ops finish
+        // Call updateUIForRoomState() if 'disabled' is false to restore correct state
+        if (!disabled) {
+             updateUIForRoomState();
+        }
+    }
+
+    /** Checks mobile restrictions (unchanged) */
+    function checkMobileRestriction(selectedValue) {
+        if (isMobile && restrictedMobileInterfaces.includes(selectedValue)) {
+            const selectedOption = interfaceSelect.options[interfaceSelect.selectedIndex];
+            const optionText = selectedOption ? selectedOption.text.replace(/📱.*/, '').trim() : '该接口';
+            const confirmMessage = `您当前使用的是移动设备，选择的 "${optionText}" 可能包含不适合手机浏览的内容或广告较多。\n\n确定要继续使用吗？`;
+            if (!confirm(confirmMessage)) {
+                return false; // Do not proceed
+            }
+        }
+        return true; // Proceed
+    }
+
+     /** Basic URL validation */
+     function isValidUrl(string) {
+         try {
+             const url = new URL(string);
+             return url.protocol === "http:" || url.protocol === "https:";
+         } catch (_) {
+             // Check if it might just be missing the protocol
+             if (!string.startsWith('http://') && !string.startsWith('https://') && string.includes('.')) {
+                 // Attempt to prepend https:// and re-validate - modify input directly? Or just return false?
+                 // Let's return false for simplicity and enforce full URL input.
+                 // Or we could auto-prepend in parseVideo if validation fails here
+                 return false; // Requires full URL with protocol
+             }
+             return false;
+         }
+     }
+
+    /** Updates mobile indicator icons/text in select options (unchanged) */
+    function updateMobileIndicator() {
+        Array.from(interfaceSelect.options).forEach(option => {
+            // Remove existing text indicator first
+            option.textContent = option.textContent.replace(/\s*📱.*/, '').trim(); // Remove emoji and trailing space
+            option.classList.remove('restricted-mobile'); // Reset class
+
+            if (isMobile && restrictedMobileInterfaces.includes(option.value)) {
+                option.classList.add('restricted-mobile');
+                // Add Unicode character back if not already present
+                if (!option.textContent.includes('📱')) { // Check if emoji already exists
+                     option.textContent += ` 📱`; // Add mobile phone emoji
+                }
+            }
+        });
+    }
+
+
+    // --- Initialization ---
+    function initEventListeners() {
+        parseButton.addEventListener('click', handleParseButtonClick);
+        autoTestButton.addEventListener('click', autoTestInterfaces);
+        createRoomButton.addEventListener('click', handleCreateRoom);
+        joinRoomButton.addEventListener('click', handleJoinRoom);
+        leaveRoomButton.addEventListener('click', handleLeaveRoom);
+
+        interfaceSelect.addEventListener('change', updateMobileIndicator);
+
+        // Add input validation for Room ID
+        syncRoomIdInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, ''); // Allow only digits
+        });
+
+        videoUrlInput.focus();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateMobileIndicator();
+
+        if (isMobile && restrictedMobileInterfaces.includes(interfaceSelect.value)) {
+             if (Array.from(interfaceSelect.options).some(opt => opt.value === defaultMobileInterface)) {
+                interfaceSelect.value = defaultMobileInterface;
+                updateMobileIndicator();
+             }
+        }
+
+        initEventListeners();
+        updateUIForRoomState(); // Initial UI state setup
+        console.log("ZXY Video Parser with Sync Initialized. Mobile:", isMobile);
+
+        // Clean up PeerJS connection if the page is closed or refreshed
+        window.addEventListener('beforeunload', () => {
+             destroyPeer();
+        });
+    });
+
+})();
+</script>
+
+</body>
+</html>
